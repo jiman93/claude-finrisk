@@ -229,4 +229,12 @@ export type ChatMessage =
       id: string;
       type: "checkpoint";
       instance: CheckpointInstance;
+    }
+  | {
+      id: string;
+      type: "submitted_checkpoint";
+      definitionId: string;
+      label: string;
+      state: "submitted" | "skipped";
+      fields: Array<{ label: string; value: string }>;
     };

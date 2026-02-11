@@ -41,6 +41,7 @@ interface StudyState {
     order: string[]
   ) => Promise<void>;
   submitEditedSummary: (taskId: string, editedText: string) => Promise<void>;
+  addMessage: (msg: ChatMessage) => void;
 
   // Chat history actions
   saveChat: (chatId: string, title: string, assignment: ParticipantAssignment) => void;
@@ -216,6 +217,12 @@ export const useStudyStore = create<StudyState>((set, get) => ({
       const message = error instanceof Error ? error.message : "Unexpected error";
       set({ error: message, isLoading: false });
     }
+  },
+
+  addMessage: (msg) => {
+    set((state) => ({
+      messages: [...state.messages, msg],
+    }));
   },
 
   // ── Chat history actions ──

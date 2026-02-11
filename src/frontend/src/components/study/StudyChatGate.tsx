@@ -76,6 +76,7 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
     advancePhase,
     submitNodeSelection,
     submitEditedSummary,
+    addMessage,
   } = useStudyStore();
 
   const [started, setStarted] = useState(false);
@@ -298,6 +299,18 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
                       <CheckpointRenderer
                         key={msg.id}
                         instance={msg.instance}
+                      />
+                    );
+                  }
+
+                  if (msg.type === "submitted_checkpoint") {
+                    return (
+                      <SubmittedCheckpointCard
+                        key={msg.id}
+                        label={msg.label}
+                        state={msg.state}
+                        fields={msg.fields}
+                        onViewCheckpoint={openCheckpointPane}
                       />
                     );
                   }
@@ -598,16 +611,31 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
                   );
                 }
 
+                if (msg.type === "submitted_checkpoint") {
+                  return (
+                    <SubmittedCheckpointCard
+                      key={msg.id}
+                      label={msg.label}
+                      state={msg.state}
+                      fields={msg.fields}
+                      onViewCheckpoint={openCheckpointPane}
+                    />
+                  );
+                }
+
                 return null;
               })}
 
-              {/* Post-generation checkpoint instances from assignment */}
+              {/* Post-generation checkpoint instances from assignment (only unsubmitted ones) */}
               {currentPhase &&
                 !isLoading &&
                 session &&
                 currentPhaseHasSummary(messages) &&
                 currentPhase.checkpoints
                   .filter((cp) => cp.pipeline_position === "post_generation")
+                  .filter((cp) => !messages.some(
+                    (m) => m.type === "submitted_checkpoint" && m.definitionId === cp.definition_id
+                  ))
                   .map((cp) => {
                     const def = SEED_DEFINITIONS.find((d) => d.id === cp.definition_id);
                     if (!def || def.field_schema.length === 0) return null;
@@ -617,6 +645,7 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
                         definitionId={cp.definition_id}
                         label={cp.label}
                         onViewCheckpoint={openCheckpointPane}
+                        onCheckpointDone={addMessage}
                       />
                     );
                   })}
@@ -957,14 +986,57 @@ function CheckpointRenderer({ instance }: { instance: CheckpointInstance }) {
   );
 }
 
+function SubmittedCheckpointCard({
+  label,
+  state,
+  fields,
+  onViewCheckpoint,
+}: {
+  label: string;
+  state: "submitted" | "skipped";
+  fields: Array<{ label: string; value: string }>;
+  onViewCheckpoint: (label: string, fields: Array<{ label: string; value: string }>) => void;
+}) {
+  if (state === "skipped") {
+    return (
+      <div className="pi-step-card completed scg-cp-clickable">
+        <div className="pi-step-left">
+          <span className="pi-step-icon">&#8594;</span>
+          <span>{label}</span>
+          <span className="cp-control-badge skipped">Skipped</span>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="pi-step-card completed scg-cp-clickable">
+      <div className="pi-step-left">
+        <span className="pi-step-icon">&#10003;</span>
+        <span>{label}</span>
+        <span className="cp-control-badge submitted">Submitted</span>
+      </div>
+      <button
+        type="button"
+        className="pi-show-more-btn"
+        onClick={() => onViewCheckpoint(label, fields)}
+      >
+        View responses
+      </button>
+    </div>
+  );
+}
+
 function PostGenerationCheckpoint({
   definitionId,
   label,
   onViewCheckpoint,
+  onCheckpointDone,
 }: {
   definitionId: string;
   label: string;
   onViewCheckpoint: (label: string, fields: Array<{ label: string; value: string }>) => void;
+  onCheckpointDone: (msg: ChatMessage) => void;
 }) {
   const def = SEED_DEFINITIONS.find((d) => d.id === definitionId);
   if (!def || def.field_schema.length === 0) return null;
@@ -1002,49 +1074,42 @@ function PostGenerationCheckpoint({
     });
   }
 
-  // When submitted or skipped, show a compact one-liner in the stream
-  if (instance.state === "submitted") {
-    const result = (instance.submit_result as Record<string, unknown>) ?? {};
-    return (
-      <div className="pi-step-card completed scg-cp-clickable">
-        <div className="pi-step-left">
-          <span className="pi-step-icon">&#10003;</span>
-          <span>{label}</span>
-          <span className="cp-control-badge submitted">Submitted</span>
-        </div>
-        <button
-          type="button"
-          className="pi-show-more-btn"
-          onClick={() => onViewCheckpoint(label, buildFieldSummary(result))}
-        >
-          View responses
-        </button>
-      </div>
-    );
+  function handleSubmit(_id: string, data: Record<string, unknown>) {
+    setInstance((prev) => ({ ...prev, state: "submitted", submit_result: data }));
+    const fields = buildFieldSummary(data);
+    onCheckpointDone({
+      id: `cp-done-${definitionId}-${Date.now()}`,
+      type: "submitted_checkpoint",
+      definitionId,
+      label,
+      state: "submitted",
+      fields,
+    });
   }
 
-  if (instance.state === "skipped") {
-    return (
-      <div className="pi-step-card completed scg-cp-clickable">
-        <div className="pi-step-left">
-          <span className="pi-step-icon">&#8594;</span>
-          <span>{label}</span>
-          <span className="cp-control-badge skipped">Skipped</span>
-        </div>
-      </div>
-    );
+  function handleSkip(_id: string) {
+    setInstance((prev) => ({ ...prev, state: "skipped" }));
+    onCheckpointDone({
+      id: `cp-done-${definitionId}-${Date.now()}`,
+      type: "submitted_checkpoint",
+      definitionId,
+      label,
+      state: "skipped",
+      fields: [],
+    });
+  }
+
+  // Once submitted/skipped, this component is hidden (the message stream renders the card)
+  if (instance.state === "submitted" || instance.state === "skipped") {
+    return null;
   }
 
   // Active state: render the full form
   return (
     <DynamicControlRenderer
       instance={instance}
-      onSubmit={(_id, data) =>
-        setInstance((prev) => ({ ...prev, state: "submitted", submit_result: data }))
-      }
-      onSkip={(_id) =>
-        setInstance((prev) => ({ ...prev, state: "skipped" }))
-      }
+      onSubmit={handleSubmit}
+      onSkip={handleSkip}
       onRetry={(_id) =>
         setInstance((prev) => ({
           ...prev,
