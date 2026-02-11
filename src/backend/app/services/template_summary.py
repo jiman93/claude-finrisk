@@ -1,32 +1,27 @@
-from app.config import settings
+"""Offline template-based summary fallback.
+
+Used when the LLM service is unavailable (no OpenAI API key configured).
+Produces a structured summary from retrieved nodes without calling any
+external API.
+"""
+
 from app.schemas.task import RetrievalNode
-from app.services.mock_retrieval_engine import (
-    MockRetrievalEngine,
-    MockRetrievalError,
-    MockRetrievalResult,
-)
 
 
-def mock_pageindex_retrieval(ticker: str, query: str) -> MockRetrievalResult:
-    engine = MockRetrievalEngine(
-        scenario=settings.mock_retrieval_scenario,
-        seed_salt=settings.mock_seed_salt,
-    )
-    return engine.retrieve(ticker, query)
+def template_summary(ticker: str, query: str, nodes: list[RetrievalNode]) -> str:
+    """Build a template-based summary from retrieved nodes.
 
-
-def mock_retrieval_nodes(ticker: str, query: str) -> list[RetrievalNode]:
-    return mock_pageindex_retrieval(ticker, query).nodes
-
-
-def mock_summary(ticker: str, query: str, nodes: list[RetrievalNode]) -> str:
-    citations = []
+    Returns a structured risk summary with citations drawn from the
+    provided nodes.  This is a deterministic, zero-cost fallback for
+    development and offline testing.
+    """
+    citations: list[str] = []
     for node in nodes:
         citation = f"[{node.title}, Page {node.page_index}]"
         if citation not in citations:
             citations.append(citation)
 
-    key_points = []
+    key_points: list[str] = []
     for node in nodes[:5]:
         key_points.append(f"- {node.relevant_content} [{node.title}, Page {node.page_index}]")
 
@@ -44,12 +39,3 @@ def mock_summary(ticker: str, query: str, nodes: list[RetrievalNode]) -> str:
         "- Execution delays when supplier, regulatory, or macro conditions deteriorate.\n\n"
         f"Source attribution: {citations_line}"
     )
-
-
-__all__ = [
-    "MockRetrievalError",
-    "MockRetrievalResult",
-    "mock_pageindex_retrieval",
-    "mock_retrieval_nodes",
-    "mock_summary",
-]

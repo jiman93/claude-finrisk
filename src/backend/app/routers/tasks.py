@@ -3,7 +3,6 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from app.config import settings
 from app.db.database import get_db
 from app.models.task import Task
 from app.schemas.task import (
@@ -19,16 +18,12 @@ from app.schemas.task import (
     SelectNodesResponse,
 )
 from app.services.llm_service import LLMService, LLMServiceError
-from app.services.mock_pipeline import (
-    MockRetrievalError,
-    mock_pageindex_retrieval,
-    mock_summary,
-)
-from app.services.pageindex_service import PageIndexError, PageIndexService
+from app.services.retrieval_service import RetrievalError, RetrievalService
+from app.services.template_summary import template_summary
 
 router = APIRouter(prefix="/api/tasks", tags=["tasks"])
 
-pageindex_service = PageIndexService()
+retrieval_service = RetrievalService()
 llm_service = LLMService()
 
 
@@ -40,34 +35,18 @@ def query_task(task_id: str, payload: QueryRequest, db: Session = Depends(get_db
 
     query = payload.query or task.query_text
     task.query_text = query
-    retrieval_id: str | None = None
+
     try:
-        retrieval = pageindex_service.retrieve(task.ticker, query)
-        nodes = retrieval.nodes
-        retrieval_id = retrieval.retrieval_id
-    except PageIndexError:
-        if not settings.enable_mock_fallback:
-            raise HTTPException(status_code=503, detail="PageIndex retrieval failed and fallback is disabled")
-        try:
-            mock_retrieval = mock_pageindex_retrieval(task.ticker, query)
-        except MockRetrievalError as exc:
-            raise HTTPException(status_code=exc.status_code, detail=str(exc)) from exc
-        nodes = mock_retrieval.nodes
-        retrieval_id = mock_retrieval.retrieval_id
+        result = retrieval_service.retrieve(task.ticker, query)
+    except RetrievalError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
 
-    if not nodes:
-        if not settings.enable_mock_fallback:
-            raise HTTPException(status_code=502, detail="Retrieval returned no nodes")
-        try:
-            mock_retrieval = mock_pageindex_retrieval(task.ticker, query)
-        except MockRetrievalError as exc:
-            raise HTTPException(status_code=exc.status_code, detail=str(exc)) from exc
-        nodes = mock_retrieval.nodes
-        retrieval_id = mock_retrieval.retrieval_id
+    if not result.nodes:
+        raise HTTPException(status_code=502, detail="Retrieval returned no nodes")
 
-    task.retrieved_nodes = [node.model_dump() for node in nodes]
-    if retrieval_id:
-        task.pageindex_retrieval_id = retrieval_id
+    task.retrieved_nodes = [node.model_dump() for node in result.nodes]
+    if result.retrieval_id:
+        task.pageindex_retrieval_id = result.retrieval_id
     task.retrieval_completed_at = datetime.utcnow()
     db.commit()
     db.refresh(task)
@@ -75,7 +54,7 @@ def query_task(task_id: str, payload: QueryRequest, db: Session = Depends(get_db
     return QueryResponse(
         status="completed",
         task_id=task.id,
-        retrieved_nodes=nodes,
+        retrieved_nodes=result.nodes,
         retrieval_completed_at=task.retrieval_completed_at,
     )
 
@@ -101,9 +80,7 @@ def generate_summary(task_id: str, payload: GenerateRequest, db: Session = Depen
     try:
         summary = llm_service.generate_summary(task.ticker, task.query_text, nodes)
     except LLMServiceError:
-        if not settings.enable_mock_fallback:
-            raise HTTPException(status_code=503, detail="LLM generation failed and fallback is disabled")
-        summary = mock_summary(task.ticker, task.query_text, nodes)
+        summary = template_summary(task.ticker, task.query_text, nodes)
 
     task.selected_node_ids = selected_ids
     task.generated_summary = summary

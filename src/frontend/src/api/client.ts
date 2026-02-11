@@ -6,8 +6,6 @@ import type {
   QueryResponse,
   SelectNodesResponse,
   SessionState,
-  SyntheticGenerateResponse,
-  SyntheticRetrieveResponse,
 } from "../types";
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
@@ -85,30 +83,5 @@ export function editSummaryTask(
       edited_text: editedText,
       flagged_spans: flaggedSpans,
     }),
-  });
-}
-
-export function syntheticRetrieve(
-  query: string,
-  ticker: string = "MSFT"
-): Promise<SyntheticRetrieveResponse> {
-  return request<SyntheticRetrieveResponse>("/api/synthetic/retrieve", {
-    method: "POST",
-    body: JSON.stringify({ query, ticker }),
-  });
-}
-
-export function syntheticGenerate(
-  payload: {
-    query: string;
-    ticker: string;
-    retrieval_id: string;
-    doc_id: string;
-    retrieved_nodes: SyntheticRetrieveResponse["retrieved_nodes"];
-  }
-): Promise<SyntheticGenerateResponse> {
-  return request<SyntheticGenerateResponse>("/api/synthetic/generate", {
-    method: "POST",
-    body: JSON.stringify(payload),
   });
 }

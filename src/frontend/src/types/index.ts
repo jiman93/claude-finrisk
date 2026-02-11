@@ -26,37 +26,6 @@ export interface QueryResponse {
   retrieval_completed_at: string;
 }
 
-export interface SyntheticRelevantContent {
-  page_index: number;
-  relevant_content: string;
-}
-
-export interface SyntheticRetrievedNode {
-  title: string;
-  node_id: string;
-  relevant_contents: SyntheticRelevantContent[];
-}
-
-export interface SyntheticRetrieveResponse {
-  retrieval_id: string;
-  doc_id: string;
-  status: string;
-  query: string;
-  scenario: string;
-  latency_ms: number;
-  retrieved_nodes: SyntheticRetrievedNode[];
-}
-
-export interface SyntheticGenerateResponse {
-  generation_id: string;
-  retrieval_id: string;
-  status: string;
-  scenario: string;
-  latency_ms: number;
-  summary: string;
-  citations: string[];
-}
-
 export interface GenerateResponse {
   task_id: string;
   summary: string;
