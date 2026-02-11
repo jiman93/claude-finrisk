@@ -10,6 +10,7 @@ so they are only loaded when ``RETRIEVAL_MODE=local``.
 
 from __future__ import annotations
 
+import logging
 import uuid
 from typing import TYPE_CHECKING
 
@@ -18,6 +19,8 @@ from app.schemas.task import RetrievalNode
 
 if TYPE_CHECKING:
     import chromadb
+
+log = logging.getLogger(__name__)
 
 
 class ChromaServiceError(RuntimeError):
@@ -40,7 +43,10 @@ class ChromaService:
     def _ensure_client(self) -> chromadb.ClientAPI:
         if self._client is not None:
             return self._client
+        return self._create_client()
 
+    def _create_client(self) -> "chromadb.ClientAPI":
+        """Create a fresh PersistentClient (and embedding function)."""
         try:
             import chromadb as _chromadb
             from chromadb.utils.embedding_functions import (
@@ -55,10 +61,15 @@ class ChromaService:
 
         db_path = str(PROJECT_ROOT / settings.chroma_db_path)
         self._client = _chromadb.PersistentClient(path=db_path)
-        self._embedding_fn = SentenceTransformerEmbeddingFunction(
-            model_name=settings.embedding_model,
-        )
+        if self._embedding_fn is None:
+            self._embedding_fn = SentenceTransformerEmbeddingFunction(
+                model_name=settings.embedding_model,
+            )
         return self._client
+
+    def _reset_client(self) -> None:
+        """Discard the cached client so the next call creates a fresh one."""
+        self._client = None
 
     @staticmethod
     def collection_name(ticker: str) -> str:
@@ -84,7 +95,39 @@ class ChromaService:
 
         Returns a ``RetrievalResult`` (same dataclass used by
         ``PageIndexService``) so consumers are mode-agnostic.
+
+        On HNSW / internal errors the client is reset and the query
+        is retried once with a fresh ``PersistentClient``.
         """
+        from app.services.pageindex_service import RetrievalResult
+
+        for attempt in range(2):
+            try:
+                return self._do_retrieve(ticker, query, top_k)
+            except ChromaServiceError:
+                raise
+            except Exception as exc:
+                if attempt == 0:
+                    log.warning(
+                        "ChromaDB query failed (%s), resetting client and retrying…",
+                        exc,
+                    )
+                    self._reset_client()
+                    self._create_client()
+                else:
+                    raise ChromaServiceError(
+                        f"ChromaDB query failed after retry for {ticker}: {exc}"
+                    ) from exc
+
+        # Unreachable, but keeps mypy happy
+        raise ChromaServiceError("Unexpected retrieval failure")  # pragma: no cover
+
+    def _do_retrieve(
+        self,
+        ticker: str,
+        query: str,
+        top_k: int,
+    ) -> "RetrievalResult":
         from app.services.pageindex_service import RetrievalResult
 
         client = self._ensure_client()
