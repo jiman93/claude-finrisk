@@ -84,7 +84,13 @@ def get_all_assignments(db: Session = Depends(get_db)):
 def get_assignment(participant_id: str, db: Session = Depends(get_db)):
     assignment = db.get(StudyAssignment, participant_id)
     if not assignment:
-        raise HTTPException(status_code=404, detail="Assignment not found")
+        # Auto-generate defaults if the table is empty, then retry
+        existing_count = db.query(StudyAssignment).count()
+        if existing_count == 0:
+            _upsert_defaults(db)
+            assignment = db.get(StudyAssignment, participant_id)
+        if not assignment:
+            raise HTTPException(status_code=404, detail="Assignment not found")
     return _to_response(assignment)
 
 
