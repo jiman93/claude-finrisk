@@ -471,6 +471,58 @@ input {
   white-space: pre-wrap;
 }
 
+/* ── Formatted Markdown (summaries) ── */
+
+.pi-formatted-markdown {
+  line-height: 1.7;
+  color: var(--text-primary);
+  font-size: 15px;
+}
+
+.pi-formatted-markdown h1,
+.pi-formatted-markdown h2,
+.pi-formatted-markdown h3,
+.pi-formatted-markdown h4 {
+  margin: 16px 0 6px;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.pi-formatted-markdown h3 {
+  font-size: 15px;
+}
+
+.pi-formatted-markdown h4 {
+  font-size: 14px;
+}
+
+.pi-formatted-markdown p {
+  margin: 6px 0;
+}
+
+.pi-formatted-markdown strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.pi-formatted-markdown ol,
+.pi-formatted-markdown ul {
+  margin: 6px 0;
+  padding-left: 22px;
+}
+
+.pi-formatted-markdown li {
+  margin: 3px 0;
+}
+
+.pi-formatted-markdown li > p {
+  margin: 0;
+}
+
+.pi-formatted-markdown > :first-child {
+  margin-top: 0;
+}
+
 .pi-citation-row {
   margin-top: 10px;
   display: flex;
