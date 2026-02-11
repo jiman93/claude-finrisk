@@ -10,6 +10,7 @@ import type {
   PhaseAssignment,
 } from "../../types";
 import DynamicControlRenderer from "../controls/DynamicControlRenderer";
+import FormattedMarkdown from "../FormattedMarkdown";
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
 const CHUNK_TRUNCATE_LEN = 200;
@@ -360,7 +361,7 @@ export default function StudyChatGate({ onPromptLogged }: StudyChatGateProps) {
                   return (
                     <div key={msg.id} className="pi-answer-card">
                       <div className="pi-answer-label">Generated Summary</div>
-                      <div className="pi-answer-text">{msg.summary}</div>
+                      <FormattedMarkdown text={msg.summary} />
                     </div>
                   );
                 }
@@ -567,41 +568,86 @@ function EditableSummaryCard({
   onSubmit: (taskId: string, editedText: string) => Promise<void>;
   disabled: boolean;
 }) {
+  const [phase, setPhase] = useState<"reviewing" | "editing" | "submitted">("reviewing");
   const [text, setText] = useState(summary);
-  const [submitted, setSubmitted] = useState(false);
 
-  async function handleSubmit() {
-    setSubmitted(true);
+  async function handleAccept() {
+    setPhase("submitted");
+    await onSubmit(taskId, summary);
+  }
+
+  async function handleSubmitEdit() {
+    setPhase("submitted");
     await onSubmit(taskId, text);
   }
 
-  if (submitted) {
+  // Submitted — read-only formatted result
+  if (phase === "submitted") {
     return (
       <div className="pi-answer-card">
-        <div className="pi-answer-label">Edited Summary (submitted)</div>
-        <div className="pi-answer-text">{text}</div>
+        <div className="pi-answer-label">
+          {text === summary ? "Generated Summary (accepted)" : "Edited Summary (submitted)"}
+        </div>
+        <FormattedMarkdown text={text} />
       </div>
     );
   }
 
+  // Editing — raw textarea
+  if (phase === "editing") {
+    return (
+      <div className="pi-inline-control-card">
+        <div className="pi-postgen-title">Edit the generated summary</div>
+        <textarea
+          className="pi-edit-textarea"
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          rows={12}
+          disabled={disabled}
+        />
+        <div className="pi-postgen-actions">
+          <button
+            type="button"
+            className="pi-secondary-btn"
+            onClick={() => setPhase("reviewing")}
+            disabled={disabled}
+          >
+            Back to Review
+          </button>
+          <button
+            type="button"
+            className="pi-primary-btn"
+            onClick={() => void handleSubmitEdit()}
+            disabled={disabled}
+          >
+            Submit Edited Summary
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Reviewing — formatted summary with accept/edit buttons
   return (
     <div className="pi-inline-control-card">
-      <div className="pi-postgen-title">Edit the generated summary</div>
-      <textarea
-        className="pi-edit-textarea"
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        rows={10}
-        disabled={disabled}
-      />
+      <div className="pi-answer-label">Generated Summary</div>
+      <FormattedMarkdown text={summary} />
       <div className="pi-postgen-actions">
         <button
           type="button"
           className="pi-primary-btn"
-          onClick={() => void handleSubmit()}
+          onClick={() => void handleAccept()}
           disabled={disabled}
         >
-          Submit Edited Summary
+          Looks Good
+        </button>
+        <button
+          type="button"
+          className="pi-secondary-btn"
+          onClick={() => setPhase("editing")}
+          disabled={disabled}
+        >
+          Edit Summary
         </button>
       </div>
     </div>
