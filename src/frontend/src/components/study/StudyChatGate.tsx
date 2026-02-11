@@ -12,6 +12,7 @@ import type {
 import DynamicControlRenderer from "../controls/DynamicControlRenderer";
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
+const CHUNK_TRUNCATE_LEN = 200;
 
 interface StudyChatGateProps {
   onPromptLogged: (prompt: string) => void;
@@ -287,7 +288,11 @@ export default function StudyChatGate({ onPromptLogged }: StudyChatGateProps) {
                   return (
                     <div key={msg.id} className="pi-step-card running">
                       <div className="pi-step-left">
-                        <span className="pi-step-icon">&#8635;</span>
+                        <span className="pi-pulse-loader">
+                          <span className="dot" />
+                          <span className="dot" />
+                          <span className="dot" />
+                        </span>
                         <span>{msg.content}</span>
                       </div>
                     </div>
@@ -432,6 +437,30 @@ function currentPhaseHasSummary(msgs: ChatMessage[]): boolean {
 
 // ── Inline sub-components ──
 
+function TruncatedContent({ text }: { text: string }) {
+  const [expanded, setExpanded] = useState(false);
+  const needsTruncation = text.length > CHUNK_TRUNCATE_LEN;
+
+  return (
+    <div className="pi-selector-content">
+      {needsTruncation && !expanded ? text.slice(0, CHUNK_TRUNCATE_LEN) + "…" : text}
+      {needsTruncation && (
+        <button
+          type="button"
+          className="pi-show-more-btn"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setExpanded((v) => !v);
+          }}
+        >
+          {expanded ? "Show less" : "Show more"}
+        </button>
+      )}
+    </div>
+  );
+}
+
 function SelectorCard({
   taskId,
   nodes,
@@ -492,7 +521,7 @@ function SelectorCard({
             />
             <div>
               <div className="pi-selector-title">{node.title}</div>
-              <div className="pi-selector-content">{node.relevant_content}</div>
+              <TruncatedContent text={node.relevant_content} />
               <span className="pi-citation-chip">[{node.title}, Page {node.page_index}]</span>
             </div>
           </label>
