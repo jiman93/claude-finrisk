@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import type { ChatMessage } from "../types";
+import DynamicControlRenderer from "./controls/DynamicControlRenderer";
 import EditableSummaryMessage from "./messages/EditableSummaryMessage";
 import LoadingMessage from "./messages/LoadingMessage";
 import RetrievedNodesMessage from "./messages/RetrievedNodesMessage";
@@ -16,6 +17,9 @@ interface MessageRendererProps {
     order: string[]
   ) => void;
   onSubmitEditedSummary: (taskId: string, editedText: string) => void;
+  onCheckpointSubmit?: (instanceId: string, data: Record<string, unknown>) => void;
+  onCheckpointSkip?: (instanceId: string) => void;
+  onCheckpointRetry?: (instanceId: string) => void;
 }
 
 function TextBubble({
@@ -36,6 +40,9 @@ export default function MessageRenderer({
   message,
   onSubmitNodeSelection,
   onSubmitEditedSummary,
+  onCheckpointSubmit,
+  onCheckpointSkip,
+  onCheckpointRetry,
 }: MessageRendererProps) {
   if (message.type === "text") {
     return <TextBubble role={message.role} content={message.content} />;
@@ -76,9 +83,25 @@ export default function MessageRenderer({
       </AssistantBlock>
     );
   }
-  return (
-    <AssistantBlock>
-      <SummaryMessage summary={message.summary} />
-    </AssistantBlock>
-  );
+  if (message.type === "checkpoint") {
+    return (
+      <AssistantBlock>
+        <DynamicControlRenderer
+          instance={message.instance}
+          onSubmit={onCheckpointSubmit ?? (() => {})}
+          onSkip={onCheckpointSkip ?? (() => {})}
+          onRetry={onCheckpointRetry ?? (() => {})}
+        />
+      </AssistantBlock>
+    );
+  }
+  if (message.type === "summary") {
+    return (
+      <AssistantBlock>
+        <SummaryMessage summary={message.summary} />
+      </AssistantBlock>
+    );
+  }
+  // Exhaustive check - should never reach here
+  return null;
 }
