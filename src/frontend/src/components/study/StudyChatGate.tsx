@@ -79,6 +79,9 @@ export default function StudyChatGate({ onPromptLogged }: StudyChatGateProps) {
   const [started, setStarted] = useState(false);
   const sessionStartedRef = useRef(false);
 
+  // Right pane: view a summary
+  const [paneSummary, setPaneSummary] = useState<{ label: string; text: string } | null>(null);
+
   // Fetch the participant's assignment from the study control panel API
   async function handleLoadParticipant(e: FormEvent) {
     e.preventDefault();
@@ -241,7 +244,7 @@ export default function StudyChatGate({ onPromptLogged }: StudyChatGateProps) {
   // ── Screen 3: Active study session (chat stream) ──
   return (
     <section className="pi-chat-shell">
-      <div className="pi-workspace pane-collapsed">
+      <div className={`pi-workspace${paneSummary ? "" : " pane-collapsed"}`}>
         <div className="pi-left-pane scg-active-layout">
           {/* Session info bar */}
           <div className="scg-session-bar">
@@ -352,6 +355,7 @@ export default function StudyChatGate({ onPromptLogged }: StudyChatGateProps) {
                       taskId={msg.taskId}
                       summary={msg.summary}
                       onSubmit={submitEditedSummary}
+                      onViewSummary={(label, text) => setPaneSummary({ label, text })}
                       disabled={isLoading}
                     />
                   );
@@ -359,9 +363,18 @@ export default function StudyChatGate({ onPromptLogged }: StudyChatGateProps) {
 
                 if (msg.type === "summary") {
                   return (
-                    <div key={msg.id} className="pi-answer-card">
-                      <div className="pi-answer-label">Generated Summary</div>
-                      <FormattedMarkdown text={msg.summary} />
+                    <div key={msg.id} className="pi-step-card completed">
+                      <div className="pi-step-left">
+                        <span className="pi-step-icon">&#10003;</span>
+                        <span>Summary generated</span>
+                      </div>
+                      <button
+                        type="button"
+                        className="pi-show-more-btn"
+                        onClick={() => setPaneSummary({ label: "Generated Summary", text: msg.summary })}
+                      >
+                        View summary
+                      </button>
                     </div>
                   );
                 }
@@ -424,6 +437,25 @@ export default function StudyChatGate({ onPromptLogged }: StudyChatGateProps) {
 
           {studyError && <div className="scg-error" style={{ margin: "0 16px 8px" }}>{studyError}</div>}
         </div>
+
+        {/* Right pane: summary viewer */}
+        {paneSummary && (
+          <div className="pi-right-pane">
+            <div className="pi-right-header">
+              <span className="pi-right-file">{paneSummary.label}</span>
+              <button
+                type="button"
+                className="pi-close-pane-btn"
+                onClick={() => setPaneSummary(null)}
+              >
+                Close
+              </button>
+            </div>
+            <div className="pi-right-body">
+              <FormattedMarkdown text={paneSummary.text} />
+            </div>
+          </div>
+        )}
       </div>
     </section>
   );
@@ -561,11 +593,13 @@ function EditableSummaryCard({
   taskId,
   summary,
   onSubmit,
+  onViewSummary,
   disabled,
 }: {
   taskId: string;
   summary: string;
   onSubmit: (taskId: string, editedText: string) => Promise<void>;
+  onViewSummary: (label: string, text: string) => void;
   disabled: boolean;
 }) {
   const [phase, setPhase] = useState<"reviewing" | "editing" | "submitted">("reviewing");
@@ -581,14 +615,24 @@ function EditableSummaryCard({
     await onSubmit(taskId, text);
   }
 
-  // Submitted — read-only formatted result
+  // Submitted — compact one-liner with "view" link
   if (phase === "submitted") {
+    const wasEdited = text !== summary;
     return (
-      <div className="pi-answer-card">
-        <div className="pi-answer-label">
-          {text === summary ? "Generated Summary (accepted)" : "Edited Summary (submitted)"}
+      <div className="pi-step-card completed">
+        <div className="pi-step-left">
+          <span className="pi-step-icon">&#10003;</span>
+          <span>{wasEdited ? "User edited the generated summary" : "Summary accepted"}</span>
         </div>
-        <FormattedMarkdown text={text} />
+        <button
+          type="button"
+          className="pi-show-more-btn"
+          onClick={() =>
+            onViewSummary(wasEdited ? "Edited Summary" : "Generated Summary", text)
+          }
+        >
+          View summary
+        </button>
       </div>
     );
   }
