@@ -3,6 +3,7 @@ import { FormEvent, useEffect, useRef, useState } from "react";
 import { SEED_DEFINITIONS } from "../../data/checkpointDefinitions";
 import { useStudyStore } from "../../stores/studyStore";
 import type {
+  ChatMessage,
   CheckpointInstance,
   CheckpointState,
   ParticipantAssignment,
@@ -357,7 +358,7 @@ export default function StudyChatGate({ onPromptLogged }: StudyChatGateProps) {
               {currentPhase &&
                 !isLoading &&
                 session &&
-                messages.some((m) => m.type === "summary") &&
+                currentPhaseHasSummary(messages) &&
                 currentPhase.checkpoints
                   .filter((cp) => cp.pipeline_position === "post_generation")
                   .map((cp) => {
@@ -375,7 +376,7 @@ export default function StudyChatGate({ onPromptLogged }: StudyChatGateProps) {
               {/* Phase advance button */}
               {session &&
                 !isLoading &&
-                messages.some((m) => m.type === "summary") &&
+                currentPhaseHasSummary(messages) &&
                 session.current_phase < 3 && (
                   <div className="scg-advance-section">
                     <button
@@ -389,7 +390,7 @@ export default function StudyChatGate({ onPromptLogged }: StudyChatGateProps) {
                   </div>
                 )}
 
-              {session && session.current_phase >= 3 && messages.some((m) => m.type === "summary") && (
+              {session && session.current_phase >= 3 && currentPhaseHasSummary(messages) && (
                 <div className="pi-run-meta pi-status-row">
                   <span>Study session complete. All 3 phases finished.</span>
                 </div>
@@ -402,6 +403,31 @@ export default function StudyChatGate({ onPromptLogged }: StudyChatGateProps) {
       </div>
     </section>
   );
+}
+
+/**
+ * Check whether the *current* phase has a completed summary.
+ *
+ * When `advancePhase()` is called the store appends to the messages array —
+ * previous-phase summaries still exist.  We need to look only at messages
+ * that came *after* the last phase-transition system message ("Transitioned
+ * to Phase …" or the initial "Phase N | Mode …").  If there's a "summary"
+ * message in that slice, the current phase generation is done.
+ */
+function currentPhaseHasSummary(msgs: ChatMessage[]): boolean {
+  let phaseStartIdx = 0;
+  for (let i = msgs.length - 1; i >= 0; i--) {
+    const m = msgs[i];
+    if (
+      m.type === "text" &&
+      m.role === "system" &&
+      (/^Transitioned to Phase/.test(m.content) || /^Phase \d/.test(m.content))
+    ) {
+      phaseStartIdx = i;
+      break;
+    }
+  }
+  return msgs.slice(phaseStartIdx).some((m) => m.type === "summary");
 }
 
 // ── Inline sub-components ──
