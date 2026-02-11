@@ -3,29 +3,34 @@ import { useState } from "react";
 import CheckpointDashboard from "./components/admin/CheckpointDashboard";
 import StudyChatGate from "./components/study/StudyChatGate";
 import StudyControlPanel from "./components/study/StudyControlPanel";
+import { useStudyStore } from "./stores/studyStore";
 
 type AppPage = "chat" | "dashboard" | "study";
 
 export default function App() {
   const [page, setPage] = useState<AppPage>("chat");
-  const [chatKey, setChatKey] = useState(0);
-  const [chatHistory, setChatHistory] = useState<string[]>([
-    "Financial risk related to supply...",
-    "How does the Fed assess...",
-  ]);
-  const [activeChat, setActiveChat] = useState<string>("Financial risk related to supply...");
 
-  function handlePromptLogged(prompt: string) {
-    const trimmed = prompt.trim();
-    if (!trimmed) {
-      return;
-    }
-    const title = trimmed.length > 32 ? `${trimmed.slice(0, 32)}...` : trimmed;
-    setChatHistory((prev) => {
-      const next = [title, ...prev.filter((item) => item !== title)];
-      return next.slice(0, 10);
-    });
-    setActiveChat(title);
+  const activeChatId = useStudyStore((s) => s.activeChatId);
+  const chatOrder = useStudyStore((s) => s.chatOrder);
+  const chatSnapshots = useStudyStore((s) => s.chatSnapshots);
+  const loadChat = useStudyStore((s) => s.loadChat);
+  const clearForNewChat = useStudyStore((s) => s.clearForNewChat);
+  const saveChat = useStudyStore((s) => s.saveChat);
+
+  // Derive title for the topbar
+  const activeTitle = activeChatId
+    ? chatSnapshots[activeChatId]?.title ?? "Study Session"
+    : "New Chat";
+
+  function handleNewChat() {
+    // Save current session before clearing (if it has content)
+    clearForNewChat();
+    setPage("chat");
+  }
+
+  function handleSelectChat(chatId: string) {
+    loadChat(chatId);
+    setPage("chat");
   }
 
   return (
@@ -34,12 +39,8 @@ export default function App() {
         <div className="pi-logo">Y</div>
         <nav className="pi-nav">
           <button
-            className={`pi-nav-item ${page === "chat" ? "active" : ""}`}
-            onClick={() => {
-              setPage("chat");
-              setChatKey((prev) => prev + 1);
-              setActiveChat("New Chat");
-            }}
+            className={`pi-nav-item ${page === "chat" && !activeChatId ? "active" : ""}`}
+            onClick={handleNewChat}
           >
             New Chat
           </button>
@@ -61,18 +62,19 @@ export default function App() {
 
         <div className="pi-sidebar-section">
           <div className="pi-sidebar-label">Chats</div>
-          {chatHistory.map((item) => (
-            <button
-              key={item}
-              className={`pi-chat-item ${activeChat === item && page === "chat" ? "active" : ""}`}
-              onClick={() => {
-                setActiveChat(item);
-                setPage("chat");
-              }}
-            >
-              {item}
-            </button>
-          ))}
+          {chatOrder.map((chatId) => {
+            const snap = chatSnapshots[chatId];
+            if (!snap) return null;
+            return (
+              <button
+                key={chatId}
+                className={`pi-chat-item ${activeChatId === chatId && page === "chat" ? "active" : ""}`}
+                onClick={() => handleSelectChat(chatId)}
+              >
+                {snap.title}
+              </button>
+            );
+          })}
         </div>
 
         <div className="pi-sidebar-footer">
@@ -91,7 +93,7 @@ export default function App() {
                 ? "HITL Checkpoint Manager"
                 : page === "study"
                   ? "Study Control Panel"
-                  : activeChat}
+                  : activeTitle}
             </span>
           </div>
           <div className="pi-topbar-right">
@@ -134,8 +136,7 @@ export default function App() {
         <div className="pi-canvas">
           {page === "chat" && (
             <StudyChatGate
-              key={chatKey}
-              onPromptLogged={handlePromptLogged}
+              onSaveChat={saveChat}
             />
           )}
           {page === "dashboard" && (
