@@ -363,18 +363,9 @@ export default function StudyChatGate({ onPromptLogged }: StudyChatGateProps) {
 
                 if (msg.type === "summary") {
                   return (
-                    <div key={msg.id} className="pi-step-card completed">
-                      <div className="pi-step-left">
-                        <span className="pi-step-icon">&#10003;</span>
-                        <span>Summary generated</span>
-                      </div>
-                      <button
-                        type="button"
-                        className="pi-show-more-btn"
-                        onClick={() => setPaneSummary({ label: "Generated Summary", text: msg.summary })}
-                      >
-                        View summary
-                      </button>
+                    <div key={msg.id} className="pi-answer-card">
+                      <div className="pi-answer-label">Generated Summary</div>
+                      <FormattedMarkdown text={msg.summary} />
                     </div>
                   );
                 }
