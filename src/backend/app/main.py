@@ -6,7 +6,6 @@ import app.models  # noqa: F401
 from app.db.database import Base, engine
 from app.routers.sessions import router as sessions_router
 from app.routers.study_assignments import router as study_assignments_router
-from app.routers.synthetic import router as synthetic_router
 from app.routers.tasks import router as tasks_router
 
 app = FastAPI(
@@ -40,7 +39,6 @@ def health():
 
 app.include_router(sessions_router)
 app.include_router(tasks_router)
-app.include_router(synthetic_router)
 app.include_router(study_assignments_router)
 
 

@@ -20,14 +20,9 @@ class Settings(BaseSettings):
     openai_api_key: str = ""
     openai_base_url: str = "https://api.openai.com/v1"
     openai_model: str = "gpt-4o-mini"
-    enable_mock_fallback: bool = True
-    mock_retrieval_scenario: str = "happy_path"
-    mock_seed_salt: str = "finrisk"
-    synthetic_enabled: bool = True
-    synthetic_retrieval_latency_min_ms: int = 450
-    synthetic_retrieval_latency_max_ms: int = 1300
-    synthetic_generation_latency_min_ms: int = 650
-    synthetic_generation_latency_max_ms: int = 1700
+    retrieval_mode: str = "local"  # "local" (ChromaDB) or "pageindex"
+    chroma_db_path: str = "./data/chroma_db"
+    embedding_model: str = "all-MiniLM-L6-v2"
 
     model_config = SettingsConfigDict(
         env_file=(str(ROOT_ENV_FILE), ".env"),
