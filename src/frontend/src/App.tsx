@@ -1,8 +1,13 @@
 import { useState } from "react";
 
-import ChatInterface from "./components/ChatInterface";
+import CheckpointDashboard from "./components/admin/CheckpointDashboard";
+import StudyChatGate from "./components/study/StudyChatGate";
+import StudyControlPanel from "./components/study/StudyControlPanel";
+
+type AppPage = "chat" | "dashboard" | "study";
 
 export default function App() {
+  const [page, setPage] = useState<AppPage>("chat");
   const [chatKey, setChatKey] = useState(0);
   const [chatHistory, setChatHistory] = useState<string[]>([
     "Financial risk related to supply...",
@@ -29,8 +34,9 @@ export default function App() {
         <div className="pi-logo">Y</div>
         <nav className="pi-nav">
           <button
-            className="pi-nav-item active"
+            className={`pi-nav-item ${page === "chat" ? "active" : ""}`}
             onClick={() => {
+              setPage("chat");
               setChatKey((prev) => prev + 1);
               setActiveChat("New Chat");
             }}
@@ -39,6 +45,18 @@ export default function App() {
           </button>
           <button className="pi-nav-item">Documents</button>
           <button className="pi-nav-item">Library</button>
+          <button
+            className={`pi-nav-item ${page === "dashboard" ? "active" : ""}`}
+            onClick={() => setPage("dashboard")}
+          >
+            Checkpoints
+          </button>
+          <button
+            className={`pi-nav-item ${page === "study" ? "active" : ""}`}
+            onClick={() => setPage("study")}
+          >
+            Study Setup
+          </button>
         </nav>
 
         <div className="pi-sidebar-section">
@@ -46,8 +64,11 @@ export default function App() {
           {chatHistory.map((item) => (
             <button
               key={item}
-              className={`pi-chat-item ${activeChat === item ? "active" : ""}`}
-              onClick={() => setActiveChat(item)}
+              className={`pi-chat-item ${activeChat === item && page === "chat" ? "active" : ""}`}
+              onClick={() => {
+                setActiveChat(item);
+                setPage("chat");
+              }}
             >
               {item}
             </button>
@@ -55,30 +76,74 @@ export default function App() {
         </div>
 
         <div className="pi-sidebar-footer">
-          <button className="pi-icon-btn" title="Settings">⚙</button>
-          <button className="pi-icon-btn" title="Inbox">✉</button>
-          <button className="pi-icon-btn" title="Help">⌘</button>
+          <button className="pi-icon-btn" title="Settings">&#9881;</button>
+          <button className="pi-icon-btn" title="Inbox">&#9993;</button>
+          <button className="pi-icon-btn" title="Help">&#8984;</button>
         </div>
       </aside>
 
       <section className="pi-main">
         <header className="pi-topbar">
           <div className="pi-topbar-left">
-            <button className="pi-collapse-btn">▮</button>
-            <span className="pi-chat-title">{activeChat}</span>
+            <button className="pi-collapse-btn">&#9646;</button>
+            <span className="pi-chat-title">
+              {page === "dashboard"
+                ? "HITL Checkpoint Manager"
+                : page === "study"
+                  ? "Study Control Panel"
+                  : activeChat}
+            </span>
           </div>
           <div className="pi-topbar-right">
-            <button className="pi-pill-btn">Contact Us</button>
-            <button className="pi-pill-btn accent">Upgrade</button>
+            {page === "chat" && (
+              <>
+                <button
+                  className="pi-pill-btn accent"
+                  onClick={() => setPage("dashboard")}
+                >
+                  Checkpoint Dashboard
+                </button>
+                <button
+                  className="pi-pill-btn"
+                  onClick={() => setPage("study")}
+                >
+                  Study Setup
+                </button>
+              </>
+            )}
+            {page === "dashboard" && (
+              <button
+                className="pi-pill-btn"
+                onClick={() => setPage("chat")}
+              >
+                Back to Chat
+              </button>
+            )}
+            {page === "study" && (
+              <button
+                className="pi-pill-btn"
+                onClick={() => setPage("chat")}
+              >
+                Back to Chat
+              </button>
+            )}
             <div className="pi-user-chip">Zul Hafiz</div>
           </div>
         </header>
 
         <div className="pi-canvas">
-          <ChatInterface
-            key={chatKey}
-            onPromptLogged={handlePromptLogged}
-          />
+          {page === "chat" && (
+            <StudyChatGate
+              key={chatKey}
+              onPromptLogged={handlePromptLogged}
+            />
+          )}
+          {page === "dashboard" && (
+            <CheckpointDashboard onBack={() => setPage("chat")} />
+          )}
+          {page === "study" && (
+            <StudyControlPanel onBack={() => setPage("chat")} />
+          )}
         </div>
       </section>
     </main>

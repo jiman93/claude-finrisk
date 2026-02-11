@@ -94,6 +94,121 @@ export interface EditSummaryResponse {
   edit_completed_at: string;
 }
 
+// ---------------------------------------------------------------------------
+// Checkpoint / HITL Control Architecture types
+// ---------------------------------------------------------------------------
+
+export type CheckpointFieldType =
+  | "text"
+  | "textarea"
+  | "select"
+  | "multi_select"
+  | "checkbox"
+  | "radio"
+  | "number"
+  | "range"
+  | "chips";
+
+export interface CheckpointFieldDef {
+  key: string;
+  type: CheckpointFieldType;
+  label: string;
+  required: boolean;
+  placeholder?: string;
+  options?: Array<{ value: string; label: string }>;
+  min?: number;
+  max?: number;
+  default?: unknown;
+}
+
+export type CheckpointState =
+  | "pending"
+  | "offered"
+  | "active"
+  | "submitted"
+  | "collapsed"
+  | "skipped"
+  | "failed"
+  | "timed_out";
+
+export type PipelinePosition =
+  | "after_retrieval"
+  | "after_generation"
+  | "post_generation";
+
+export interface CheckpointDefinition {
+  id: string;
+  control_type: string;
+  label: string;
+  description: string;
+  field_schema: CheckpointFieldDef[];
+  pipeline_position: PipelinePosition;
+  sort_order: number;
+  applicable_modes: string[];
+  required: boolean;
+  timeout_seconds: number | null;
+  max_retries: number;
+  circuit_breaker_threshold: number;
+  circuit_breaker_window_minutes: number;
+  enabled: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CheckpointInstance {
+  id: string;
+  task_id: string;
+  definition_id: string;
+  control_type: string;
+  label: string;
+  state: CheckpointState;
+  field_schema: CheckpointFieldDef[];
+  payload: Record<string, unknown> | null;
+  submit_result: Record<string, unknown> | null;
+  required: boolean;
+  timeout_seconds: number | null;
+  attempt_count: number;
+  max_retries: number;
+  last_error: string | null;
+  offered_at: string | null;
+  submitted_at: string | null;
+}
+
+// ---------------------------------------------------------------------------
+// Study Control Panel types
+// ---------------------------------------------------------------------------
+
+export type AssignmentStatus = "not_started" | "in_progress" | "completed";
+
+export interface PhaseCheckpointRef {
+  definition_id: string;
+  control_type: string;
+  label: string;
+  pipeline_position: PipelinePosition;
+  sort_order: number;
+}
+
+export interface PhaseAssignment {
+  phase: number;
+  mode: Mode;
+  ticker: string;
+  query: string;
+  checkpoints: PhaseCheckpointRef[];
+}
+
+export interface ParticipantAssignment {
+  participant_id: string;
+  group: "A" | "B";
+  phases: [PhaseAssignment, PhaseAssignment, PhaseAssignment];
+  status: AssignmentStatus;
+  override: boolean;
+  updated_at: string;
+}
+
+// ---------------------------------------------------------------------------
+// Chat message types
+// ---------------------------------------------------------------------------
+
 export type ChatMessage =
   | {
       id: string;
@@ -128,4 +243,9 @@ export type ChatMessage =
       type: "editable_summary";
       taskId: string;
       summary: string;
+    }
+  | {
+      id: string;
+      type: "checkpoint";
+      instance: CheckpointInstance;
     };
