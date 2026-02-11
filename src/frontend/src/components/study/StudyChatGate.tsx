@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 
 import { SEED_DEFINITIONS } from "../../data/checkpointDefinitions";
 import { useStudyStore } from "../../stores/studyStore";
@@ -74,6 +74,7 @@ export default function StudyChatGate({ onPromptLogged }: StudyChatGateProps) {
   } = useStudyStore();
 
   const [started, setStarted] = useState(false);
+  const sessionStartedRef = useRef(false);
 
   // Fetch the participant's assignment from the study control panel API
   async function handleLoadParticipant(e: FormEvent) {
@@ -115,15 +116,17 @@ export default function StudyChatGate({ onPromptLogged }: StudyChatGateProps) {
     setStarted(true);
   }
 
-  // Trigger the actual session start when participantId is set and started flag is true
+  // Trigger the actual session start once when started flag flips to true
   useEffect(() => {
-    if (started && !session) {
+    if (started && !sessionStartedRef.current) {
+      sessionStartedRef.current = true;
       startAndRunCurrentPhase();
       if (assignment) {
         onPromptLogged(`${assignment.participant_id} - Study Session`);
       }
     }
-  }, [started, session, startAndRunCurrentPhase, assignment, onPromptLogged]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [started]);
 
   // Build checkpoint instances for the current phase from the assignment
   const currentPhase = assignment?.phases.find(
@@ -198,6 +201,7 @@ export default function StudyChatGate({ onPromptLogged }: StudyChatGateProps) {
                     onClick={() => {
                       setAssignment(null);
                       setStarted(false);
+                      sessionStartedRef.current = false;
                     }}
                   >
                     Change Participant
