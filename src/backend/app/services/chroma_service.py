@@ -13,7 +13,7 @@ from __future__ import annotations
 import uuid
 from typing import TYPE_CHECKING
 
-from app.config import settings
+from app.config import PROJECT_ROOT, settings
 from app.schemas.task import RetrievalNode
 
 if TYPE_CHECKING:
@@ -53,7 +53,7 @@ class ChromaService:
                 "  pip install chromadb sentence-transformers"
             ) from exc
 
-        db_path = settings.chroma_db_path
+        db_path = str(PROJECT_ROOT / settings.chroma_db_path)
         self._client = _chromadb.PersistentClient(path=db_path)
         self._embedding_fn = SentenceTransformerEmbeddingFunction(
             model_name=settings.embedding_model,
