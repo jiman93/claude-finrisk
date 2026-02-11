@@ -176,12 +176,10 @@ export const useStudyStore = create<StudyState>((set, get) => ({
         messages: [
           ...state.messages,
           {
-            id: makeId("msg"),
-            type: "text",
-            role: "assistant",
-            content: `Edited summary saved (${result.characters_edited} chars changed, ${result.hallucinations_flagged} flags).`,
+            id: makeId("summary"),
+            type: "summary",
+            summary: result.edited_summary,
           },
-          { id: makeId("summary"), type: "summary", summary: result.edited_summary },
         ],
         isLoading: false,
       }));

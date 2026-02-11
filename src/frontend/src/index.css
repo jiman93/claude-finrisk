@@ -1831,6 +1831,36 @@ input {
   font-size: 12px;
 }
 
+/* ── Clickable checkpoint one-liner ── */
+.scg-cp-clickable {
+  cursor: default;
+}
+.scg-cp-clickable .pi-show-more-btn {
+  flex-shrink: 0;
+}
+
+/* ── Right-pane checkpoint detail ── */
+.scg-cp-detail-list {
+  display: grid;
+  gap: 12px;
+}
+.scg-cp-detail-row {
+  display: grid;
+  gap: 4px;
+}
+.scg-cp-detail-label {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.scg-cp-detail-value {
+  color: var(--text-primary);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
 /* ── Responsive ── */
 @media (max-width: 760px) {
   .scg-phases-row {

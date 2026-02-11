@@ -79,8 +79,26 @@ export default function StudyChatGate({ onPromptLogged }: StudyChatGateProps) {
   const [started, setStarted] = useState(false);
   const sessionStartedRef = useRef(false);
 
-  // Right pane: view a summary
+  // Right pane: view a summary or checkpoint detail
   const [paneSummary, setPaneSummary] = useState<{ label: string; text: string } | null>(null);
+  const [paneCheckpoint, setPaneCheckpoint] = useState<{
+    label: string;
+    fields: Array<{ label: string; value: string }>;
+  } | null>(null);
+
+  // Helpers to manage the right pane — only one view at a time
+  function openSummaryPane(label: string, text: string) {
+    setPaneCheckpoint(null);
+    setPaneSummary({ label, text });
+  }
+  function openCheckpointPane(label: string, fields: Array<{ label: string; value: string }>) {
+    setPaneSummary(null);
+    setPaneCheckpoint({ label, fields });
+  }
+  function closePane() {
+    setPaneSummary(null);
+    setPaneCheckpoint(null);
+  }
 
   // Fetch the participant's assignment from the study control panel API
   async function handleLoadParticipant(e: FormEvent) {
@@ -244,7 +262,7 @@ export default function StudyChatGate({ onPromptLogged }: StudyChatGateProps) {
   // ── Screen 3: Active study session (chat stream) ──
   return (
     <section className="pi-chat-shell">
-      <div className={`pi-workspace${paneSummary ? "" : " pane-collapsed"}`}>
+      <div className={`pi-workspace${paneSummary || paneCheckpoint ? "" : " pane-collapsed"}`}>
         <div className="pi-left-pane scg-active-layout">
           {/* Session info bar */}
           <div className="scg-session-bar">
@@ -355,13 +373,19 @@ export default function StudyChatGate({ onPromptLogged }: StudyChatGateProps) {
                       taskId={msg.taskId}
                       summary={msg.summary}
                       onSubmit={submitEditedSummary}
-                      onViewSummary={(label, text) => setPaneSummary({ label, text })}
+                      onViewSummary={(label, text) => openSummaryPane(label, text)}
                       disabled={isLoading}
                     />
                   );
                 }
 
                 if (msg.type === "summary") {
+                  // In editable modes the EditableSummaryCard already
+                  // displays the content; this message only acts as a
+                  // signal for currentPhaseHasSummary().
+                  const hasEditCard = messages.some((m) => m.type === "editable_summary");
+                  if (hasEditCard) return null;
+
                   return (
                     <div key={msg.id} className="pi-answer-card">
                       <div className="pi-answer-label">Generated Summary</div>
@@ -397,6 +421,7 @@ export default function StudyChatGate({ onPromptLogged }: StudyChatGateProps) {
                         key={cp.definition_id}
                         definitionId={cp.definition_id}
                         label={cp.label}
+                        onViewCheckpoint={openCheckpointPane}
                       />
                     );
                   })}
@@ -429,21 +454,37 @@ export default function StudyChatGate({ onPromptLogged }: StudyChatGateProps) {
           {studyError && <div className="scg-error" style={{ margin: "0 16px 8px" }}>{studyError}</div>}
         </div>
 
-        {/* Right pane: summary viewer */}
+        {/* Right pane: summary or checkpoint viewer */}
         {paneSummary && (
           <div className="pi-right-pane">
             <div className="pi-right-header">
               <span className="pi-right-file">{paneSummary.label}</span>
-              <button
-                type="button"
-                className="pi-close-pane-btn"
-                onClick={() => setPaneSummary(null)}
-              >
+              <button type="button" className="pi-close-pane-btn" onClick={closePane}>
                 Close
               </button>
             </div>
             <div className="pi-right-body">
               <FormattedMarkdown text={paneSummary.text} />
+            </div>
+          </div>
+        )}
+        {paneCheckpoint && (
+          <div className="pi-right-pane">
+            <div className="pi-right-header">
+              <span className="pi-right-file">{paneCheckpoint.label}</span>
+              <button type="button" className="pi-close-pane-btn" onClick={closePane}>
+                Close
+              </button>
+            </div>
+            <div className="pi-right-body">
+              <div className="scg-cp-detail-list">
+                {paneCheckpoint.fields.map((f, i) => (
+                  <div key={i} className="scg-cp-detail-row">
+                    <span className="scg-cp-detail-label">{f.label}</span>
+                    <span className="scg-cp-detail-value">{f.value}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         )}
@@ -606,25 +647,33 @@ function EditableSummaryCard({
     await onSubmit(taskId, text);
   }
 
-  // Submitted — compact one-liner with "view" link
+  // Submitted — show original summary inline; if edited, add a notice with right-pane link
   if (phase === "submitted") {
     const wasEdited = text !== summary;
     return (
-      <div className="pi-step-card completed">
-        <div className="pi-step-left">
-          <span className="pi-step-icon">&#10003;</span>
-          <span>{wasEdited ? "User edited the generated summary" : "Summary accepted"}</span>
+      <>
+        {wasEdited && (
+          <div className="pi-step-card completed">
+            <div className="pi-step-left">
+              <span className="pi-step-icon">&#9998;</span>
+              <span>User edited the generated summary</span>
+            </div>
+            <button
+              type="button"
+              className="pi-show-more-btn"
+              onClick={() => onViewSummary("Edited Summary", text)}
+            >
+              View edited version
+            </button>
+          </div>
+        )}
+        <div className="pi-answer-card">
+          <div className="pi-answer-label">
+            {wasEdited ? "Original Summary" : "Generated Summary (accepted)"}
+          </div>
+          <FormattedMarkdown text={summary} />
         </div>
-        <button
-          type="button"
-          className="pi-show-more-btn"
-          onClick={() =>
-            onViewSummary(wasEdited ? "Edited Summary" : "Generated Summary", text)
-          }
-        >
-          View summary
-        </button>
-      </div>
+      </>
     );
   }
 
@@ -716,9 +765,11 @@ function CheckpointRenderer({ instance }: { instance: CheckpointInstance }) {
 function PostGenerationCheckpoint({
   definitionId,
   label,
+  onViewCheckpoint,
 }: {
   definitionId: string;
   label: string;
+  onViewCheckpoint: (label: string, fields: Array<{ label: string; value: string }>) => void;
 }) {
   const def = SEED_DEFINITIONS.find((d) => d.id === definitionId);
   if (!def || def.field_schema.length === 0) return null;
@@ -742,6 +793,54 @@ function PostGenerationCheckpoint({
     submitted_at: null,
   });
 
+  // Build field label→value pairs for the right-pane detail view
+  function buildFieldSummary(data: Record<string, unknown>) {
+    return def!.field_schema.map((field) => {
+      const val = data[field.key];
+      const display =
+        val === undefined || val === null || val === ""
+          ? "—"
+          : Array.isArray(val)
+            ? val.join(", ")
+            : String(val);
+      return { label: field.label, value: display };
+    });
+  }
+
+  // When submitted or skipped, show a compact one-liner in the stream
+  if (instance.state === "submitted") {
+    const result = (instance.submit_result as Record<string, unknown>) ?? {};
+    return (
+      <div className="pi-step-card completed scg-cp-clickable">
+        <div className="pi-step-left">
+          <span className="pi-step-icon">&#10003;</span>
+          <span>{label}</span>
+          <span className="cp-control-badge submitted">Submitted</span>
+        </div>
+        <button
+          type="button"
+          className="pi-show-more-btn"
+          onClick={() => onViewCheckpoint(label, buildFieldSummary(result))}
+        >
+          View responses
+        </button>
+      </div>
+    );
+  }
+
+  if (instance.state === "skipped") {
+    return (
+      <div className="pi-step-card completed scg-cp-clickable">
+        <div className="pi-step-left">
+          <span className="pi-step-icon">&#8594;</span>
+          <span>{label}</span>
+          <span className="cp-control-badge skipped">Skipped</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Active state: render the full form
   return (
     <DynamicControlRenderer
       instance={instance}
