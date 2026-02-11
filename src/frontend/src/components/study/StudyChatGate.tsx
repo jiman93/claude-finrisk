@@ -241,7 +241,7 @@ export default function StudyChatGate({ onPromptLogged }: StudyChatGateProps) {
   return (
     <section className="pi-chat-shell">
       <div className="pi-workspace pane-collapsed">
-        <div className="pi-left-pane">
+        <div className="pi-left-pane scg-active-layout">
           {/* Session info bar */}
           <div className="scg-session-bar">
             <span className="scg-session-pid">{assignment.participant_id}</span>
@@ -261,6 +261,24 @@ export default function StudyChatGate({ onPromptLogged }: StudyChatGateProps) {
 
           <div className="pi-chat-stream">
             <div className="pi-transcript">
+              {/* Document attachment card */}
+              {session && (
+                <div className="scg-doc-card">
+                  <div className="scg-doc-thumb">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                      <polyline points="14 2 14 8 20 8" />
+                      <line x1="16" y1="13" x2="8" y2="13" />
+                      <line x1="16" y1="17" x2="8" y2="17" />
+                    </svg>
+                  </div>
+                  <div className="scg-doc-info">
+                    <span className="scg-doc-name">{session.current_ticker}_10-K_Annual_Report.html</span>
+                    <span className="scg-doc-meta">10-K Annual Filing</span>
+                  </div>
+                </div>
+              )}
+
               {messages.map((msg) => {
                 if (msg.type === "text") {
                   if (msg.role === "system") {
