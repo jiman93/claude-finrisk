@@ -16,7 +16,7 @@ const BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
 const CHUNK_TRUNCATE_LEN = 200;
 
 interface StudyChatGateProps {
-  onPromptLogged: (prompt: string) => void;
+  onSaveChat: (chatId: string, title: string, assignment: ParticipantAssignment) => void;
 }
 
 const MODE_LABELS: Record<string, string> = {
@@ -57,7 +57,7 @@ function PhaseOverviewCard({ phase, isCurrent }: { phase: PhaseAssignment; isCur
   );
 }
 
-export default function StudyChatGate({ onPromptLogged }: StudyChatGateProps) {
+export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
   const [participantInput, setParticipantInput] = useState("P01");
   const [assignment, setAssignment] = useState<ParticipantAssignment | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
@@ -69,6 +69,8 @@ export default function StudyChatGate({ onPromptLogged }: StudyChatGateProps) {
     messages,
     isLoading,
     error: studyError,
+    activeChatId,
+    chatSnapshots,
     setParticipantId,
     startAndRunCurrentPhase,
     advancePhase,
@@ -78,6 +80,20 @@ export default function StudyChatGate({ onPromptLogged }: StudyChatGateProps) {
 
   const [started, setStarted] = useState(false);
   const sessionStartedRef = useRef(false);
+  const chatIdRef = useRef<string | null>(null);
+
+  // Determine if we're viewing a restored (read-only) past chat
+  // Read-only means: we loaded a snapshot AND haven't started a new active session on top of it
+  const isRestoredView = !!(
+    activeChatId &&
+    chatSnapshots[activeChatId] &&
+    !started &&
+    !sessionStartedRef.current
+  );
+
+  // When viewing a restored snapshot, use its assignment
+  const restoredAssignment = activeChatId ? chatSnapshots[activeChatId]?.assignment ?? null : null;
+  const effectiveAssignment = isRestoredView ? restoredAssignment : assignment;
 
   // Right pane: view a summary or checkpoint detail
   const [paneSummary, setPaneSummary] = useState<{ label: string; text: string } | null>(null);
@@ -144,18 +160,197 @@ export default function StudyChatGate({ onPromptLogged }: StudyChatGateProps) {
   useEffect(() => {
     if (started && !sessionStartedRef.current) {
       sessionStartedRef.current = true;
+      // Generate a chat ID for this session
+      chatIdRef.current = `chat-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
       startAndRunCurrentPhase();
-      if (assignment) {
-        onPromptLogged(`${assignment.participant_id} - Study Session`);
-      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [started]);
 
+  // Auto-save to chat history whenever messages change (for active sessions only)
+  useEffect(() => {
+    if (!started || !sessionStartedRef.current || !assignment || !chatIdRef.current) return;
+    // Don't save if no messages yet (initial state)
+    if (messages.length === 0) return;
+    const title = `${assignment.participant_id} - Study Session`;
+    onSaveChat(chatIdRef.current, title, assignment);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages, session]);
+
   // Build checkpoint instances for the current phase from the assignment
-  const currentPhase = assignment?.phases.find(
+  const currentPhase = effectiveAssignment?.phases.find(
     (p) => p.phase === (session?.current_phase ?? 1)
   );
+
+  // ── Restored view: show the saved chat stream (read-only) ──
+  if (isRestoredView && session && effectiveAssignment) {
+    return (
+      <section className="pi-chat-shell">
+        <div className={`pi-workspace${paneSummary || paneCheckpoint ? "" : " pane-collapsed"}`}>
+          <div className="pi-left-pane scg-active-layout">
+            {/* Session info bar */}
+            <div className="scg-session-bar">
+              <span className="scg-session-pid">{effectiveAssignment.participant_id}</span>
+              <span className={`scp-card-group group-${effectiveAssignment.group.toLowerCase()}`}>
+                {effectiveAssignment.group}
+              </span>
+              <span className="scg-session-phase">Phase {session.current_phase}/3</span>
+              <span className={`scp-mode-badge ${MODE_COLORS[session.current_mode] ?? ""}`}>
+                {MODE_LABELS[session.current_mode] ?? session.current_mode}
+              </span>
+              <span className="scg-session-ticker">{session.current_ticker}</span>
+            </div>
+
+            <div className="pi-chat-stream">
+              <div className="pi-transcript">
+                {/* Document attachment card */}
+                <div className="scg-doc-card">
+                  <div className="scg-doc-thumb">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                      <polyline points="14 2 14 8 20 8" />
+                      <line x1="16" y1="13" x2="8" y2="13" />
+                      <line x1="16" y1="17" x2="8" y2="17" />
+                    </svg>
+                  </div>
+                  <div className="scg-doc-info">
+                    <span className="scg-doc-name">{session.current_ticker}_10-K_Annual_Report.html</span>
+                    <span className="scg-doc-meta">10-K Annual Filing</span>
+                  </div>
+                </div>
+
+                {/* Read-only message stream */}
+                {messages.map((msg) => {
+                  if (msg.type === "text") {
+                    if (msg.role === "system") {
+                      return (
+                        <div key={msg.id} className="pi-assistant-text" style={{ opacity: 0.7, fontSize: 13 }}>
+                          {msg.content}
+                        </div>
+                      );
+                    }
+                    if (msg.role === "user") {
+                      return (
+                        <div key={msg.id} className="pi-user-bubble">
+                          {msg.content}
+                        </div>
+                      );
+                    }
+                    return (
+                      <div key={msg.id} className="pi-assistant-text">
+                        {msg.content}
+                      </div>
+                    );
+                  }
+
+                  if (msg.type === "loading") return null; // Skip loading indicators in read-only
+
+                  if (msg.type === "retrieved_nodes") {
+                    return (
+                      <div key={msg.id} className="pi-step-card completed">
+                        <div className="pi-step-left">
+                          <span className="pi-step-icon">&#10003;</span>
+                          <span>Retrieved {msg.nodes.length} chunks</span>
+                        </div>
+                        <div className="pi-step-right">
+                          {msg.nodes.map((n) => n.title).slice(0, 3).join(", ")}
+                          {msg.nodes.length > 3 ? ` +${msg.nodes.length - 3} more` : ""}
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  // Selector in read-only: always show as submitted
+                  if (msg.type === "selector") {
+                    return (
+                      <div key={msg.id} className="pi-selector-card">
+                        <div className="pi-selector-header">
+                          <span>Chunk selection submitted</span>
+                          <span className="pi-selector-meta">{msg.nodes.length} chunks</span>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  // Editable summary in read-only: show as accepted
+                  if (msg.type === "editable_summary") {
+                    return (
+                      <div key={msg.id} className="pi-answer-card">
+                        <div className="pi-answer-label">Generated Summary</div>
+                        <FormattedMarkdown text={msg.summary} />
+                      </div>
+                    );
+                  }
+
+                  if (msg.type === "summary") {
+                    const hasEditCard = messages.some((m) => m.type === "editable_summary");
+                    if (hasEditCard) return null;
+                    return (
+                      <div key={msg.id} className="pi-answer-card">
+                        <div className="pi-answer-label">Generated Summary</div>
+                        <FormattedMarkdown text={msg.summary} />
+                      </div>
+                    );
+                  }
+
+                  if (msg.type === "checkpoint") {
+                    return (
+                      <CheckpointRenderer
+                        key={msg.id}
+                        instance={msg.instance}
+                      />
+                    );
+                  }
+
+                  return null;
+                })}
+
+                {/* Session status */}
+                <div className="pi-run-meta pi-status-row" style={{ marginTop: 16 }}>
+                  <span style={{ opacity: 0.6 }}>Viewing saved session</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right pane: summary or checkpoint viewer */}
+          {paneSummary && (
+            <div className="pi-right-pane">
+              <div className="pi-right-header">
+                <span className="pi-right-file">{paneSummary.label}</span>
+                <button type="button" className="pi-close-pane-btn" onClick={closePane}>
+                  Close
+                </button>
+              </div>
+              <div className="pi-right-body">
+                <FormattedMarkdown text={paneSummary.text} />
+              </div>
+            </div>
+          )}
+          {paneCheckpoint && (
+            <div className="pi-right-pane">
+              <div className="pi-right-header">
+                <span className="pi-right-file">{paneCheckpoint.label}</span>
+                <button type="button" className="pi-close-pane-btn" onClick={closePane}>
+                  Close
+                </button>
+              </div>
+              <div className="pi-right-body">
+                <div className="scg-cp-detail-list">
+                  {paneCheckpoint.fields.map((f, i) => (
+                    <div key={i} className="scg-cp-detail-row">
+                      <span className="scg-cp-detail-label">{f.label}</span>
+                      <span className="scg-cp-detail-value">{f.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
+    );
+  }
 
   // ── Screen 1: Participant ID prompt ──
   if (!assignment) {

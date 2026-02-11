@@ -8,14 +8,28 @@ import {
   selectNodesTask,
   startSession,
 } from "../api/client";
-import type { ChatMessage, Mode, SessionState } from "../types";
+import type {
+  ChatMessage,
+  ChatSnapshot,
+  Mode,
+  ParticipantAssignment,
+  SessionState,
+} from "../types";
 
 interface StudyState {
+  // Active session state
   participantId: string;
   session: SessionState | null;
   messages: ChatMessage[];
   isLoading: boolean;
   error: string | null;
+
+  // Chat history
+  activeChatId: string | null;
+  chatSnapshots: Record<string, ChatSnapshot>; // chatId → snapshot
+  chatOrder: string[]; // most-recent-first ordering of chatIds
+
+  // Active session actions
   setParticipantId: (participantId: string) => void;
   startAndRunCurrentPhase: () => Promise<void>;
   askQuery: (query: string) => Promise<void>;
@@ -27,6 +41,11 @@ interface StudyState {
     order: string[]
   ) => Promise<void>;
   submitEditedSummary: (taskId: string, editedText: string) => Promise<void>;
+
+  // Chat history actions
+  saveChat: (chatId: string, title: string, assignment: ParticipantAssignment) => void;
+  loadChat: (chatId: string) => void;
+  clearForNewChat: () => void;
 }
 
 function makeId(prefix: string): string {
@@ -39,7 +58,13 @@ export const useStudyStore = create<StudyState>((set, get) => ({
   messages: [],
   isLoading: false,
   error: null,
+
+  activeChatId: null,
+  chatSnapshots: {},
+  chatOrder: [],
+
   setParticipantId: (participantId) => set({ participantId }),
+
   startAndRunCurrentPhase: async () => {
     const { participantId } = get();
     set({ isLoading: true, error: null, messages: [] });
@@ -73,6 +98,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
       set({ error: message, isLoading: false });
     }
   },
+
   askQuery: async (query) => {
     const session = get().session;
     const normalizedQuery = query.trim();
@@ -86,6 +112,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
       mode: session.current_mode,
     });
   },
+
   advancePhase: async () => {
     const { session } = get();
     if (!session) {
@@ -125,6 +152,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
       set({ error: message, isLoading: false });
     }
   },
+
   submitNodeSelection: async (taskId, selectedIds, rejectedIds, order) => {
     const session = get().session;
     if (!session) return;
@@ -168,6 +196,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
       });
     }
   },
+
   submitEditedSummary: async (taskId, editedText) => {
     set({ isLoading: true, error: null });
     try {
@@ -187,6 +216,50 @@ export const useStudyStore = create<StudyState>((set, get) => ({
       const message = error instanceof Error ? error.message : "Unexpected error";
       set({ error: message, isLoading: false });
     }
+  },
+
+  // ── Chat history actions ──
+
+  saveChat: (chatId, title, assignment) => {
+    const { session, messages } = get();
+    const snapshot: ChatSnapshot = {
+      chatId,
+      title,
+      session,
+      messages: [...messages],
+      assignment,
+    };
+    set((state) => {
+      const newOrder = [chatId, ...state.chatOrder.filter((id) => id !== chatId)].slice(0, 20);
+      return {
+        activeChatId: chatId,
+        chatSnapshots: { ...state.chatSnapshots, [chatId]: snapshot },
+        chatOrder: newOrder,
+      };
+    });
+  },
+
+  loadChat: (chatId) => {
+    const snapshot = get().chatSnapshots[chatId];
+    if (!snapshot) return;
+    set({
+      activeChatId: chatId,
+      session: snapshot.session,
+      messages: [...snapshot.messages],
+      isLoading: false,
+      error: null,
+    });
+  },
+
+  clearForNewChat: () => {
+    set({
+      activeChatId: null,
+      session: null,
+      messages: [],
+      isLoading: false,
+      error: null,
+      participantId: "P01",
+    });
   },
 }));
 

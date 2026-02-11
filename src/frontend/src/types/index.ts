@@ -175,6 +175,18 @@ export interface ParticipantAssignment {
 }
 
 // ---------------------------------------------------------------------------
+// Chat history / sidebar types
+// ---------------------------------------------------------------------------
+
+export interface ChatSnapshot {
+  chatId: string;
+  title: string;
+  session: SessionState | null;
+  messages: ChatMessage[];
+  assignment: ParticipantAssignment;
+}
+
+// ---------------------------------------------------------------------------
 // Chat message types
 // ---------------------------------------------------------------------------
 
