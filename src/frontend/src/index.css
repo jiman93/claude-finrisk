@@ -1692,6 +1692,11 @@ input {
   margin-top: 8px;
 }
 
+/* Study left-pane: session-bar (auto) then chat-stream (1fr) */
+.pi-left-pane.scg-active-layout {
+  grid-template-rows: auto 1fr;
+}
+
 /* ── Screen 3: Active Session Bar ── */
 .scg-session-bar {
   display: flex;
@@ -1722,6 +1727,56 @@ input {
 .scg-advance-section {
   padding: 20px 0;
   text-align: center;
+}
+
+/* ── Document attachment card (study chat) ── */
+.scg-doc-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+  width: fit-content;
+  max-width: min(420px, 90%);
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: var(--bg-card-2);
+  border: 1px solid var(--border-soft);
+  margin-bottom: 6px;
+}
+
+.scg-doc-thumb {
+  width: 48px;
+  height: 56px;
+  border-radius: 6px;
+  background: #1e293b;
+  border: 1px solid var(--border-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #475569;
+  font-size: 18px;
+}
+
+.scg-doc-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.scg-doc-name {
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.scg-doc-meta {
+  color: var(--text-muted);
+  font-size: 12px;
 }
 
 /* ── Responsive ── */
