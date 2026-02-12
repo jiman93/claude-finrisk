@@ -68,3 +68,13 @@ class CompleteTaskResponse(BaseModel):
     task_id: str
     completed_at: datetime
     time_on_task_seconds: int
+
+
+class ChatRequest(BaseModel):
+    message: str
+    context: str = ""
+
+
+class ChatResponse(BaseModel):
+    task_id: str
+    reply: str

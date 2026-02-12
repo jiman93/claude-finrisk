@@ -1,4 +1,5 @@
 import type {
+  ChatTaskResponse,
   EditSummaryResponse,
   FlaggedSpan,
   GenerateResponse,
@@ -83,5 +84,16 @@ export function editSummaryTask(
       edited_text: editedText,
       flagged_spans: flaggedSpans,
     }),
+  });
+}
+
+export function chatTask(
+  taskId: string,
+  message: string,
+  context: string
+): Promise<ChatTaskResponse> {
+  return request<ChatTaskResponse>(`/api/tasks/${taskId}/chat`, {
+    method: "POST",
+    body: JSON.stringify({ message, context }),
   });
 }
