@@ -135,3 +135,38 @@ python3 scripts/index_pageindex_documents.py
 Outputs:
 - Index manifest: `data/metadata/pageindex_index_manifest.json`
 - Env snippet: `data/metadata/pageindex_doc_map.env` (contains `PAGEINDEX_DOC_MAP=...`)
+
+## Discussion Notes (Reformatted)
+
+### Positioning (simple)
+- FinRisk is a governed AI workflow for financial-risk summarization, not just a chatbot.
+- Core value: AI speed with human control and audit trail.
+
+### Thesis-first focus
+- Keep the primary study flow clean and measurable:
+  - retrieve -> select chunks -> generate -> edit -> questionnaire.
+- Keep `Group A vs Group B` protocol for the thesis user study.
+- Primary outcomes:
+  - quality
+  - trust/confidence
+  - time-on-task
+
+### Interaction model decisions
+- Keep chat stream UX as the main interface.
+- Treat frontend `messages[]` as UI projection.
+- Treat backend task/checkpoint/session records as source of truth for protocol and analysis.
+
+### Checkpoint UX direction
+- Full-HITL sequence is valid:
+  - protocol query shown
+  - retrieval progress logs
+  - chunk selection control
+  - generation
+  - edit
+  - questionnaire
+- Use clean UI assistance for selection (better formatting, previews, citations, selection counters).
+
+### Scope guardrails
+- Avoid adding `chunk simplify` in primary measured runs to prevent confounding.
+- If needed later, run simplify as a separate exploratory condition with separate logging lane.
+- Prioritize data integrity and protocol enforcement before adding new UX features.
