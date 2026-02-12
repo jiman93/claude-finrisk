@@ -71,13 +71,18 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
     error: studyError,
     activeChatId,
     chatSnapshots,
+    followUpCounts,
     setParticipantId,
     startAndRunCurrentPhase,
     advancePhase,
+    askFollowUp,
+    triggerGeneration,
     submitNodeSelection,
     submitEditedSummary,
     addMessage,
   } = useStudyStore();
+
+  const [followUpInput, setFollowUpInput] = useState("");
 
   const [started, setStarted] = useState(false);
   const sessionStartedRef = useRef(false);
@@ -177,6 +182,22 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
     onSaveChat(chatIdRef.current, title, assignment);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages, session]);
+
+  // Follow-up query handler
+  async function handleFollowUp(e: FormEvent) {
+    e.preventDefault();
+    const q = followUpInput.trim();
+    if (!q || isLoading) return;
+    setFollowUpInput("");
+    await askFollowUp(q);
+  }
+
+  // Check if the stream is at a point where follow-up queries make sense
+  // (not while loading, and when the stream has at least completed retrieval once)
+  const canAskFollowUp = started && session && !isLoading && !isRestoredView;
+
+  // Check if we have a pending generate_prompt (user hasn't clicked generate yet)
+  const hasGeneratePrompt = messages.some((m) => m.type === "generate_prompt");
 
   // Build checkpoint instances for the current phase from the assignment
   const currentPhase = effectiveAssignment?.phases.find(
@@ -313,6 +334,22 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
                         onViewCheckpoint={openCheckpointPane}
                       />
                     );
+                  }
+
+                  if (msg.type === "generate_prompt") {
+                    // In read-only, show as a completed step
+                    return (
+                      <div key={msg.id} className="pi-step-card completed">
+                        <div className="pi-step-left">
+                          <span className="pi-step-icon">&#10003;</span>
+                          <span>Generate Summary (triggered)</span>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  if (msg.type === "questionnaire_prompt") {
+                    return null;
                   }
 
                   return null;
@@ -623,14 +660,42 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
                   );
                 }
 
+                if (msg.type === "generate_prompt") {
+                  return (
+                    <GeneratePromptCard
+                      key={msg.id}
+                      taskId={msg.taskId}
+                      onGenerate={triggerGeneration}
+                      disabled={isLoading}
+                    />
+                  );
+                }
+
+                if (msg.type === "questionnaire_prompt") {
+                  return null; // Questionnaire prompt is handled by the section below
+                }
+
                 return null;
               })}
+
+              {/* "Continue to Questionnaire" prompt — shown when summary is done but questionnaire hasn't started */}
+              {currentPhase &&
+                !isLoading &&
+                session &&
+                currentPhaseHasSummary(messages) &&
+                !currentPhaseHasQuestionnairePrompt(messages) &&
+                currentPhase.checkpoints.filter((cp) => cp.pipeline_position === "post_generation").length > 0 && (
+                  <QuestionnairePromptCard onContinue={() => {
+                    addMessage({ id: `qp-${Date.now()}`, type: "questionnaire_prompt" });
+                  }} />
+                )}
 
               {/* Post-generation checkpoint instances from assignment (only unsubmitted ones) */}
               {currentPhase &&
                 !isLoading &&
                 session &&
                 currentPhaseHasSummary(messages) &&
+                currentPhaseHasQuestionnairePrompt(messages) &&
                 currentPhase.checkpoints
                   .filter((cp) => cp.pipeline_position === "post_generation")
                   .filter((cp) => !messages.some(
@@ -650,11 +715,12 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
                     );
                   })}
 
-              {/* Phase advance button */}
+              {/* Phase advance button — show when no checkpoints or all done */}
               {session &&
                 !isLoading &&
                 currentPhaseHasSummary(messages) &&
-                session.current_phase < 3 && (
+                session.current_phase < 3 &&
+                phaseCheckpointsDone(messages, currentPhase) && (
                   <div className="scg-advance-section">
                     <button
                       type="button"
@@ -662,12 +728,13 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
                       onClick={() => advancePhase()}
                       disabled={isLoading}
                     >
-                      Advance to Phase {session.current_phase + 1}
+                      Next Phase ▶ Phase {session.current_phase + 1}
                     </button>
                   </div>
                 )}
 
-              {session && session.current_phase >= 3 && currentPhaseHasSummary(messages) && (
+              {session && session.current_phase >= 3 && currentPhaseHasSummary(messages) &&
+                phaseCheckpointsDone(messages, currentPhase) && (
                 <div className="pi-run-meta pi-status-row">
                   <span>Study session complete. All 3 phases finished.</span>
                 </div>
@@ -676,6 +743,35 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
           </div>
 
           {studyError && <div className="scg-error" style={{ margin: "0 16px 8px" }}>{studyError}</div>}
+
+          {/* Follow-up query input bar */}
+          {canAskFollowUp && (
+            <div className="scg-followup-bar">
+              <form className="scg-followup-form" onSubmit={handleFollowUp}>
+                <input
+                  className="scg-followup-input"
+                  type="text"
+                  value={followUpInput}
+                  onChange={(e) => setFollowUpInput(e.target.value)}
+                  placeholder="Ask a follow-up question…"
+                  disabled={isLoading}
+                />
+                <button
+                  type="submit"
+                  className="pi-send-btn"
+                  disabled={!followUpInput.trim() || isLoading}
+                  title="Send follow-up query"
+                >
+                  &#8593;
+                </button>
+              </form>
+              {session && followUpCounts[session.current_phase] ? (
+                <div className="scg-followup-count">
+                  {followUpCounts[session.current_phase]} follow-up{followUpCounts[session.current_phase] > 1 ? "s" : ""} this phase
+                </div>
+              ) : null}
+            </div>
+          )}
         </div>
 
         {/* Right pane: summary or checkpoint viewer */}
@@ -740,6 +836,43 @@ function currentPhaseHasSummary(msgs: ChatMessage[]): boolean {
     }
   }
   return msgs.slice(phaseStartIdx).some((m) => m.type === "summary");
+}
+
+/**
+ * Check whether the user has clicked "Continue to Questionnaire" in the current phase.
+ */
+function currentPhaseHasQuestionnairePrompt(msgs: ChatMessage[]): boolean {
+  let phaseStartIdx = 0;
+  for (let i = msgs.length - 1; i >= 0; i--) {
+    const m = msgs[i];
+    if (
+      m.type === "text" &&
+      m.role === "system" &&
+      (/^Transitioned to Phase/.test(m.content) || /^Phase \d/.test(m.content))
+    ) {
+      phaseStartIdx = i;
+      break;
+    }
+  }
+  return msgs.slice(phaseStartIdx).some((m) => m.type === "questionnaire_prompt");
+}
+
+/**
+ * Check whether all post-gen checkpoints are done (submitted/skipped) for the current phase,
+ * OR there are no checkpoints, OR there's no questionnaire prompt yet (meaning "Next Phase"
+ * should wait until questionnaires are done).
+ */
+function phaseCheckpointsDone(msgs: ChatMessage[], currentPhase: PhaseAssignment | undefined): boolean {
+  if (!currentPhase) return true;
+  const postGenCps = currentPhase.checkpoints.filter((cp) => cp.pipeline_position === "post_generation");
+  // If no post-gen checkpoints, advance is allowed once summary is done
+  if (postGenCps.length === 0) return true;
+  // If questionnaire hasn't started yet, don't show advance
+  if (!currentPhaseHasQuestionnairePrompt(msgs)) return false;
+  // All must be submitted/skipped
+  return postGenCps.every((cp) =>
+    msgs.some((m) => m.type === "submitted_checkpoint" && m.definitionId === cp.definition_id)
+  );
 }
 
 // ── Inline sub-components ──
@@ -1022,6 +1155,71 @@ function SubmittedCheckpointCard({
         onClick={() => onViewCheckpoint(label, fields)}
       >
         View responses
+      </button>
+    </div>
+  );
+}
+
+function QuestionnairePromptCard({ onContinue }: { onContinue: () => void }) {
+  const [clicked, setClicked] = useState(false);
+
+  function handleClick() {
+    if (clicked) return;
+    setClicked(true);
+    onContinue();
+  }
+
+  if (clicked) return null;
+
+  return (
+    <div className="scg-action-prompt">
+      <div className="scg-action-prompt-text">
+        Summary complete. Proceed to the questionnaire when you&apos;re ready.
+      </div>
+      <button
+        type="button"
+        className="pi-primary-btn scg-action-prompt-btn"
+        onClick={handleClick}
+      >
+        Continue to Questionnaire ▶
+      </button>
+    </div>
+  );
+}
+
+function GeneratePromptCard({
+  taskId,
+  onGenerate,
+  disabled,
+}: {
+  taskId: string;
+  onGenerate: (taskId: string) => Promise<void>;
+  disabled: boolean;
+}) {
+  const [clicked, setClicked] = useState(false);
+
+  async function handleClick() {
+    if (clicked || disabled) return;
+    setClicked(true);
+    await onGenerate(taskId);
+  }
+
+  if (clicked) {
+    return null; // Will be replaced by loading indicator from store
+  }
+
+  return (
+    <div className="scg-action-prompt">
+      <div className="scg-action-prompt-text">
+        Chunks retrieved. Review above, then generate a summary when ready.
+      </div>
+      <button
+        type="button"
+        className="pi-primary-btn scg-action-prompt-btn"
+        onClick={() => void handleClick()}
+        disabled={disabled}
+      >
+        Generate Summary ▶
       </button>
     </div>
   );

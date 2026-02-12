@@ -237,4 +237,13 @@ export type ChatMessage =
       label: string;
       state: "submitted" | "skipped";
       fields: Array<{ label: string; value: string }>;
+    }
+  | {
+      id: string;
+      type: "generate_prompt";
+      taskId: string;
+    }
+  | {
+      id: string;
+      type: "questionnaire_prompt";
     };

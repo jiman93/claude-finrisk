@@ -1744,9 +1744,9 @@ input {
   margin-top: 8px;
 }
 
-/* Study left-pane: session-bar (auto) then chat-stream (1fr) */
+/* Study left-pane: session-bar (auto) then chat-stream (1fr) then follow-up bar (auto) */
 .pi-left-pane.scg-active-layout {
-  grid-template-rows: auto 1fr;
+  grid-template-rows: auto 1fr auto;
 }
 
 /* ── Screen 3: Active Session Bar ── */
@@ -1859,6 +1859,73 @@ input {
   color: var(--text-primary);
   font-size: 14px;
   line-height: 1.5;
+}
+
+/* ── Action Prompt Cards (Generate / Questionnaire) ── */
+.scg-action-prompt {
+  margin-top: 16px;
+  border: 1px solid #2d4a6a;
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(47, 125, 224, 0.06) 0%, rgba(47, 125, 224, 0.02) 100%);
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.scg-action-prompt-text {
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.5;
+  flex: 1;
+  min-width: 200px;
+}
+.scg-action-prompt-btn {
+  flex-shrink: 0;
+  font-size: 14px;
+  padding: 10px 20px;
+  white-space: nowrap;
+}
+
+/* ── Follow-up Input Bar ── */
+.scg-followup-bar {
+  padding: 8px 16px 12px;
+  border-top: 1px solid var(--border-soft);
+  background: var(--bg-toolbar);
+}
+.scg-followup-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 920px;
+  margin: 0 auto;
+}
+.scg-followup-input {
+  flex: 1;
+  border: 1px solid var(--border-soft);
+  border-radius: 10px;
+  background: #161923;
+  color: var(--text-primary);
+  padding: 10px 14px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+.scg-followup-input:focus {
+  border-color: var(--accent);
+}
+.scg-followup-input::placeholder {
+  color: var(--text-muted);
+}
+.scg-followup-input:disabled {
+  opacity: 0.5;
+}
+.scg-followup-count {
+  margin-top: 4px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 11px;
 }
 
 /* ── Responsive ── */

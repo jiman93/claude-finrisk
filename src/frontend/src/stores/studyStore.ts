@@ -24,6 +24,9 @@ interface StudyState {
   isLoading: boolean;
   error: string | null;
 
+  // Follow-up query tracking
+  followUpCounts: Record<number, number>; // phase → count of follow-up queries
+
   // Chat history
   activeChatId: string | null;
   chatSnapshots: Record<string, ChatSnapshot>; // chatId → snapshot
@@ -33,6 +36,8 @@ interface StudyState {
   setParticipantId: (participantId: string) => void;
   startAndRunCurrentPhase: () => Promise<void>;
   askQuery: (query: string) => Promise<void>;
+  askFollowUp: (query: string) => Promise<void>;
+  triggerGeneration: (taskId: string) => Promise<void>;
   advancePhase: () => Promise<void>;
   submitNodeSelection: (
     taskId: string,
@@ -59,6 +64,8 @@ export const useStudyStore = create<StudyState>((set, get) => ({
   messages: [],
   isLoading: false,
   error: null,
+
+  followUpCounts: {},
 
   activeChatId: null,
   chatSnapshots: {},
@@ -114,6 +121,81 @@ export const useStudyStore = create<StudyState>((set, get) => ({
     });
   },
 
+  askFollowUp: async (query) => {
+    const session = get().session;
+    const normalizedQuery = query.trim();
+    if (!session || !normalizedQuery) return;
+
+    // Increment follow-up count for current phase
+    set((state) => ({
+      followUpCounts: {
+        ...state.followUpCounts,
+        [session.current_phase]: (state.followUpCounts[session.current_phase] ?? 0) + 1,
+      },
+    }));
+
+    await runTaskFlow({
+      taskId: session.current_task_id,
+      query: normalizedQuery,
+      mode: session.current_mode,
+    });
+  },
+
+  triggerGeneration: async (taskId) => {
+    const session = get().session;
+    if (!session) return;
+
+    // Remove the generate_prompt message and start generation
+    const generationLoadingId = makeId("loading-generation");
+
+    useStudyStore.setState((state) => ({
+      isLoading: true,
+      error: null,
+      messages: [
+        ...state.messages.filter((m) => m.type !== "generate_prompt"),
+        { id: generationLoadingId, type: "loading", content: "Generating summary..." },
+      ],
+    }));
+
+    try {
+      const generation = await generateTask(taskId);
+      useStudyStore.setState((state) => ({
+        messages: state.messages.filter((m) => m.id !== generationLoadingId),
+      }));
+
+      if (session.current_mode === "hitl_g" || session.current_mode === "hitl_full") {
+        useStudyStore.setState((state) => ({
+          messages: [
+            ...state.messages,
+            {
+              id: makeId("edit"),
+              type: "editable_summary",
+              taskId,
+              summary: generation.summary,
+            },
+          ],
+          isLoading: false,
+        }));
+        return;
+      }
+
+      useStudyStore.setState((state) => ({
+        messages: [
+          ...state.messages,
+          { id: makeId("summary"), type: "summary", summary: generation.summary },
+        ],
+        isLoading: false,
+      }));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unexpected error";
+      useStudyStore.setState((state) => ({
+        error: message,
+        isLoading: false,
+        messages: state.messages.filter((m) => m.id !== generationLoadingId),
+      }));
+    }
+  },
+
   advancePhase: async () => {
     const { session } = get();
     if (!session) {
@@ -158,43 +240,22 @@ export const useStudyStore = create<StudyState>((set, get) => ({
     const session = get().session;
     if (!session) return;
 
-    set((state) => ({
-      isLoading: true,
-      messages: [
-        ...state.messages,
-        { id: "loading-generation", type: "loading", content: "Generating summary..." },
-      ],
-    }));
+    set({ isLoading: true });
 
     try {
       await selectNodesTask(taskId, selectedIds, rejectedIds, order);
-      const generation = await generateTask(taskId);
-      set((state) => ({
-        messages: state.messages.filter((m) => m.id !== "loading-generation"),
-      }));
 
-      if (session.current_mode === "hitl_full") {
-        set((state) => ({
-          messages: [
-            ...state.messages,
-            { id: makeId("edit"), type: "editable_summary", taskId, summary: generation.summary },
-          ],
-          isLoading: false,
-        }));
-        return;
-      }
-
+      // Show a "Generate Summary" button instead of auto-generating
       set((state) => ({
-        messages: [...state.messages, { id: makeId("summary"), type: "summary", summary: generation.summary }],
+        messages: [
+          ...state.messages,
+          { id: makeId("gen-prompt"), type: "generate_prompt", taskId },
+        ],
         isLoading: false,
       }));
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unexpected error";
-      set({
-        error: message,
-        isLoading: false,
-        messages: get().messages.filter((m) => m.id !== "loading-generation"),
-      });
+      set({ error: message, isLoading: false });
     }
   },
 
@@ -266,6 +327,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
       isLoading: false,
       error: null,
       participantId: "P01",
+      followUpCounts: {},
     });
   },
 }));
@@ -278,7 +340,6 @@ interface RunTaskFlowParams {
 
 async function runTaskFlow({ taskId, query, mode }: RunTaskFlowParams) {
   const retrievalLoadingId = makeId("loading-retrieval");
-  const generationLoadingId = makeId("loading-generation");
 
   useStudyStore.setState((state) => ({
     isLoading: true,
@@ -299,6 +360,7 @@ async function runTaskFlow({ taskId, query, mode }: RunTaskFlowParams) {
       ],
     }));
 
+    // For HITL-R and HITL-Full: show chunk selector (user must select then submit)
     if (mode === "hitl_r" || mode === "hitl_full") {
       useStudyStore.setState((state) => ({
         messages: [
@@ -315,32 +377,12 @@ async function runTaskFlow({ taskId, query, mode }: RunTaskFlowParams) {
       return;
     }
 
+    // For baseline and HITL-G: show a "Generate Summary" button instead of auto-generating
     useStudyStore.setState((state) => ({
-      messages: [...state.messages, { id: generationLoadingId, type: "loading", content: "Generating summary..." }],
-    }));
-    const generation = await generateTask(taskId);
-    useStudyStore.setState((state) => ({
-      messages: state.messages.filter((m) => m.id !== generationLoadingId),
-    }));
-
-    if (mode === "hitl_g") {
-      useStudyStore.setState((state) => ({
-        messages: [
-          ...state.messages,
-          {
-            id: makeId("edit"),
-            type: "editable_summary",
-            taskId,
-            summary: generation.summary,
-          },
-        ],
-        isLoading: false,
-      }));
-      return;
-    }
-
-    useStudyStore.setState((state) => ({
-      messages: [...state.messages, { id: makeId("summary"), type: "summary", summary: generation.summary }],
+      messages: [
+        ...state.messages,
+        { id: makeId("gen-prompt"), type: "generate_prompt", taskId },
+      ],
       isLoading: false,
     }));
   } catch (error) {
@@ -348,9 +390,7 @@ async function runTaskFlow({ taskId, query, mode }: RunTaskFlowParams) {
     useStudyStore.setState((state) => ({
       error: message,
       isLoading: false,
-      messages: state.messages.filter(
-        (m) => m.id !== retrievalLoadingId && m.id !== generationLoadingId
-      ),
+      messages: state.messages.filter((m) => m.id !== retrievalLoadingId),
     }));
   }
 }
