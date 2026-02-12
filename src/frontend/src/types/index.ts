@@ -246,14 +246,7 @@ export type ChatMessage =
       summary: string;
     }
 
-  // ── Checkpoints ──
-  | {
-      id: string;
-      type: "active_checkpoint";
-      definitionId: string;
-      label: string;
-      instance: CheckpointInstance;
-    }
+  // ── Checkpoints (history — submitted/skipped cards stay in stream) ──
   | {
       id: string;
       type: "submitted_checkpoint";
@@ -263,23 +256,17 @@ export type ChatMessage =
       fields: Array<{ label: string; value: string }>;
     }
 
-  // ── Flow controls (pushed into stream by store) ──
-  | {
-      id: string;
-      type: "questionnaire_prompt";
-    }
-  | {
-      id: string;
-      type: "phase_advance";
-      nextPhase: number;
-    }
-
   // ── Visual ──
   | {
       id: string;
       type: "follow_up_divider";
-    }
-  | {
-      id: string;
-      type: "session_complete";
     };
+
+// ---------------------------------------------------------------------------
+// Tail action types — rendered in pinned zone outside the scrollable stream
+// ---------------------------------------------------------------------------
+
+export type TailAction =
+  | { type: "questionnaire_prompt" }
+  | { type: "phase_advance"; nextPhase: number }
+  | { type: "session_complete" };

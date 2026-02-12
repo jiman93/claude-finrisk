@@ -1744,9 +1744,17 @@ input {
   margin-top: 8px;
 }
 
-/* Study left-pane: session-bar (auto) then chat-stream (1fr) then follow-up bar (auto) */
+/* Study left-pane: session-bar | stream | tail-zone | follow-up bar */
 .pi-left-pane.scg-active-layout {
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: auto 1fr auto auto;
+}
+
+/* ── Pinned tail action zone ── */
+.scg-tail-zone {
+  border-top: 1px solid var(--border-soft);
+  padding: 12px 16px;
+  max-height: 40vh;
+  overflow-y: auto;
 }
 
 /* ── Screen 3: Active Session Bar ── */

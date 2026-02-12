@@ -83,18 +83,6 @@ export default function MessageRenderer({
       </AssistantBlock>
     );
   }
-  if (message.type === "active_checkpoint") {
-    return (
-      <AssistantBlock>
-        <DynamicControlRenderer
-          instance={message.instance}
-          onSubmit={onCheckpointSubmit ?? (() => {})}
-          onSkip={onCheckpointSkip ?? (() => {})}
-          onRetry={onCheckpointRetry ?? (() => {})}
-        />
-      </AssistantBlock>
-    );
-  }
   if (message.type === "summary") {
     return (
       <AssistantBlock>

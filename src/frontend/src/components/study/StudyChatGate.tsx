@@ -9,6 +9,7 @@ import type {
   PhaseAssignment,
   RetrievalNode,
   SessionState,
+  TailAction,
 } from "../../types";
 import DynamicControlRenderer from "../controls/DynamicControlRenderer";
 import FormattedMarkdown from "../FormattedMarkdown";
@@ -53,6 +54,8 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
     activeChatId,
     chatSnapshots,
     followUpCounts,
+    tailAction,
+    activeCheckpoints,
     setParticipantId,
     setAssignment,
     startAndRunCurrentPhase,
@@ -229,10 +232,6 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
                   onSubmitNodeSelection={submitNodeSelection}
                   onSubmitEditedSummary={submitEditedSummary}
                   onTriggerGeneration={triggerGeneration}
-                  onStartQuestionnaire={startQuestionnaire}
-                  onSubmitCheckpoint={submitCheckpoint}
-                  onSkipCheckpoint={skipCheckpoint}
-                  onAdvancePhase={advancePhase}
                   onViewSummary={openSummaryPane}
                   onViewCheckpoint={openCheckpointPane}
                 />
@@ -368,10 +367,6 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
                 onSubmitNodeSelection={submitNodeSelection}
                 onSubmitEditedSummary={submitEditedSummary}
                 onTriggerGeneration={triggerGeneration}
-                onStartQuestionnaire={startQuestionnaire}
-                onSubmitCheckpoint={submitCheckpoint}
-                onSkipCheckpoint={skipCheckpoint}
-                onAdvancePhase={advancePhase}
                 onViewSummary={openSummaryPane}
                 onViewCheckpoint={openCheckpointPane}
               />
@@ -379,6 +374,17 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
           </div>
 
           {studyError && <div className="scg-error" style={{ margin: "0 16px 8px" }}>{studyError}</div>}
+
+          {/* Pinned tail action zone */}
+          <TailActionZone
+            tailAction={tailAction}
+            activeCheckpoints={activeCheckpoints}
+            isLoading={isLoading}
+            onStartQuestionnaire={startQuestionnaire}
+            onSubmitCheckpoint={submitCheckpoint}
+            onSkipCheckpoint={skipCheckpoint}
+            onAdvancePhase={advancePhase}
+          />
 
           {/* Follow-up query input bar */}
           {canAskFollowUp && (
@@ -426,10 +432,6 @@ interface StreamRendererProps {
   onSubmitNodeSelection: (taskId: string, selected: string[], rejected: string[], order: string[]) => Promise<void>;
   onSubmitEditedSummary: (taskId: string, editedText: string) => Promise<void>;
   onTriggerGeneration: (taskId: string) => Promise<void>;
-  onStartQuestionnaire: () => void;
-  onSubmitCheckpoint: (definitionId: string, data: Record<string, unknown>) => void;
-  onSkipCheckpoint: (definitionId: string) => void;
-  onAdvancePhase: () => Promise<void>;
   onViewSummary: (label: string, text: string) => void;
   onViewCheckpoint: (label: string, fields: Array<{ label: string; value: string }>) => void;
 }
@@ -441,10 +443,6 @@ function StreamRenderer({
   onSubmitNodeSelection,
   onSubmitEditedSummary,
   onTriggerGeneration,
-  onStartQuestionnaire,
-  onSubmitCheckpoint,
-  onSkipCheckpoint,
-  onAdvancePhase,
   onViewSummary,
   onViewCheckpoint,
 }: StreamRendererProps) {
@@ -535,17 +533,6 @@ function StreamRenderer({
               />
             );
 
-          case "active_checkpoint":
-            return readOnly ? null : (
-              <ActiveCheckpointCard
-                key={msg.id}
-                definitionId={msg.definitionId}
-                instance={msg.instance}
-                onSubmit={onSubmitCheckpoint}
-                onSkip={onSkipCheckpoint}
-              />
-            );
-
           case "submitted_checkpoint":
             return (
               <SubmittedCheckpointCard
@@ -557,39 +544,10 @@ function StreamRenderer({
               />
             );
 
-          case "questionnaire_prompt":
-            return readOnly ? null : (
-              <QuestionnairePromptCard
-                key={msg.id}
-                onContinue={onStartQuestionnaire}
-              />
-            );
-
-          case "phase_advance":
-            return readOnly ? null : (
-              <div key={msg.id} className="scg-advance-section">
-                <button
-                  type="button"
-                  className="pi-primary-btn"
-                  onClick={() => void onAdvancePhase()}
-                  disabled={isLoading}
-                >
-                  Next Phase ▶ Phase {msg.nextPhase}
-                </button>
-              </div>
-            );
-
           case "follow_up_divider":
             return (
               <div key={msg.id} className="scg-followup-divider">
                 <span className="scg-followup-divider-label">Follow-up</span>
-              </div>
-            );
-
-          case "session_complete":
-            return (
-              <div key={msg.id} className="pi-run-meta pi-status-row" style={{ marginTop: 16 }}>
-                <span>Study session complete. All 3 phases finished.</span>
               </div>
             );
 
@@ -598,6 +556,69 @@ function StreamRenderer({
         }
       })}
     </>
+  );
+}
+
+// ===========================================================================
+// TailActionZone — Pinned below the scrollable stream
+// ===========================================================================
+
+interface TailActionZoneProps {
+  tailAction: TailAction | null;
+  activeCheckpoints: CheckpointInstance[];
+  isLoading: boolean;
+  onStartQuestionnaire: () => void;
+  onSubmitCheckpoint: (definitionId: string, data: Record<string, unknown>) => void;
+  onSkipCheckpoint: (definitionId: string) => void;
+  onAdvancePhase: () => Promise<void>;
+}
+
+function TailActionZone({
+  tailAction,
+  activeCheckpoints,
+  isLoading,
+  onStartQuestionnaire,
+  onSubmitCheckpoint,
+  onSkipCheckpoint,
+  onAdvancePhase,
+}: TailActionZoneProps) {
+  if (!tailAction && activeCheckpoints.length === 0) return null;
+
+  return (
+    <div className="scg-tail-zone">
+      {/* Active checkpoint forms */}
+      {activeCheckpoints.map((inst) => (
+        <ActiveCheckpointCard
+          key={inst.id}
+          definitionId={inst.definition_id}
+          instance={inst}
+          onSubmit={onSubmitCheckpoint}
+          onSkip={onSkipCheckpoint}
+        />
+      ))}
+
+      {/* Tail action buttons */}
+      {tailAction?.type === "questionnaire_prompt" && (
+        <QuestionnairePromptCard onContinue={onStartQuestionnaire} />
+      )}
+      {tailAction?.type === "phase_advance" && (
+        <div className="scg-advance-section">
+          <button
+            type="button"
+            className="pi-primary-btn"
+            onClick={() => void onAdvancePhase()}
+            disabled={isLoading}
+          >
+            Next Phase ▶ Phase {tailAction.nextPhase}
+          </button>
+        </div>
+      )}
+      {tailAction?.type === "session_complete" && (
+        <div className="pi-run-meta pi-status-row" style={{ marginTop: 8 }}>
+          <span>Study session complete. All 3 phases finished.</span>
+        </div>
+      )}
+    </div>
   );
 }
 
