@@ -187,16 +187,31 @@ export interface ChatSnapshot {
 }
 
 // ---------------------------------------------------------------------------
-// Chat message types
+// Chat message types — stream-first architecture
+// Every visual element is a message in the array. The renderer is a pure
+// type-switch with zero injection logic; all flow decisions live in the store.
 // ---------------------------------------------------------------------------
 
 export type ChatMessage =
+  // ── Structural ──
+  | {
+      id: string;
+      type: "phase_start";
+      phase: number;
+      mode: Mode;
+      ticker: string;
+      query: string;
+    }
+
+  // ── Text ──
   | {
       id: string;
       type: "text";
       role: "system" | "user" | "assistant";
       content: string;
     }
+
+  // ── Pipeline stages ──
   | {
       id: string;
       type: "loading";
@@ -209,15 +224,20 @@ export type ChatMessage =
     }
   | {
       id: string;
-      type: "summary";
-      summary: string;
-      editable?: boolean;
-    }
-  | {
-      id: string;
       type: "selector";
       taskId: string;
       nodes: RetrievalNode[];
+      submitted?: boolean;
+    }
+  | {
+      id: string;
+      type: "generate_prompt";
+      taskId: string;
+    }
+  | {
+      id: string;
+      type: "summary";
+      summary: string;
     }
   | {
       id: string;
@@ -225,9 +245,13 @@ export type ChatMessage =
       taskId: string;
       summary: string;
     }
+
+  // ── Checkpoints ──
   | {
       id: string;
-      type: "checkpoint";
+      type: "active_checkpoint";
+      definitionId: string;
+      label: string;
       instance: CheckpointInstance;
     }
   | {
@@ -238,12 +262,24 @@ export type ChatMessage =
       state: "submitted" | "skipped";
       fields: Array<{ label: string; value: string }>;
     }
-  | {
-      id: string;
-      type: "generate_prompt";
-      taskId: string;
-    }
+
+  // ── Flow controls (pushed into stream by store) ──
   | {
       id: string;
       type: "questionnaire_prompt";
+    }
+  | {
+      id: string;
+      type: "phase_advance";
+      nextPhase: number;
+    }
+
+  // ── Visual ──
+  | {
+      id: string;
+      type: "follow_up_divider";
+    }
+  | {
+      id: string;
+      type: "session_complete";
     };

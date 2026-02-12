@@ -8,18 +8,26 @@ import {
   selectNodesTask,
   startSession,
 } from "../api/client";
+import { SEED_DEFINITIONS } from "../data/checkpointDefinitions";
 import type {
   ChatMessage,
   ChatSnapshot,
+  CheckpointInstance,
   Mode,
   ParticipantAssignment,
+  PhaseAssignment,
   SessionState,
 } from "../types";
+
+// ---------------------------------------------------------------------------
+// Interface
+// ---------------------------------------------------------------------------
 
 interface StudyState {
   // Active session state
   participantId: string;
   session: SessionState | null;
+  assignment: ParticipantAssignment | null;
   messages: ChatMessage[];
   isLoading: boolean;
   error: string | null;
@@ -34,6 +42,7 @@ interface StudyState {
 
   // Active session actions
   setParticipantId: (participantId: string) => void;
+  setAssignment: (assignment: ParticipantAssignment | null) => void;
   startAndRunCurrentPhase: () => Promise<void>;
   askQuery: (query: string) => Promise<void>;
   askFollowUp: (query: string) => Promise<void>;
@@ -46,7 +55,9 @@ interface StudyState {
     order: string[]
   ) => Promise<void>;
   submitEditedSummary: (taskId: string, editedText: string) => Promise<void>;
-  addMessage: (msg: ChatMessage) => void;
+  startQuestionnaire: () => void;
+  submitCheckpoint: (definitionId: string, data: Record<string, unknown>) => void;
+  skipCheckpoint: (definitionId: string) => void;
 
   // Chat history actions
   saveChat: (chatId: string, title: string, assignment: ParticipantAssignment) => void;
@@ -54,13 +65,67 @@ interface StudyState {
   clearForNewChat: () => void;
 }
 
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
 function makeId(prefix: string): string {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 }
 
+/** Find the index of the last `phase_start` message in the array. */
+function getCurrentPhaseStartIdx(msgs: ChatMessage[]): number {
+  for (let i = msgs.length - 1; i >= 0; i--) {
+    if (msgs[i].type === "phase_start") return i;
+  }
+  return 0;
+}
+
+/** Check whether the current phase already has a completed summary. */
+function currentPhaseHasSummary(msgs: ChatMessage[]): boolean {
+  const idx = getCurrentPhaseStartIdx(msgs);
+  return msgs.slice(idx).some((m) => m.type === "summary");
+}
+
+/** Get the current phase assignment from the store's assignment. */
+function getCurrentPhaseAssignment(
+  assignment: ParticipantAssignment | null,
+  session: SessionState | null
+): PhaseAssignment | undefined {
+  if (!assignment || !session) return undefined;
+  return assignment.phases.find((p) => p.phase === session.current_phase);
+}
+
+/** Get post-generation checkpoint refs for a phase. */
+function getPostGenCheckpoints(phase: PhaseAssignment | undefined) {
+  if (!phase) return [];
+  return phase.checkpoints.filter((cp) => cp.pipeline_position === "post_generation");
+}
+
+/** Build field label→value pairs for a submitted checkpoint. */
+function buildFieldSummary(definitionId: string, data: Record<string, unknown>) {
+  const def = SEED_DEFINITIONS.find((d) => d.id === definitionId);
+  if (!def) return [];
+  return def.field_schema.map((field) => {
+    const val = data[field.key];
+    const display =
+      val === undefined || val === null || val === ""
+        ? "—"
+        : Array.isArray(val)
+          ? val.join(", ")
+          : String(val);
+    return { label: field.label, value: display };
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Store
+// ---------------------------------------------------------------------------
+
 export const useStudyStore = create<StudyState>((set, get) => ({
   participantId: "P01",
   session: null,
+  assignment: null,
   messages: [],
   isLoading: false,
   error: null,
@@ -73,6 +138,10 @@ export const useStudyStore = create<StudyState>((set, get) => ({
 
   setParticipantId: (participantId) => set({ participantId }),
 
+  setAssignment: (assignment) => set({ assignment }),
+
+  // ── Start session and run phase 1 ──
+
   startAndRunCurrentPhase: async () => {
     const { participantId } = get();
     set({ isLoading: true, error: null, messages: [] });
@@ -82,16 +151,12 @@ export const useStudyStore = create<StudyState>((set, get) => ({
         session,
         messages: [
           {
-            id: makeId("msg"),
-            type: "text",
-            role: "system",
-            content: `Session started for ${session.participant_id} (Group ${session.group}).`,
-          },
-          {
-            id: makeId("msg"),
-            type: "text",
-            role: "system",
-            content: `Phase ${session.current_phase} | Mode ${session.current_mode} | Ticker ${session.current_ticker}`,
+            id: makeId("phase"),
+            type: "phase_start",
+            phase: session.current_phase,
+            mode: session.current_mode,
+            ticker: session.current_ticker,
+            query: session.current_query,
           },
         ],
       });
@@ -107,6 +172,8 @@ export const useStudyStore = create<StudyState>((set, get) => ({
     }
   },
 
+  // ── Ask a query (initial) ──
+
   askQuery: async (query) => {
     const session = get().session;
     const normalizedQuery = query.trim();
@@ -121,6 +188,8 @@ export const useStudyStore = create<StudyState>((set, get) => ({
     });
   },
 
+  // ── Follow-up query ──
+
   askFollowUp: async (query) => {
     const session = get().session;
     const normalizedQuery = query.trim();
@@ -134,15 +203,11 @@ export const useStudyStore = create<StudyState>((set, get) => ({
       },
     }));
 
-    // Check if the current phase already has a summary.
-    // If YES → retrieval-only (exploratory), no pipeline restart.
-    // If NO  → replace the current pipeline position (remove old generate_prompt/selector,
-    //           re-run full flow so the user gets a fresh generate button for the new query).
     const msgs = get().messages;
-    const hasSummary = currentPhaseHasSummaryHelper(msgs);
+    const hasSummary = currentPhaseHasSummary(msgs);
 
     if (hasSummary) {
-      // Retrieval-only follow-up (post-summary exploration)
+      // Post-summary: retrieval-only follow-up (exploration)
       const retrievalLoadingId = makeId("loading-retrieval");
 
       set((state) => ({
@@ -150,6 +215,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
         error: null,
         messages: [
           ...state.messages,
+          { id: makeId("div"), type: "follow_up_divider" },
           { id: makeId("msg"), type: "text", role: "user", content: normalizedQuery },
           { id: retrievalLoadingId, type: "loading", content: "Searching document..." },
         ],
@@ -177,7 +243,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
         }));
       }
     } else {
-      // Pre-summary follow-up: remove old generate_prompt/selector, re-run full flow
+      // Pre-summary: remove old generate_prompt/selector, re-run full flow
       set((state) => ({
         messages: state.messages.filter(
           (m) => m.type !== "generate_prompt" && m.type !== "selector"
@@ -192,11 +258,12 @@ export const useStudyStore = create<StudyState>((set, get) => ({
     }
   },
 
+  // ── Trigger generation ──
+
   triggerGeneration: async (taskId) => {
     const session = get().session;
     if (!session) return;
 
-    // Remove the generate_prompt message and start generation
     const generationLoadingId = makeId("loading-generation");
 
     useStudyStore.setState((state) => ({
@@ -230,6 +297,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
         return;
       }
 
+      // Baseline / HITL-R: push summary then post-summary controls
       useStudyStore.setState((state) => ({
         messages: [
           ...state.messages,
@@ -237,6 +305,8 @@ export const useStudyStore = create<StudyState>((set, get) => ({
         ],
         isLoading: false,
       }));
+
+      pushPostSummaryControls();
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unexpected error";
       useStudyStore.setState((state) => ({
@@ -247,13 +317,21 @@ export const useStudyStore = create<StudyState>((set, get) => ({
     }
   },
 
+  // ── Advance phase ──
+
   advancePhase: async () => {
     const { session } = get();
     if (!session) {
       return;
     }
 
-    set({ isLoading: true, error: null });
+    // Remove the phase_advance message
+    set((state) => ({
+      isLoading: true,
+      error: null,
+      messages: state.messages.filter((m) => m.type !== "phase_advance"),
+    }));
+
     try {
       const next = await nextPhase(session.session_id);
       const updated: SessionState = {
@@ -269,10 +347,12 @@ export const useStudyStore = create<StudyState>((set, get) => ({
         messages: [
           ...state.messages,
           {
-            id: makeId("msg"),
-            type: "text",
-            role: "system",
-            content: `Transitioned to Phase ${next.current_phase} (${next.current_mode}).`,
+            id: makeId("phase"),
+            type: "phase_start",
+            phase: next.current_phase,
+            mode: next.current_mode,
+            ticker: next.current_ticker,
+            query: next.current_query,
           },
         ],
       }));
@@ -287,6 +367,8 @@ export const useStudyStore = create<StudyState>((set, get) => ({
     }
   },
 
+  // ── Submit node selection (HITL-R / HITL-Full) ──
+
   submitNodeSelection: async (taskId, selectedIds, rejectedIds, order) => {
     const session = get().session;
     if (!session) return;
@@ -296,11 +378,15 @@ export const useStudyStore = create<StudyState>((set, get) => ({
     try {
       await selectNodesTask(taskId, selectedIds, rejectedIds, order);
 
-      // Show a "Generate Summary" button instead of auto-generating
+      // Mark existing selector as submitted, push generate_prompt
       set((state) => ({
         messages: [
-          ...state.messages,
-          { id: makeId("gen-prompt"), type: "generate_prompt", taskId },
+          ...state.messages.map((m) =>
+            m.type === "selector" && m.taskId === taskId
+              ? { ...m, submitted: true }
+              : m
+          ),
+          { id: makeId("gen-prompt"), type: "generate_prompt" as const, taskId },
         ],
         isLoading: false,
       }));
@@ -309,6 +395,8 @@ export const useStudyStore = create<StudyState>((set, get) => ({
       set({ error: message, isLoading: false });
     }
   },
+
+  // ── Submit edited summary (HITL-G / HITL-Full) ──
 
   submitEditedSummary: async (taskId, editedText) => {
     set({ isLoading: true, error: null });
@@ -325,16 +413,113 @@ export const useStudyStore = create<StudyState>((set, get) => ({
         ],
         isLoading: false,
       }));
+
+      pushPostSummaryControls();
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unexpected error";
       set({ error: message, isLoading: false });
     }
   },
 
-  addMessage: (msg) => {
+  // ── Start questionnaire (user clicks "Continue to Questionnaire") ──
+
+  startQuestionnaire: () => {
+    const { session, assignment } = get();
+    const currentPhase = getCurrentPhaseAssignment(assignment, session);
+    const postGenCps = getPostGenCheckpoints(currentPhase);
+
+    // Remove the questionnaire_prompt and push active checkpoints
+    const newMessages: ChatMessage[] = [];
+
+    for (const cp of postGenCps) {
+      const def = SEED_DEFINITIONS.find((d) => d.id === cp.definition_id);
+      if (!def || def.field_schema.length === 0) continue;
+
+      const instance: CheckpointInstance = {
+        id: `post-gen-${cp.definition_id}-${Date.now()}`,
+        task_id: session?.current_task_id ?? "study-task",
+        definition_id: cp.definition_id,
+        control_type: def.control_type,
+        label: cp.label,
+        state: "active",
+        field_schema: def.field_schema,
+        payload: null,
+        submit_result: null,
+        required: def.required,
+        timeout_seconds: def.timeout_seconds,
+        attempt_count: 0,
+        max_retries: def.max_retries,
+        last_error: null,
+        offered_at: new Date().toISOString(),
+        submitted_at: null,
+      };
+
+      newMessages.push({
+        id: makeId("acp"),
+        type: "active_checkpoint",
+        definitionId: cp.definition_id,
+        label: cp.label,
+        instance,
+      });
+    }
+
     set((state) => ({
-      messages: [...state.messages, msg],
+      messages: [
+        ...state.messages.filter((m) => m.type !== "questionnaire_prompt"),
+        ...newMessages,
+      ],
     }));
+  },
+
+  // ── Submit a checkpoint ──
+
+  submitCheckpoint: (definitionId, data) => {
+    const fields = buildFieldSummary(definitionId, data);
+    const def = SEED_DEFINITIONS.find((d) => d.id === definitionId);
+    const label = def?.label ?? definitionId;
+
+    set((state) => ({
+      messages: [
+        ...state.messages.filter(
+          (m) => !(m.type === "active_checkpoint" && m.definitionId === definitionId)
+        ),
+        {
+          id: makeId("scp"),
+          type: "submitted_checkpoint",
+          definitionId,
+          label,
+          state: "submitted",
+          fields,
+        },
+      ],
+    }));
+
+    checkAllCheckpointsDone();
+  },
+
+  // ── Skip a checkpoint ──
+
+  skipCheckpoint: (definitionId) => {
+    const def = SEED_DEFINITIONS.find((d) => d.id === definitionId);
+    const label = def?.label ?? definitionId;
+
+    set((state) => ({
+      messages: [
+        ...state.messages.filter(
+          (m) => !(m.type === "active_checkpoint" && m.definitionId === definitionId)
+        ),
+        {
+          id: makeId("scp"),
+          type: "submitted_checkpoint",
+          definitionId,
+          label,
+          state: "skipped",
+          fields: [],
+        },
+      ],
+    }));
+
+    checkAllCheckpointsDone();
   },
 
   // ── Chat history actions ──
@@ -365,6 +550,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
       activeChatId: chatId,
       session: snapshot.session,
       messages: [...snapshot.messages],
+      assignment: snapshot.assignment,
       isLoading: false,
       error: null,
     });
@@ -374,6 +560,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
     set({
       activeChatId: null,
       session: null,
+      assignment: null,
       messages: [],
       isLoading: false,
       error: null,
@@ -383,25 +570,92 @@ export const useStudyStore = create<StudyState>((set, get) => ({
   },
 }));
 
+// ---------------------------------------------------------------------------
+// Private helpers (operate on the store from outside the action creators)
+// ---------------------------------------------------------------------------
+
 /**
- * Check whether the current phase already has a completed summary.
- * Looks only at messages after the last phase-transition system message.
+ * After a summary is finalized, push the appropriate flow control messages.
+ * - If post-gen checkpoints exist → push questionnaire_prompt
+ * - Else if phase < 3 → push phase_advance
+ * - Else → push session_complete
  */
-function currentPhaseHasSummaryHelper(msgs: ChatMessage[]): boolean {
-  let phaseStartIdx = 0;
-  for (let i = msgs.length - 1; i >= 0; i--) {
-    const m = msgs[i];
-    if (
-      m.type === "text" &&
-      m.role === "system" &&
-      (/^Transitioned to Phase/.test(m.content) || /^Phase \d/.test(m.content))
-    ) {
-      phaseStartIdx = i;
-      break;
-    }
+function pushPostSummaryControls() {
+  const { session, assignment } = useStudyStore.getState();
+  const currentPhase = getCurrentPhaseAssignment(assignment, session);
+  const postGenCps = getPostGenCheckpoints(currentPhase);
+
+  if (postGenCps.length > 0) {
+    useStudyStore.setState((state) => ({
+      messages: [
+        ...state.messages,
+        { id: makeId("qp"), type: "questionnaire_prompt" },
+      ],
+    }));
+  } else if (session && session.current_phase < 3) {
+    useStudyStore.setState((state) => ({
+      messages: [
+        ...state.messages,
+        {
+          id: makeId("adv"),
+          type: "phase_advance",
+          nextPhase: session.current_phase + 1,
+        },
+      ],
+    }));
+  } else {
+    useStudyStore.setState((state) => ({
+      messages: [
+        ...state.messages,
+        { id: makeId("done"), type: "session_complete" },
+      ],
+    }));
   }
-  return msgs.slice(phaseStartIdx).some((m) => m.type === "summary");
 }
+
+/**
+ * After a checkpoint is submitted/skipped, check if all post-gen checkpoints
+ * for the current phase are done. If so, push phase_advance or session_complete.
+ */
+function checkAllCheckpointsDone() {
+  const { session, assignment, messages } = useStudyStore.getState();
+  const currentPhase = getCurrentPhaseAssignment(assignment, session);
+  const postGenCps = getPostGenCheckpoints(currentPhase);
+
+  if (postGenCps.length === 0) return;
+
+  const allDone = postGenCps.every((cp) =>
+    messages.some(
+      (m) => m.type === "submitted_checkpoint" && m.definitionId === cp.definition_id
+    )
+  );
+
+  if (!allDone) return;
+
+  if (session && session.current_phase < 3) {
+    useStudyStore.setState((state) => ({
+      messages: [
+        ...state.messages,
+        {
+          id: makeId("adv"),
+          type: "phase_advance",
+          nextPhase: session.current_phase + 1,
+        },
+      ],
+    }));
+  } else {
+    useStudyStore.setState((state) => ({
+      messages: [
+        ...state.messages,
+        { id: makeId("done"), type: "session_complete" },
+      ],
+    }));
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Pipeline flow (called from actions)
+// ---------------------------------------------------------------------------
 
 interface RunTaskFlowParams {
   taskId: string;
@@ -431,7 +685,7 @@ async function runTaskFlow({ taskId, query, mode }: RunTaskFlowParams) {
       ],
     }));
 
-    // For HITL-R and HITL-Full: show chunk selector (user must select then submit)
+    // For HITL-R and HITL-Full: show chunk selector
     if (mode === "hitl_r" || mode === "hitl_full") {
       useStudyStore.setState((state) => ({
         messages: [
@@ -448,7 +702,7 @@ async function runTaskFlow({ taskId, query, mode }: RunTaskFlowParams) {
       return;
     }
 
-    // For baseline and HITL-G: show a "Generate Summary" button instead of auto-generating
+    // For baseline and HITL-G: show "Generate Summary" button
     useStudyStore.setState((state) => ({
       messages: [
         ...state.messages,

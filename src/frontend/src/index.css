@@ -1776,6 +1776,21 @@ input {
   margin-left: auto;
 }
 
+/* ── Phase start card (stream-first) ── */
+.scg-phase-start-card {
+  margin: 16px 0 8px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: var(--bg-card-2);
+  border: 1px solid var(--border-soft);
+  border-left: 3px solid var(--accent);
+}
+.scg-phase-start-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .scg-advance-section {
   padding: 20px 0;
   text-align: center;
