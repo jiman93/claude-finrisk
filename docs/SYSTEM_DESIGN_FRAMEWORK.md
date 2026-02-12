@@ -8,6 +8,54 @@ This document defines the working system design for the FinRisk chat app so we c
 - Core interaction model: chat-first workflow with explicit, inspectable tool steps.
 - Human control: HITL actions are part of the chat timeline, not detached modal flows.
 
+## Research Questions + Study Flow v2 (Constraint-Aware)
+
+### Why this revision
+This v2 section updates the original study framing to match current system constraints and future enterprise requirements:
+- checkpoint and phase progression must be backend-authoritative, not UI-authoritative
+- all intervention events must be auditable and persistable
+- study outcomes must remain valid even when provider reliability varies
+
+### Primary Research Questions (RQ)
+1. `RQ1 (Quality)`: Does human intervention at retrieval and/or generation improve factual quality and relevance of financial risk summaries versus baseline automation?
+2. `RQ2 (Trust)`: How does intervention level affect participant trust and confidence in the generated output?
+3. `RQ3 (Effort/Speed)`: What is the tradeoff between quality gains and human effort/time-on-task across Baseline, HITL-R, HITL-G, and HITL-Full?
+4. `RQ4 (Governance Fit)`: Which intervention points produce the strongest auditability and policy-control signals needed for enterprise deployment?
+
+### Secondary Questions
+- `SQ1`: Which errors are best caught at retrieval control vs generation control?
+- `SQ2`: Does requiring explicit evidence selection reduce unsupported claims?
+- `SQ3`: Do users prefer a single in-stream intervention model over fragmented UI workflows?
+
+### Study Flow v2 (Recommended)
+1. `Orientation`: short onboarding + one non-study practice run to reduce tool-learning effects.
+2. `Phase execution`: participant completes assigned phases in configured mode order with fixed ticker/query per phase.
+3. `Mandatory intervention gates`: required checkpoints must be completed before progression; optional checkpoints are explicitly logged as skipped.
+4. `Mandatory post-task instrument`: confidence + citation helpfulness + notes captured after each phase task.
+5. `Phase completion`: backend marks task/session completion and records timing.
+6. `End-of-session instrument`: final comparative reflection across modes (perceived trust, workload, preference).
+
+### Measurement Contract (minimum required)
+For each phase task, the backend should persist:
+- retrieval artifact set and selected/rejected evidence
+- generated summary and edited summary delta
+- checkpoint submissions with stable instance IDs and timestamps
+- task timing (`started`, `retrieval_complete`, `generation_complete`, `edit_complete`, `completed`)
+- post-task questionnaire response
+
+### Validity Guardrails
+- Keep ticker/query fixed per phase assignment; do not allow ad-hoc prompt drift in primary-task runs.
+- Treat follow-up chat/search as secondary behavior unless explicitly modeled in the protocol.
+- Use balanced mode ordering across participants to reduce carryover effects.
+- Record provider fallback events so quality analysis can segment live vs fallback runs.
+- Do not allow client-only checkpoint completion as source-of-truth for study data.
+
+### Enterprise Translation Lens
+Interpret study outputs using three enterprise outcomes:
+- `Outcome A`: quality improvement per unit time
+- `Outcome B`: audit completeness of human oversight
+- `Outcome C`: policy-control coverage (where human gates prevented risky output)
+
 ## Core Design Principles
 1. Chat is the source of truth.
 2. Every meaningful action must be represented in transcript form.
@@ -26,7 +74,8 @@ This document defines the working system design for the FinRisk chat app so we c
 - Responsibilities:
   - Render multi-step conversational stream.
   - Render in-stream HITL controls (selection/edit/questionnaire).
-  - Maintain local state machine for post-generation decisions.
+  - Maintain UI interaction state for post-generation decisions.
+  - Defer workflow authority (checkpoint/session progression) to backend state.
   - Open right pane with read-only artifacts (citations, selected chunks, edited summary, questionnaire response).
 
 ### Backend
@@ -249,7 +298,7 @@ This pattern keeps control behavior modular and lets the chat stream remain stab
 4. In-stream chunk selection.
 5. Step: synthesis.
 6. Answer + citations.
-7. Optional edit/questionnaire before next query.
+7. Mode-dependent edit + post-task questionnaire before phase completion.
 
 ### Live Path (Target)
 - Replace synthetic retrieve/generate calls with provider-backed calls while preserving UI contracts:
