@@ -1928,6 +1928,30 @@ input {
   font-size: 11px;
 }
 
+/* ── Follow-up Divider ── */
+.scg-followup-divider {
+  margin-top: 20px;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.scg-followup-divider::before,
+.scg-followup-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border-soft);
+}
+.scg-followup-divider-label {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
 /* ── Responsive ── */
 @media (max-width: 760px) {
   .scg-phases-row {
