@@ -1,6 +1,7 @@
 import { create } from "zustand";
 
 import {
+  chatTask,
   editSummaryTask,
   generateTask,
   nextPhase,
@@ -50,7 +51,8 @@ interface StudyState {
   setAssignment: (assignment: ParticipantAssignment | null) => void;
   startAndRunCurrentPhase: () => Promise<void>;
   askQuery: (query: string) => Promise<void>;
-  askFollowUp: (query: string) => Promise<void>;
+  askFollowUpChat: (query: string) => Promise<void>;
+  askFollowUpSearch: (query: string) => Promise<void>;
   triggerGeneration: (taskId: string) => Promise<void>;
   advancePhase: () => Promise<void>;
   submitNodeSelection: (
@@ -90,6 +92,30 @@ function getCurrentPhaseStartIdx(msgs: ChatMessage[]): number {
 function currentPhaseHasSummary(msgs: ChatMessage[]): boolean {
   const idx = getCurrentPhaseStartIdx(msgs);
   return msgs.slice(idx).some((m) => m.type === "summary");
+}
+
+/**
+ * Assemble conversational context from the current phase's messages:
+ * summary text + any prior follow-up exchanges (user + assistant text messages).
+ */
+function assembleContext(msgs: ChatMessage[]): string {
+  const phaseIdx = getCurrentPhaseStartIdx(msgs);
+  const phaseMessages = msgs.slice(phaseIdx);
+  const parts: string[] = [];
+
+  for (const m of phaseMessages) {
+    if (m.type === "summary") {
+      parts.push(`Generated Summary:\n${m.summary}`);
+    } else if (m.type === "text" && m.role === "user") {
+      parts.push(`User: ${m.content}`);
+    } else if (m.type === "text" && m.role === "assistant") {
+      parts.push(`Assistant: ${m.content}`);
+    }
+  }
+
+  // Truncate to ~8000 chars to stay within token limits
+  const joined = parts.join("\n\n");
+  return joined.length > 8000 ? joined.slice(-8000) : joined;
 }
 
 /** Get the current phase assignment from the store's assignment. */
@@ -194,9 +220,9 @@ export const useStudyStore = create<StudyState>((set, get) => ({
     });
   },
 
-  // ── Follow-up query ──
+  // ── Follow-up: conversational (default) ──
 
-  askFollowUp: async (query) => {
+  askFollowUpChat: async (query) => {
     const session = get().session;
     const normalizedQuery = query.trim();
     if (!session || !normalizedQuery) return;
@@ -212,56 +238,127 @@ export const useStudyStore = create<StudyState>((set, get) => ({
     const msgs = get().messages;
     const hasSummary = currentPhaseHasSummary(msgs);
 
-    if (hasSummary) {
-      // Post-summary: retrieval-only follow-up
-      // Just append to the stream — tail action is pinned separately
-      const retrievalLoadingId = makeId("loading-retrieval");
-
-      set((state) => ({
-        isLoading: true,
-        error: null,
-        messages: [
-          ...state.messages,
-          { id: makeId("div"), type: "follow_up_divider" as const },
-          { id: makeId("msg"), type: "text" as const, role: "user" as const, content: normalizedQuery },
-          { id: retrievalLoadingId, type: "loading" as const, content: "Searching document..." },
-        ],
-      }));
-
-      try {
-        const retrieval = await queryTask(session.current_task_id, normalizedQuery);
-        set((state) => ({
-          messages: [
-            ...state.messages.filter((m) => m.id !== retrievalLoadingId),
-            {
-              id: makeId("nodes"),
-              type: "retrieved_nodes" as const,
-              nodes: retrieval.retrieved_nodes,
-            },
-          ],
-          isLoading: false,
-        }));
-      } catch (error) {
-        const message = error instanceof Error ? error.message : "Unexpected error";
-        set((state) => ({
-          error: message,
-          isLoading: false,
-          messages: state.messages.filter((m) => m.id !== retrievalLoadingId),
-        }));
-      }
-    } else {
+    if (!hasSummary) {
       // Pre-summary: remove old generate_prompt/selector, re-run full flow
       set((state) => ({
         messages: state.messages.filter(
           (m) => m.type !== "generate_prompt" && m.type !== "selector"
         ),
       }));
-
       await runTaskFlow({
         taskId: session.current_task_id,
         query: normalizedQuery,
         mode: session.current_mode,
       });
+      return;
+    }
+
+    // Post-summary: conversational LLM call (no retrieval)
+    const chatLoadingId = makeId("loading-chat");
+    const context = assembleContext(msgs);
+
+    set((state) => ({
+      isLoading: true,
+      error: null,
+      messages: [
+        ...state.messages,
+        { id: makeId("div"), type: "follow_up_divider" as const },
+        { id: makeId("msg"), type: "text" as const, role: "user" as const, content: normalizedQuery },
+        { id: chatLoadingId, type: "loading" as const, content: "Thinking..." },
+      ],
+    }));
+
+    try {
+      const result = await chatTask(session.current_task_id, normalizedQuery, context);
+      set((state) => ({
+        messages: [
+          ...state.messages.filter((m) => m.id !== chatLoadingId),
+          {
+            id: makeId("reply"),
+            type: "text" as const,
+            role: "assistant" as const,
+            content: result.reply,
+          },
+        ],
+        isLoading: false,
+      }));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unexpected error";
+      set((state) => ({
+        error: message,
+        isLoading: false,
+        messages: state.messages.filter((m) => m.id !== chatLoadingId),
+      }));
+    }
+  },
+
+  // ── Follow-up: document search (retrieval) ──
+
+  askFollowUpSearch: async (query) => {
+    const session = get().session;
+    const normalizedQuery = query.trim();
+    if (!session || !normalizedQuery) return;
+
+    // Increment follow-up count
+    set((state) => ({
+      followUpCounts: {
+        ...state.followUpCounts,
+        [session.current_phase]: (state.followUpCounts[session.current_phase] ?? 0) + 1,
+      },
+    }));
+
+    const msgs = get().messages;
+    const hasSummary = currentPhaseHasSummary(msgs);
+
+    if (!hasSummary) {
+      // Pre-summary: remove old generate_prompt/selector, re-run full flow
+      set((state) => ({
+        messages: state.messages.filter(
+          (m) => m.type !== "generate_prompt" && m.type !== "selector"
+        ),
+      }));
+      await runTaskFlow({
+        taskId: session.current_task_id,
+        query: normalizedQuery,
+        mode: session.current_mode,
+      });
+      return;
+    }
+
+    // Post-summary: retrieval follow-up (search document)
+    const retrievalLoadingId = makeId("loading-retrieval");
+
+    set((state) => ({
+      isLoading: true,
+      error: null,
+      messages: [
+        ...state.messages,
+        { id: makeId("div"), type: "follow_up_divider" as const },
+        { id: makeId("msg"), type: "text" as const, role: "user" as const, content: normalizedQuery },
+        { id: retrievalLoadingId, type: "loading" as const, content: "Searching document..." },
+      ],
+    }));
+
+    try {
+      const retrieval = await queryTask(session.current_task_id, normalizedQuery);
+      set((state) => ({
+        messages: [
+          ...state.messages.filter((m) => m.id !== retrievalLoadingId),
+          {
+            id: makeId("nodes"),
+            type: "retrieved_nodes" as const,
+            nodes: retrieval.retrieved_nodes,
+          },
+        ],
+        isLoading: false,
+      }));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unexpected error";
+      set((state) => ({
+        error: message,
+        isLoading: false,
+        messages: state.messages.filter((m) => m.id !== retrievalLoadingId),
+      }));
     }
   },
 

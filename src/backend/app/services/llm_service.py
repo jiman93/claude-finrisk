@@ -78,3 +78,50 @@ class LLMService:
         if not content:
             raise LLMServiceError("OpenAI response contained empty content")
         return str(content)
+
+    def chat_reply(self, ticker: str, message: str, context: str) -> str:
+        """Conversational follow-up — answers from existing context, no retrieval."""
+        if not self.api_key:
+            raise LLMServiceError("OPENAI_API_KEY is not configured")
+
+        system_prompt = (
+            "You are a financial analyst assistant helping a user understand a risk "
+            f"analysis for {ticker}. Answer the user's question based ONLY on the "
+            "context provided below. Be concise and factual. If the answer is not "
+            "in the context, say so clearly.\n\n"
+            "Context:\n"
+            f"{context}"
+        )
+
+        payload = {
+            "model": self.model,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": message},
+            ],
+            "temperature": 0.3,
+        }
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json",
+        }
+
+        try:
+            with httpx.Client(timeout=60) as client:
+                response = client.post(
+                    f"{self.base_url}/chat/completions",
+                    json=payload,
+                    headers=headers,
+                )
+                response.raise_for_status()
+                data = response.json()
+        except httpx.HTTPError as exc:
+            raise LLMServiceError(f"OpenAI HTTP error: {exc}") from exc
+
+        choices = data.get("choices", [])
+        if not choices:
+            raise LLMServiceError("OpenAI response contained no choices")
+        content = choices[0].get("message", {}).get("content", "")
+        if not content:
+            raise LLMServiceError("OpenAI response contained empty content")
+        return str(content)
