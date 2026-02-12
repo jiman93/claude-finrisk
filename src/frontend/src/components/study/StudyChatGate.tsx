@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useRef, useState } from "react";
+import React, { FormEvent, useEffect, useRef, useState } from "react";
 
 import { SEED_DEFINITIONS } from "../../data/checkpointDefinitions";
 import { useStudyStore } from "../../stores/studyStore";
@@ -546,31 +546,134 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
                 </div>
               )}
 
-              {messages.map((msg) => {
+              {messages.map((msg, msgIdx) => {
+                // ── Inline pipeline controls ──
+                // After the summary (or editable_summary acceptance), inject
+                // questionnaire prompt → checkpoints → phase advance controls
+                // BEFORE rendering any subsequent follow-up messages.
+                // This keeps controls anchored to the summary position.
+                const pipelineControls: React.ReactNode[] = [];
+                const isSummaryMsg = msg.type === "summary" || msg.type === "editable_summary";
+                if (isSummaryMsg) {
+                  const isLastSummaryLikeMsg = !messages.slice(msgIdx + 1).some(
+                    (m) => m.type === "summary" || m.type === "editable_summary"
+                  );
+                  if (isLastSummaryLikeMsg && session && currentPhase && !isLoading) {
+                    // Questionnaire prompt
+                    const hasQP = currentPhaseHasQuestionnairePrompt(messages);
+                    const postGenCps = currentPhase.checkpoints.filter(
+                      (cp) => cp.pipeline_position === "post_generation"
+                    );
+                    if (postGenCps.length > 0 && !hasQP) {
+                      pipelineControls.push(
+                        <QuestionnairePromptCard
+                          key="qp-prompt"
+                          onContinue={() => {
+                            addMessage({ id: `qp-${Date.now()}`, type: "questionnaire_prompt" });
+                          }}
+                        />
+                      );
+                    }
+
+                    // Post-gen checkpoints (if questionnaire started)
+                    if (hasQP) {
+                      postGenCps
+                        .filter((cp) => !messages.some(
+                          (m) => m.type === "submitted_checkpoint" && m.definitionId === cp.definition_id
+                        ))
+                        .forEach((cp) => {
+                          const def = SEED_DEFINITIONS.find((d) => d.id === cp.definition_id);
+                          if (!def || def.field_schema.length === 0) return;
+                          pipelineControls.push(
+                            <PostGenerationCheckpoint
+                              key={cp.definition_id}
+                              definitionId={cp.definition_id}
+                              label={cp.label}
+                              onViewCheckpoint={openCheckpointPane}
+                              onCheckpointDone={addMessage}
+                            />
+                          );
+                        });
+                    }
+
+                    // Phase advance button
+                    if (phaseCheckpointsDone(messages, currentPhase)) {
+                      if (session.current_phase < 3) {
+                        pipelineControls.push(
+                          <div key="phase-advance" className="scg-advance-section">
+                            <button
+                              type="button"
+                              className="pi-primary-btn"
+                              onClick={() => advancePhase()}
+                              disabled={isLoading}
+                            >
+                              Next Phase ▶ Phase {session.current_phase + 1}
+                            </button>
+                          </div>
+                        );
+                      } else {
+                        pipelineControls.push(
+                          <div key="session-complete" className="pi-run-meta pi-status-row">
+                            <span>Study session complete. All 3 phases finished.</span>
+                          </div>
+                        );
+                      }
+                    }
+                  }
+                }
+
+                // ── Follow-up separator ──
+                // Detect user messages that appear after a summary (follow-up queries)
+                // and add a subtle divider to visually separate exploration from pipeline
+                let followUpSeparator: React.ReactNode = null;
+                if (
+                  msg.type === "text" &&
+                  msg.role === "user" &&
+                  msgIdx > 0
+                ) {
+                  const prevMsgs = messages.slice(0, msgIdx);
+                  const hasPriorSummary = currentPhaseHasSummary(prevMsgs);
+                  // Check this is the first user msg after the summary block
+                  // (i.e., previous msg is not a user msg — avoids double separators)
+                  const prevMsg = messages[msgIdx - 1];
+                  const prevIsFollowUp = prevMsg?.type === "text" && prevMsg?.role === "user";
+                  const prevIsRetrievedFollowUp = prevMsg?.type === "retrieved_nodes";
+                  if (hasPriorSummary && !prevIsFollowUp && !prevIsRetrievedFollowUp) {
+                    followUpSeparator = (
+                      <div className="scg-followup-divider">
+                        <span className="scg-followup-divider-label">Follow-up</span>
+                      </div>
+                    );
+                  }
+                }
+
+                // ── Message rendering ──
+                let rendered: React.ReactNode = null;
+
                 if (msg.type === "text") {
                   if (msg.role === "system") {
-                    return (
+                    rendered = (
                       <div key={msg.id} className="pi-assistant-text" style={{ opacity: 0.7, fontSize: 13 }}>
                         {msg.content}
                       </div>
                     );
-                  }
-                  if (msg.role === "user") {
-                    return (
+                  } else if (msg.role === "user") {
+                    rendered = (
                       <div key={msg.id} className="pi-user-bubble">
                         {msg.content}
                       </div>
                     );
+                  } else {
+                    rendered = (
+                      <div key={msg.id} className="pi-assistant-text">
+                        {msg.content}
+                      </div>
+                    );
                   }
-                  return (
-                    <div key={msg.id} className="pi-assistant-text">
-                      {msg.content}
-                    </div>
-                  );
                 }
 
                 if (msg.type === "loading") {
-                  return (
+                  rendered = (
                     <div key={msg.id} className="pi-step-card running">
                       <div className="pi-step-left">
                         <span className="pi-pulse-loader">
@@ -585,7 +688,7 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
                 }
 
                 if (msg.type === "retrieved_nodes") {
-                  return (
+                  rendered = (
                     <div key={msg.id} className="pi-step-card completed">
                       <div className="pi-step-left">
                         <span className="pi-step-icon">&#10003;</span>
@@ -600,7 +703,7 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
                 }
 
                 if (msg.type === "selector") {
-                  return (
+                  rendered = (
                     <SelectorCard
                       key={msg.id}
                       taskId={msg.taskId}
@@ -612,7 +715,7 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
                 }
 
                 if (msg.type === "editable_summary") {
-                  return (
+                  rendered = (
                     <EditableSummaryCard
                       key={msg.id}
                       taskId={msg.taskId}
@@ -625,22 +728,19 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
                 }
 
                 if (msg.type === "summary") {
-                  // In editable modes the EditableSummaryCard already
-                  // displays the content; this message only acts as a
-                  // signal for currentPhaseHasSummary().
                   const hasEditCard = messages.some((m) => m.type === "editable_summary");
-                  if (hasEditCard) return null;
-
-                  return (
-                    <div key={msg.id} className="pi-answer-card">
-                      <div className="pi-answer-label">Generated Summary</div>
-                      <FormattedMarkdown text={msg.summary} />
-                    </div>
-                  );
+                  if (!hasEditCard) {
+                    rendered = (
+                      <div key={msg.id} className="pi-answer-card">
+                        <div className="pi-answer-label">Generated Summary</div>
+                        <FormattedMarkdown text={msg.summary} />
+                      </div>
+                    );
+                  }
                 }
 
                 if (msg.type === "checkpoint") {
-                  return (
+                  rendered = (
                     <CheckpointRenderer
                       key={msg.id}
                       instance={msg.instance}
@@ -649,7 +749,7 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
                 }
 
                 if (msg.type === "submitted_checkpoint") {
-                  return (
+                  rendered = (
                     <SubmittedCheckpointCard
                       key={msg.id}
                       label={msg.label}
@@ -661,7 +761,7 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
                 }
 
                 if (msg.type === "generate_prompt") {
-                  return (
+                  rendered = (
                     <GeneratePromptCard
                       key={msg.id}
                       taskId={msg.taskId}
@@ -671,74 +771,21 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
                   );
                 }
 
-                if (msg.type === "questionnaire_prompt") {
-                  return null; // Questionnaire prompt is handled by the section below
+                // questionnaire_prompt messages are handled by inline controls above
+
+                // Return the message element with optional separator and pipeline controls
+                if (pipelineControls.length > 0 || followUpSeparator) {
+                  return (
+                    <React.Fragment key={msg.id}>
+                      {followUpSeparator}
+                      {rendered}
+                      {pipelineControls}
+                    </React.Fragment>
+                  );
                 }
 
-                return null;
+                return rendered;
               })}
-
-              {/* "Continue to Questionnaire" prompt — shown when summary is done but questionnaire hasn't started */}
-              {currentPhase &&
-                !isLoading &&
-                session &&
-                currentPhaseHasSummary(messages) &&
-                !currentPhaseHasQuestionnairePrompt(messages) &&
-                currentPhase.checkpoints.filter((cp) => cp.pipeline_position === "post_generation").length > 0 && (
-                  <QuestionnairePromptCard onContinue={() => {
-                    addMessage({ id: `qp-${Date.now()}`, type: "questionnaire_prompt" });
-                  }} />
-                )}
-
-              {/* Post-generation checkpoint instances from assignment (only unsubmitted ones) */}
-              {currentPhase &&
-                !isLoading &&
-                session &&
-                currentPhaseHasSummary(messages) &&
-                currentPhaseHasQuestionnairePrompt(messages) &&
-                currentPhase.checkpoints
-                  .filter((cp) => cp.pipeline_position === "post_generation")
-                  .filter((cp) => !messages.some(
-                    (m) => m.type === "submitted_checkpoint" && m.definitionId === cp.definition_id
-                  ))
-                  .map((cp) => {
-                    const def = SEED_DEFINITIONS.find((d) => d.id === cp.definition_id);
-                    if (!def || def.field_schema.length === 0) return null;
-                    return (
-                      <PostGenerationCheckpoint
-                        key={cp.definition_id}
-                        definitionId={cp.definition_id}
-                        label={cp.label}
-                        onViewCheckpoint={openCheckpointPane}
-                        onCheckpointDone={addMessage}
-                      />
-                    );
-                  })}
-
-              {/* Phase advance button — show when no checkpoints or all done */}
-              {session &&
-                !isLoading &&
-                currentPhaseHasSummary(messages) &&
-                session.current_phase < 3 &&
-                phaseCheckpointsDone(messages, currentPhase) && (
-                  <div className="scg-advance-section">
-                    <button
-                      type="button"
-                      className="pi-primary-btn"
-                      onClick={() => advancePhase()}
-                      disabled={isLoading}
-                    >
-                      Next Phase ▶ Phase {session.current_phase + 1}
-                    </button>
-                  </div>
-                )}
-
-              {session && session.current_phase >= 3 && currentPhaseHasSummary(messages) &&
-                phaseCheckpointsDone(messages, currentPhase) && (
-                <div className="pi-run-meta pi-status-row">
-                  <span>Study session complete. All 3 phases finished.</span>
-                </div>
-              )}
             </div>
           </div>
 
