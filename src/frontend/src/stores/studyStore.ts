@@ -134,11 +134,62 @@ export const useStudyStore = create<StudyState>((set, get) => ({
       },
     }));
 
-    await runTaskFlow({
-      taskId: session.current_task_id,
-      query: normalizedQuery,
-      mode: session.current_mode,
-    });
+    // Check if the current phase already has a summary.
+    // If YES → retrieval-only (exploratory), no pipeline restart.
+    // If NO  → replace the current pipeline position (remove old generate_prompt/selector,
+    //           re-run full flow so the user gets a fresh generate button for the new query).
+    const msgs = get().messages;
+    const hasSummary = currentPhaseHasSummaryHelper(msgs);
+
+    if (hasSummary) {
+      // Retrieval-only follow-up (post-summary exploration)
+      const retrievalLoadingId = makeId("loading-retrieval");
+
+      set((state) => ({
+        isLoading: true,
+        error: null,
+        messages: [
+          ...state.messages,
+          { id: makeId("msg"), type: "text", role: "user", content: normalizedQuery },
+          { id: retrievalLoadingId, type: "loading", content: "Searching document..." },
+        ],
+      }));
+
+      try {
+        const retrieval = await queryTask(session.current_task_id, normalizedQuery);
+        set((state) => ({
+          messages: [
+            ...state.messages.filter((m) => m.id !== retrievalLoadingId),
+            {
+              id: makeId("nodes"),
+              type: "retrieved_nodes",
+              nodes: retrieval.retrieved_nodes,
+            },
+          ],
+          isLoading: false,
+        }));
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Unexpected error";
+        set((state) => ({
+          error: message,
+          isLoading: false,
+          messages: state.messages.filter((m) => m.id !== retrievalLoadingId),
+        }));
+      }
+    } else {
+      // Pre-summary follow-up: remove old generate_prompt/selector, re-run full flow
+      set((state) => ({
+        messages: state.messages.filter(
+          (m) => m.type !== "generate_prompt" && m.type !== "selector"
+        ),
+      }));
+
+      await runTaskFlow({
+        taskId: session.current_task_id,
+        query: normalizedQuery,
+        mode: session.current_mode,
+      });
+    }
   },
 
   triggerGeneration: async (taskId) => {
@@ -331,6 +382,26 @@ export const useStudyStore = create<StudyState>((set, get) => ({
     });
   },
 }));
+
+/**
+ * Check whether the current phase already has a completed summary.
+ * Looks only at messages after the last phase-transition system message.
+ */
+function currentPhaseHasSummaryHelper(msgs: ChatMessage[]): boolean {
+  let phaseStartIdx = 0;
+  for (let i = msgs.length - 1; i >= 0; i--) {
+    const m = msgs[i];
+    if (
+      m.type === "text" &&
+      m.role === "system" &&
+      (/^Transitioned to Phase/.test(m.content) || /^Phase \d/.test(m.content))
+    ) {
+      phaseStartIdx = i;
+      break;
+    }
+  }
+  return msgs.slice(phaseStartIdx).some((m) => m.type === "summary");
+}
 
 interface RunTaskFlowParams {
   taskId: string;
