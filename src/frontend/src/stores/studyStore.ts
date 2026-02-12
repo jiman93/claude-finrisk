@@ -96,6 +96,32 @@ function getCurrentPhaseAssignment(
   return assignment.phases.find((p) => p.phase === session.current_phase);
 }
 
+/** Types that are "tail controls" — flow controls pushed after the summary. */
+const TAIL_CONTROL_TYPES = new Set([
+  "questionnaire_prompt",
+  "active_checkpoint",
+  "submitted_checkpoint",
+  "phase_advance",
+  "session_complete",
+]);
+
+/**
+ * Split messages into [body, tailControls] where tailControls are the
+ * trailing flow-control messages (questionnaire, checkpoints, phase advance, etc.).
+ * Follow-up content should be inserted between body and tailControls.
+ */
+function splitTailControls(msgs: ChatMessage[]): [ChatMessage[], ChatMessage[]] {
+  let splitIdx = msgs.length;
+  for (let i = msgs.length - 1; i >= 0; i--) {
+    if (TAIL_CONTROL_TYPES.has(msgs[i].type)) {
+      splitIdx = i;
+    } else {
+      break;
+    }
+  }
+  return [msgs.slice(0, splitIdx), msgs.slice(splitIdx)];
+}
+
 /** Get post-generation checkpoint refs for a phase. */
 function getPostGenCheckpoints(phase: PhaseAssignment | undefined) {
   if (!phase) return [];
@@ -208,32 +234,43 @@ export const useStudyStore = create<StudyState>((set, get) => ({
 
     if (hasSummary) {
       // Post-summary: retrieval-only follow-up (exploration)
+      // Insert BEFORE tail controls (questionnaire, checkpoints, phase advance)
       const retrievalLoadingId = makeId("loading-retrieval");
 
-      set((state) => ({
-        isLoading: true,
-        error: null,
-        messages: [
-          ...state.messages,
-          { id: makeId("div"), type: "follow_up_divider" },
-          { id: makeId("msg"), type: "text", role: "user", content: normalizedQuery },
-          { id: retrievalLoadingId, type: "loading", content: "Searching document..." },
-        ],
-      }));
+      set((state) => {
+        const [body, tail] = splitTailControls(state.messages);
+        return {
+          isLoading: true,
+          error: null,
+          messages: [
+            ...body,
+            { id: makeId("div"), type: "follow_up_divider" as const },
+            { id: makeId("msg"), type: "text" as const, role: "user" as const, content: normalizedQuery },
+            { id: retrievalLoadingId, type: "loading" as const, content: "Searching document..." },
+            ...tail,
+          ],
+        };
+      });
 
       try {
         const retrieval = await queryTask(session.current_task_id, normalizedQuery);
-        set((state) => ({
-          messages: [
-            ...state.messages.filter((m) => m.id !== retrievalLoadingId),
-            {
-              id: makeId("nodes"),
-              type: "retrieved_nodes",
-              nodes: retrieval.retrieved_nodes,
-            },
-          ],
-          isLoading: false,
-        }));
+        set((state) => {
+          const [body, tail] = splitTailControls(
+            state.messages.filter((m) => m.id !== retrievalLoadingId)
+          );
+          return {
+            messages: [
+              ...body,
+              {
+                id: makeId("nodes"),
+                type: "retrieved_nodes" as const,
+                nodes: retrieval.retrieved_nodes,
+              },
+              ...tail,
+            ],
+            isLoading: false,
+          };
+        });
       } catch (error) {
         const message = error instanceof Error ? error.message : "Unexpected error";
         set((state) => ({
