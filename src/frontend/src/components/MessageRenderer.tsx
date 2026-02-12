@@ -83,7 +83,7 @@ export default function MessageRenderer({
       </AssistantBlock>
     );
   }
-  if (message.type === "checkpoint") {
+  if (message.type === "active_checkpoint") {
     return (
       <AssistantBlock>
         <DynamicControlRenderer

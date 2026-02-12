@@ -1,6 +1,5 @@
-import React, { FormEvent, useEffect, useRef, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 
-import { SEED_DEFINITIONS } from "../../data/checkpointDefinitions";
 import { useStudyStore } from "../../stores/studyStore";
 import type {
   ChatMessage,
@@ -8,6 +7,8 @@ import type {
   CheckpointState,
   ParticipantAssignment,
   PhaseAssignment,
+  RetrievalNode,
+  SessionState,
 } from "../../types";
 import DynamicControlRenderer from "../controls/DynamicControlRenderer";
 import FormattedMarkdown from "../FormattedMarkdown";
@@ -33,39 +34,19 @@ const MODE_COLORS: Record<string, string> = {
   hitl_full: "scp-mode-hitlfull",
 };
 
-function PhaseOverviewCard({ phase, isCurrent }: { phase: PhaseAssignment; isCurrent: boolean }) {
-  return (
-    <div className={`scg-phase-card ${isCurrent ? "scg-current" : ""}`}>
-      <div className="scg-phase-header">
-        <span className="scg-phase-num">Phase {phase.phase}</span>
-        <span className={`scp-mode-badge ${MODE_COLORS[phase.mode] ?? ""}`}>
-          {MODE_LABELS[phase.mode] ?? phase.mode}
-        </span>
-      </div>
-      <div className="scg-phase-ticker">{phase.ticker}</div>
-      <div className="scg-phase-query">{phase.query}</div>
-      <div className="scg-phase-cps">
-        {phase.checkpoints.length === 0
-          ? "No checkpoints"
-          : phase.checkpoints.map((cp) => (
-              <span key={cp.definition_id} className="scg-cp-tag">
-                {cp.control_type}
-              </span>
-            ))}
-      </div>
-    </div>
-  );
-}
+// ---------------------------------------------------------------------------
+// Main component
+// ---------------------------------------------------------------------------
 
 export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
   const [participantInput, setParticipantInput] = useState("P01");
-  const [assignment, setAssignment] = useState<ParticipantAssignment | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [isFetching, setIsFetching] = useState(false);
 
-  // Study flow state
+  // Study flow state from store
   const {
     session,
+    assignment,
     messages,
     isLoading,
     error: studyError,
@@ -73,13 +54,16 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
     chatSnapshots,
     followUpCounts,
     setParticipantId,
+    setAssignment,
     startAndRunCurrentPhase,
     advancePhase,
     askFollowUp,
     triggerGeneration,
     submitNodeSelection,
     submitEditedSummary,
-    addMessage,
+    startQuestionnaire,
+    submitCheckpoint,
+    skipCheckpoint,
   } = useStudyStore();
 
   const [followUpInput, setFollowUpInput] = useState("");
@@ -89,7 +73,6 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
   const chatIdRef = useRef<string | null>(null);
 
   // Determine if we're viewing a restored (read-only) past chat
-  // Read-only means: we loaded a snapshot AND haven't started a new active session on top of it
   const isRestoredView = !!(
     activeChatId &&
     chatSnapshots[activeChatId] &&
@@ -108,7 +91,6 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
     fields: Array<{ label: string; value: string }>;
   } | null>(null);
 
-  // Helpers to manage the right pane — only one view at a time
   function openSummaryPane(label: string, text: string) {
     setPaneCheckpoint(null);
     setPaneSummary({ label, text });
@@ -134,7 +116,6 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
       const res = await fetch(`${BASE_URL}/api/study/assignments/${pid}`);
       if (!res.ok) {
         if (res.status === 404) {
-          // Try to generate defaults first, then retry
           await fetch(`${BASE_URL}/api/study/assignments`, { method: "GET" });
           const res2 = await fetch(`${BASE_URL}/api/study/assignments/${pid}`);
           if (!res2.ok) throw new Error(`Participant ${pid} not found`);
@@ -155,28 +136,26 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
     }
   }
 
-  // Start the study session for this participant
+  // Start the study session
   async function handleStartSession() {
     if (!assignment) return;
     setParticipantId(assignment.participant_id);
     setStarted(true);
   }
 
-  // Trigger the actual session start once when started flag flips to true
+  // Trigger the actual session start once
   useEffect(() => {
     if (started && !sessionStartedRef.current) {
       sessionStartedRef.current = true;
-      // Generate a chat ID for this session
       chatIdRef.current = `chat-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
       startAndRunCurrentPhase();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [started]);
 
-  // Auto-save to chat history whenever messages change (for active sessions only)
+  // Auto-save to chat history whenever messages change
   useEffect(() => {
     if (!started || !sessionStartedRef.current || !assignment || !chatIdRef.current) return;
-    // Don't save if no messages yet (initial state)
     if (messages.length === 0) return;
     const title = `${assignment.participant_id} - Study Session`;
     onSaveChat(chatIdRef.current, title, assignment);
@@ -192,211 +171,78 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
     await askFollowUp(q);
   }
 
-  // Check if the stream is at a point where follow-up queries make sense
-  // (not while loading, and when the stream has at least completed retrieval once)
   const canAskFollowUp = started && session && !isLoading && !isRestoredView;
 
-  // Check if we have a pending generate_prompt (user hasn't clicked generate yet)
-  const hasGeneratePrompt = messages.some((m) => m.type === "generate_prompt");
-
-  // Build checkpoint instances for the current phase from the assignment
-  const currentPhase = effectiveAssignment?.phases.find(
-    (p) => p.phase === (session?.current_phase ?? 1)
+  // ── Right pane (shared between active and restored views) ──
+  const rightPane = (
+    <>
+      {paneSummary && (
+        <div className="pi-right-pane">
+          <div className="pi-right-header">
+            <span className="pi-right-file">{paneSummary.label}</span>
+            <button type="button" className="pi-close-pane-btn" onClick={closePane}>
+              Close
+            </button>
+          </div>
+          <div className="pi-right-body">
+            <FormattedMarkdown text={paneSummary.text} />
+          </div>
+        </div>
+      )}
+      {paneCheckpoint && (
+        <div className="pi-right-pane">
+          <div className="pi-right-header">
+            <span className="pi-right-file">{paneCheckpoint.label}</span>
+            <button type="button" className="pi-close-pane-btn" onClick={closePane}>
+              Close
+            </button>
+          </div>
+          <div className="pi-right-body">
+            <div className="scg-cp-detail-list">
+              {paneCheckpoint.fields.map((f, i) => (
+                <div key={i} className="scg-cp-detail-row">
+                  <span className="scg-cp-detail-label">{f.label}</span>
+                  <span className="scg-cp-detail-value">{f.value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 
-  // ── Restored view: show the saved chat stream (read-only) ──
+  // ── Restored view: show saved chat stream (read-only) ──
   if (isRestoredView && session && effectiveAssignment) {
     return (
       <section className="pi-chat-shell">
         <div className={`pi-workspace${paneSummary || paneCheckpoint ? "" : " pane-collapsed"}`}>
           <div className="pi-left-pane scg-active-layout">
-            {/* Session info bar */}
-            <div className="scg-session-bar">
-              <span className="scg-session-pid">{effectiveAssignment.participant_id}</span>
-              <span className={`scp-card-group group-${effectiveAssignment.group.toLowerCase()}`}>
-                {effectiveAssignment.group}
-              </span>
-              <span className="scg-session-phase">Phase {session.current_phase}/3</span>
-              <span className={`scp-mode-badge ${MODE_COLORS[session.current_mode] ?? ""}`}>
-                {MODE_LABELS[session.current_mode] ?? session.current_mode}
-              </span>
-              <span className="scg-session-ticker">{session.current_ticker}</span>
-            </div>
-
+            <SessionBar assignment={effectiveAssignment} session={session} />
             <div className="pi-chat-stream">
               <div className="pi-transcript">
-                {/* Document attachment card */}
-                <div className="scg-doc-card">
-                  <div className="scg-doc-thumb">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                      <polyline points="14 2 14 8 20 8" />
-                      <line x1="16" y1="13" x2="8" y2="13" />
-                      <line x1="16" y1="17" x2="8" y2="17" />
-                    </svg>
-                  </div>
-                  <div className="scg-doc-info">
-                    <span className="scg-doc-name">{session.current_ticker}_10-K_Annual_Report.html</span>
-                    <span className="scg-doc-meta">10-K Annual Filing</span>
-                  </div>
-                </div>
-
-                {/* Read-only message stream */}
-                {messages.map((msg) => {
-                  if (msg.type === "text") {
-                    if (msg.role === "system") {
-                      return (
-                        <div key={msg.id} className="pi-assistant-text" style={{ opacity: 0.7, fontSize: 13 }}>
-                          {msg.content}
-                        </div>
-                      );
-                    }
-                    if (msg.role === "user") {
-                      return (
-                        <div key={msg.id} className="pi-user-bubble">
-                          {msg.content}
-                        </div>
-                      );
-                    }
-                    return (
-                      <div key={msg.id} className="pi-assistant-text">
-                        {msg.content}
-                      </div>
-                    );
-                  }
-
-                  if (msg.type === "loading") return null; // Skip loading indicators in read-only
-
-                  if (msg.type === "retrieved_nodes") {
-                    return (
-                      <div key={msg.id} className="pi-step-card completed">
-                        <div className="pi-step-left">
-                          <span className="pi-step-icon">&#10003;</span>
-                          <span>Retrieved {msg.nodes.length} chunks</span>
-                        </div>
-                        <div className="pi-step-right">
-                          {msg.nodes.map((n) => n.title).slice(0, 3).join(", ")}
-                          {msg.nodes.length > 3 ? ` +${msg.nodes.length - 3} more` : ""}
-                        </div>
-                      </div>
-                    );
-                  }
-
-                  // Selector in read-only: always show as submitted
-                  if (msg.type === "selector") {
-                    return (
-                      <div key={msg.id} className="pi-selector-card">
-                        <div className="pi-selector-header">
-                          <span>Chunk selection submitted</span>
-                          <span className="pi-selector-meta">{msg.nodes.length} chunks</span>
-                        </div>
-                      </div>
-                    );
-                  }
-
-                  // Editable summary in read-only: show as accepted
-                  if (msg.type === "editable_summary") {
-                    return (
-                      <div key={msg.id} className="pi-answer-card">
-                        <div className="pi-answer-label">Generated Summary</div>
-                        <FormattedMarkdown text={msg.summary} />
-                      </div>
-                    );
-                  }
-
-                  if (msg.type === "summary") {
-                    const hasEditCard = messages.some((m) => m.type === "editable_summary");
-                    if (hasEditCard) return null;
-                    return (
-                      <div key={msg.id} className="pi-answer-card">
-                        <div className="pi-answer-label">Generated Summary</div>
-                        <FormattedMarkdown text={msg.summary} />
-                      </div>
-                    );
-                  }
-
-                  if (msg.type === "checkpoint") {
-                    return (
-                      <CheckpointRenderer
-                        key={msg.id}
-                        instance={msg.instance}
-                      />
-                    );
-                  }
-
-                  if (msg.type === "submitted_checkpoint") {
-                    return (
-                      <SubmittedCheckpointCard
-                        key={msg.id}
-                        label={msg.label}
-                        state={msg.state}
-                        fields={msg.fields}
-                        onViewCheckpoint={openCheckpointPane}
-                      />
-                    );
-                  }
-
-                  if (msg.type === "generate_prompt") {
-                    // In read-only, show as a completed step
-                    return (
-                      <div key={msg.id} className="pi-step-card completed">
-                        <div className="pi-step-left">
-                          <span className="pi-step-icon">&#10003;</span>
-                          <span>Generate Summary (triggered)</span>
-                        </div>
-                      </div>
-                    );
-                  }
-
-                  if (msg.type === "questionnaire_prompt") {
-                    return null;
-                  }
-
-                  return null;
-                })}
-
-                {/* Session status */}
+                <DocumentCard ticker={session.current_ticker} />
+                <StreamRenderer
+                  messages={messages}
+                  readOnly
+                  isLoading={false}
+                  onSubmitNodeSelection={submitNodeSelection}
+                  onSubmitEditedSummary={submitEditedSummary}
+                  onTriggerGeneration={triggerGeneration}
+                  onStartQuestionnaire={startQuestionnaire}
+                  onSubmitCheckpoint={submitCheckpoint}
+                  onSkipCheckpoint={skipCheckpoint}
+                  onAdvancePhase={advancePhase}
+                  onViewSummary={openSummaryPane}
+                  onViewCheckpoint={openCheckpointPane}
+                />
                 <div className="pi-run-meta pi-status-row" style={{ marginTop: 16 }}>
                   <span style={{ opacity: 0.6 }}>Viewing saved session</span>
                 </div>
               </div>
             </div>
           </div>
-
-          {/* Right pane: summary or checkpoint viewer */}
-          {paneSummary && (
-            <div className="pi-right-pane">
-              <div className="pi-right-header">
-                <span className="pi-right-file">{paneSummary.label}</span>
-                <button type="button" className="pi-close-pane-btn" onClick={closePane}>
-                  Close
-                </button>
-              </div>
-              <div className="pi-right-body">
-                <FormattedMarkdown text={paneSummary.text} />
-              </div>
-            </div>
-          )}
-          {paneCheckpoint && (
-            <div className="pi-right-pane">
-              <div className="pi-right-header">
-                <span className="pi-right-file">{paneCheckpoint.label}</span>
-                <button type="button" className="pi-close-pane-btn" onClick={closePane}>
-                  Close
-                </button>
-              </div>
-              <div className="pi-right-body">
-                <div className="scg-cp-detail-list">
-                  {paneCheckpoint.fields.map((f, i) => (
-                    <div key={i} className="scg-cp-detail-row">
-                      <span className="scg-cp-detail-label">{f.label}</span>
-                      <span className="scg-cp-detail-value">{f.value}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
+          {rightPane}
         </div>
       </section>
     );
@@ -509,283 +355,26 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
     <section className="pi-chat-shell">
       <div className={`pi-workspace${paneSummary || paneCheckpoint ? "" : " pane-collapsed"}`}>
         <div className="pi-left-pane scg-active-layout">
-          {/* Session info bar */}
-          <div className="scg-session-bar">
-            <span className="scg-session-pid">{assignment.participant_id}</span>
-            <span className={`scp-card-group group-${assignment.group.toLowerCase()}`}>
-              {assignment.group}
-            </span>
-            {session && (
-              <>
-                <span className="scg-session-phase">Phase {session.current_phase}/3</span>
-                <span className={`scp-mode-badge ${MODE_COLORS[session.current_mode] ?? ""}`}>
-                  {MODE_LABELS[session.current_mode] ?? session.current_mode}
-                </span>
-                <span className="scg-session-ticker">{session.current_ticker}</span>
-              </>
-            )}
-          </div>
+          <SessionBar assignment={assignment} session={session} />
 
           <div className="pi-chat-stream">
             <div className="pi-transcript">
-              {/* Document attachment card */}
-              {session && (
-                <div className="scg-doc-card">
-                  <div className="scg-doc-thumb">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                      <polyline points="14 2 14 8 20 8" />
-                      <line x1="16" y1="13" x2="8" y2="13" />
-                      <line x1="16" y1="17" x2="8" y2="17" />
-                    </svg>
-                  </div>
-                  <div className="scg-doc-info">
-                    <span className="scg-doc-name">{session.current_ticker}_10-K_Annual_Report.html</span>
-                    <span className="scg-doc-meta">10-K Annual Filing</span>
-                  </div>
-                </div>
-              )}
+              {session && <DocumentCard ticker={session.current_ticker} />}
 
-              {messages.map((msg, msgIdx) => {
-                // ── Inline pipeline controls ──
-                // After the summary (or editable_summary acceptance), inject
-                // questionnaire prompt → checkpoints → phase advance controls
-                // BEFORE rendering any subsequent follow-up messages.
-                // This keeps controls anchored to the summary position.
-                const pipelineControls: React.ReactNode[] = [];
-                const isSummaryMsg = msg.type === "summary" || msg.type === "editable_summary";
-                if (isSummaryMsg) {
-                  const isLastSummaryLikeMsg = !messages.slice(msgIdx + 1).some(
-                    (m) => m.type === "summary" || m.type === "editable_summary"
-                  );
-                  if (isLastSummaryLikeMsg && session && currentPhase && !isLoading) {
-                    // Questionnaire prompt
-                    const hasQP = currentPhaseHasQuestionnairePrompt(messages);
-                    const postGenCps = currentPhase.checkpoints.filter(
-                      (cp) => cp.pipeline_position === "post_generation"
-                    );
-                    if (postGenCps.length > 0 && !hasQP) {
-                      pipelineControls.push(
-                        <QuestionnairePromptCard
-                          key="qp-prompt"
-                          onContinue={() => {
-                            addMessage({ id: `qp-${Date.now()}`, type: "questionnaire_prompt" });
-                          }}
-                        />
-                      );
-                    }
-
-                    // Post-gen checkpoints (if questionnaire started)
-                    if (hasQP) {
-                      postGenCps
-                        .filter((cp) => !messages.some(
-                          (m) => m.type === "submitted_checkpoint" && m.definitionId === cp.definition_id
-                        ))
-                        .forEach((cp) => {
-                          const def = SEED_DEFINITIONS.find((d) => d.id === cp.definition_id);
-                          if (!def || def.field_schema.length === 0) return;
-                          pipelineControls.push(
-                            <PostGenerationCheckpoint
-                              key={cp.definition_id}
-                              definitionId={cp.definition_id}
-                              label={cp.label}
-                              onViewCheckpoint={openCheckpointPane}
-                              onCheckpointDone={addMessage}
-                            />
-                          );
-                        });
-                    }
-
-                    // Phase advance button
-                    if (phaseCheckpointsDone(messages, currentPhase)) {
-                      if (session.current_phase < 3) {
-                        pipelineControls.push(
-                          <div key="phase-advance" className="scg-advance-section">
-                            <button
-                              type="button"
-                              className="pi-primary-btn"
-                              onClick={() => advancePhase()}
-                              disabled={isLoading}
-                            >
-                              Next Phase ▶ Phase {session.current_phase + 1}
-                            </button>
-                          </div>
-                        );
-                      } else {
-                        pipelineControls.push(
-                          <div key="session-complete" className="pi-run-meta pi-status-row">
-                            <span>Study session complete. All 3 phases finished.</span>
-                          </div>
-                        );
-                      }
-                    }
-                  }
-                }
-
-                // ── Follow-up separator ──
-                // Detect user messages that appear after a summary (follow-up queries)
-                // and add a subtle divider to visually separate exploration from pipeline
-                let followUpSeparator: React.ReactNode = null;
-                if (
-                  msg.type === "text" &&
-                  msg.role === "user" &&
-                  msgIdx > 0
-                ) {
-                  const prevMsgs = messages.slice(0, msgIdx);
-                  const hasPriorSummary = currentPhaseHasSummary(prevMsgs);
-                  // Check this is the first user msg after the summary block
-                  // (i.e., previous msg is not a user msg — avoids double separators)
-                  const prevMsg = messages[msgIdx - 1];
-                  const prevIsFollowUp = prevMsg?.type === "text" && prevMsg?.role === "user";
-                  const prevIsRetrievedFollowUp = prevMsg?.type === "retrieved_nodes";
-                  if (hasPriorSummary && !prevIsFollowUp && !prevIsRetrievedFollowUp) {
-                    followUpSeparator = (
-                      <div className="scg-followup-divider">
-                        <span className="scg-followup-divider-label">Follow-up</span>
-                      </div>
-                    );
-                  }
-                }
-
-                // ── Message rendering ──
-                let rendered: React.ReactNode = null;
-
-                if (msg.type === "text") {
-                  if (msg.role === "system") {
-                    rendered = (
-                      <div key={msg.id} className="pi-assistant-text" style={{ opacity: 0.7, fontSize: 13 }}>
-                        {msg.content}
-                      </div>
-                    );
-                  } else if (msg.role === "user") {
-                    rendered = (
-                      <div key={msg.id} className="pi-user-bubble">
-                        {msg.content}
-                      </div>
-                    );
-                  } else {
-                    rendered = (
-                      <div key={msg.id} className="pi-assistant-text">
-                        {msg.content}
-                      </div>
-                    );
-                  }
-                }
-
-                if (msg.type === "loading") {
-                  rendered = (
-                    <div key={msg.id} className="pi-step-card running">
-                      <div className="pi-step-left">
-                        <span className="pi-pulse-loader">
-                          <span className="dot" />
-                          <span className="dot" />
-                          <span className="dot" />
-                        </span>
-                        <span>{msg.content}</span>
-                      </div>
-                    </div>
-                  );
-                }
-
-                if (msg.type === "retrieved_nodes") {
-                  rendered = (
-                    <div key={msg.id} className="pi-step-card completed">
-                      <div className="pi-step-left">
-                        <span className="pi-step-icon">&#10003;</span>
-                        <span>Retrieved {msg.nodes.length} chunks</span>
-                      </div>
-                      <div className="pi-step-right">
-                        {msg.nodes.map((n) => n.title).slice(0, 3).join(", ")}
-                        {msg.nodes.length > 3 ? ` +${msg.nodes.length - 3} more` : ""}
-                      </div>
-                    </div>
-                  );
-                }
-
-                if (msg.type === "selector") {
-                  rendered = (
-                    <SelectorCard
-                      key={msg.id}
-                      taskId={msg.taskId}
-                      nodes={msg.nodes}
-                      onSubmit={submitNodeSelection}
-                      disabled={isLoading}
-                    />
-                  );
-                }
-
-                if (msg.type === "editable_summary") {
-                  rendered = (
-                    <EditableSummaryCard
-                      key={msg.id}
-                      taskId={msg.taskId}
-                      summary={msg.summary}
-                      onSubmit={submitEditedSummary}
-                      onViewSummary={(label, text) => openSummaryPane(label, text)}
-                      disabled={isLoading}
-                    />
-                  );
-                }
-
-                if (msg.type === "summary") {
-                  const hasEditCard = messages.some((m) => m.type === "editable_summary");
-                  if (!hasEditCard) {
-                    rendered = (
-                      <div key={msg.id} className="pi-answer-card">
-                        <div className="pi-answer-label">Generated Summary</div>
-                        <FormattedMarkdown text={msg.summary} />
-                      </div>
-                    );
-                  }
-                }
-
-                if (msg.type === "checkpoint") {
-                  rendered = (
-                    <CheckpointRenderer
-                      key={msg.id}
-                      instance={msg.instance}
-                    />
-                  );
-                }
-
-                if (msg.type === "submitted_checkpoint") {
-                  rendered = (
-                    <SubmittedCheckpointCard
-                      key={msg.id}
-                      label={msg.label}
-                      state={msg.state}
-                      fields={msg.fields}
-                      onViewCheckpoint={openCheckpointPane}
-                    />
-                  );
-                }
-
-                if (msg.type === "generate_prompt") {
-                  rendered = (
-                    <GeneratePromptCard
-                      key={msg.id}
-                      taskId={msg.taskId}
-                      onGenerate={triggerGeneration}
-                      disabled={isLoading}
-                    />
-                  );
-                }
-
-                // questionnaire_prompt messages are handled by inline controls above
-
-                // Return the message element with optional separator and pipeline controls
-                if (pipelineControls.length > 0 || followUpSeparator) {
-                  return (
-                    <React.Fragment key={msg.id}>
-                      {followUpSeparator}
-                      {rendered}
-                      {pipelineControls}
-                    </React.Fragment>
-                  );
-                }
-
-                return rendered;
-              })}
+              <StreamRenderer
+                messages={messages}
+                readOnly={false}
+                isLoading={isLoading}
+                onSubmitNodeSelection={submitNodeSelection}
+                onSubmitEditedSummary={submitEditedSummary}
+                onTriggerGeneration={triggerGeneration}
+                onStartQuestionnaire={startQuestionnaire}
+                onSubmitCheckpoint={submitCheckpoint}
+                onSkipCheckpoint={skipCheckpoint}
+                onAdvancePhase={advancePhase}
+                onViewSummary={openSummaryPane}
+                onViewCheckpoint={openCheckpointPane}
+              />
             </div>
           </div>
 
@@ -820,109 +409,309 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
             </div>
           )}
         </div>
-
-        {/* Right pane: summary or checkpoint viewer */}
-        {paneSummary && (
-          <div className="pi-right-pane">
-            <div className="pi-right-header">
-              <span className="pi-right-file">{paneSummary.label}</span>
-              <button type="button" className="pi-close-pane-btn" onClick={closePane}>
-                Close
-              </button>
-            </div>
-            <div className="pi-right-body">
-              <FormattedMarkdown text={paneSummary.text} />
-            </div>
-          </div>
-        )}
-        {paneCheckpoint && (
-          <div className="pi-right-pane">
-            <div className="pi-right-header">
-              <span className="pi-right-file">{paneCheckpoint.label}</span>
-              <button type="button" className="pi-close-pane-btn" onClick={closePane}>
-                Close
-              </button>
-            </div>
-            <div className="pi-right-body">
-              <div className="scg-cp-detail-list">
-                {paneCheckpoint.fields.map((f, i) => (
-                  <div key={i} className="scg-cp-detail-row">
-                    <span className="scg-cp-detail-label">{f.label}</span>
-                    <span className="scg-cp-detail-value">{f.value}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
+        {rightPane}
       </div>
     </section>
   );
 }
 
-/**
- * Check whether the *current* phase has a completed summary.
- *
- * When `advancePhase()` is called the store appends to the messages array —
- * previous-phase summaries still exist.  We need to look only at messages
- * that came *after* the last phase-transition system message ("Transitioned
- * to Phase …" or the initial "Phase N | Mode …").  If there's a "summary"
- * message in that slice, the current phase generation is done.
- */
-function currentPhaseHasSummary(msgs: ChatMessage[]): boolean {
-  let phaseStartIdx = 0;
-  for (let i = msgs.length - 1; i >= 0; i--) {
-    const m = msgs[i];
-    if (
-      m.type === "text" &&
-      m.role === "system" &&
-      (/^Transitioned to Phase/.test(m.content) || /^Phase \d/.test(m.content))
-    ) {
-      phaseStartIdx = i;
-      break;
-    }
-  }
-  return msgs.slice(phaseStartIdx).some((m) => m.type === "summary");
+// ===========================================================================
+// StreamRenderer — Pure type-switch message renderer
+// ===========================================================================
+
+interface StreamRendererProps {
+  messages: ChatMessage[];
+  readOnly: boolean;
+  isLoading: boolean;
+  onSubmitNodeSelection: (taskId: string, selected: string[], rejected: string[], order: string[]) => Promise<void>;
+  onSubmitEditedSummary: (taskId: string, editedText: string) => Promise<void>;
+  onTriggerGeneration: (taskId: string) => Promise<void>;
+  onStartQuestionnaire: () => void;
+  onSubmitCheckpoint: (definitionId: string, data: Record<string, unknown>) => void;
+  onSkipCheckpoint: (definitionId: string) => void;
+  onAdvancePhase: () => Promise<void>;
+  onViewSummary: (label: string, text: string) => void;
+  onViewCheckpoint: (label: string, fields: Array<{ label: string; value: string }>) => void;
 }
 
-/**
- * Check whether the user has clicked "Continue to Questionnaire" in the current phase.
- */
-function currentPhaseHasQuestionnairePrompt(msgs: ChatMessage[]): boolean {
-  let phaseStartIdx = 0;
-  for (let i = msgs.length - 1; i >= 0; i--) {
-    const m = msgs[i];
-    if (
-      m.type === "text" &&
-      m.role === "system" &&
-      (/^Transitioned to Phase/.test(m.content) || /^Phase \d/.test(m.content))
-    ) {
-      phaseStartIdx = i;
-      break;
-    }
-  }
-  return msgs.slice(phaseStartIdx).some((m) => m.type === "questionnaire_prompt");
-}
+function StreamRenderer({
+  messages,
+  readOnly,
+  isLoading,
+  onSubmitNodeSelection,
+  onSubmitEditedSummary,
+  onTriggerGeneration,
+  onStartQuestionnaire,
+  onSubmitCheckpoint,
+  onSkipCheckpoint,
+  onAdvancePhase,
+  onViewSummary,
+  onViewCheckpoint,
+}: StreamRendererProps) {
+  return (
+    <>
+      {messages.map((msg) => {
+        switch (msg.type) {
+          case "phase_start":
+            return <PhaseStartCard key={msg.id} msg={msg} />;
 
-/**
- * Check whether all post-gen checkpoints are done (submitted/skipped) for the current phase,
- * OR there are no checkpoints, OR there's no questionnaire prompt yet (meaning "Next Phase"
- * should wait until questionnaires are done).
- */
-function phaseCheckpointsDone(msgs: ChatMessage[], currentPhase: PhaseAssignment | undefined): boolean {
-  if (!currentPhase) return true;
-  const postGenCps = currentPhase.checkpoints.filter((cp) => cp.pipeline_position === "post_generation");
-  // If no post-gen checkpoints, advance is allowed once summary is done
-  if (postGenCps.length === 0) return true;
-  // If questionnaire hasn't started yet, don't show advance
-  if (!currentPhaseHasQuestionnairePrompt(msgs)) return false;
-  // All must be submitted/skipped
-  return postGenCps.every((cp) =>
-    msgs.some((m) => m.type === "submitted_checkpoint" && m.definitionId === cp.definition_id)
+          case "text":
+            return <TextBubble key={msg.id} role={msg.role} content={msg.content} />;
+
+          case "loading":
+            return readOnly ? null : (
+              <div key={msg.id} className="pi-step-card running">
+                <div className="pi-step-left">
+                  <span className="pi-pulse-loader">
+                    <span className="dot" />
+                    <span className="dot" />
+                    <span className="dot" />
+                  </span>
+                  <span>{msg.content}</span>
+                </div>
+              </div>
+            );
+
+          case "retrieved_nodes":
+            return <RetrievedNodesCard key={msg.id} nodes={msg.nodes} />;
+
+          case "selector":
+            return readOnly || msg.submitted ? (
+              <div key={msg.id} className="pi-selector-card">
+                <div className="pi-selector-header">
+                  <span>Chunk selection submitted</span>
+                  <span className="pi-selector-meta">{msg.nodes.length} chunks</span>
+                </div>
+              </div>
+            ) : (
+              <SelectorCard
+                key={msg.id}
+                taskId={msg.taskId}
+                nodes={msg.nodes}
+                onSubmit={onSubmitNodeSelection}
+                disabled={isLoading}
+              />
+            );
+
+          case "generate_prompt":
+            return readOnly ? (
+              <div key={msg.id} className="pi-step-card completed">
+                <div className="pi-step-left">
+                  <span className="pi-step-icon">&#10003;</span>
+                  <span>Generate Summary (triggered)</span>
+                </div>
+              </div>
+            ) : (
+              <GeneratePromptCard
+                key={msg.id}
+                taskId={msg.taskId}
+                onGenerate={onTriggerGeneration}
+                disabled={isLoading}
+              />
+            );
+
+          case "summary":
+            return (
+              <div key={msg.id} className="pi-answer-card">
+                <div className="pi-answer-label">Generated Summary</div>
+                <FormattedMarkdown text={msg.summary} />
+              </div>
+            );
+
+          case "editable_summary":
+            return readOnly ? (
+              <div key={msg.id} className="pi-answer-card">
+                <div className="pi-answer-label">Generated Summary</div>
+                <FormattedMarkdown text={msg.summary} />
+              </div>
+            ) : (
+              <EditableSummaryCard
+                key={msg.id}
+                taskId={msg.taskId}
+                summary={msg.summary}
+                onSubmit={onSubmitEditedSummary}
+                onViewSummary={onViewSummary}
+                disabled={isLoading}
+              />
+            );
+
+          case "active_checkpoint":
+            return readOnly ? null : (
+              <ActiveCheckpointCard
+                key={msg.id}
+                definitionId={msg.definitionId}
+                instance={msg.instance}
+                onSubmit={onSubmitCheckpoint}
+                onSkip={onSkipCheckpoint}
+              />
+            );
+
+          case "submitted_checkpoint":
+            return (
+              <SubmittedCheckpointCard
+                key={msg.id}
+                label={msg.label}
+                state={msg.state}
+                fields={msg.fields}
+                onViewCheckpoint={onViewCheckpoint}
+              />
+            );
+
+          case "questionnaire_prompt":
+            return readOnly ? null : (
+              <QuestionnairePromptCard
+                key={msg.id}
+                onContinue={onStartQuestionnaire}
+              />
+            );
+
+          case "phase_advance":
+            return readOnly ? null : (
+              <div key={msg.id} className="scg-advance-section">
+                <button
+                  type="button"
+                  className="pi-primary-btn"
+                  onClick={() => void onAdvancePhase()}
+                  disabled={isLoading}
+                >
+                  Next Phase ▶ Phase {msg.nextPhase}
+                </button>
+              </div>
+            );
+
+          case "follow_up_divider":
+            return (
+              <div key={msg.id} className="scg-followup-divider">
+                <span className="scg-followup-divider-label">Follow-up</span>
+              </div>
+            );
+
+          case "session_complete":
+            return (
+              <div key={msg.id} className="pi-run-meta pi-status-row" style={{ marginTop: 16 }}>
+                <span>Study session complete. All 3 phases finished.</span>
+              </div>
+            );
+
+          default:
+            return null;
+        }
+      })}
+    </>
   );
 }
 
-// ── Inline sub-components ──
+// ===========================================================================
+// Sub-components
+// ===========================================================================
+
+function SessionBar({ assignment, session }: { assignment: ParticipantAssignment; session: SessionState | null }) {
+  return (
+    <div className="scg-session-bar">
+      <span className="scg-session-pid">{assignment.participant_id}</span>
+      <span className={`scp-card-group group-${assignment.group.toLowerCase()}`}>
+        {assignment.group}
+      </span>
+      {session && (
+        <>
+          <span className="scg-session-phase">Phase {session.current_phase}/3</span>
+          <span className={`scp-mode-badge ${MODE_COLORS[session.current_mode] ?? ""}`}>
+            {MODE_LABELS[session.current_mode] ?? session.current_mode}
+          </span>
+          <span className="scg-session-ticker">{session.current_ticker}</span>
+        </>
+      )}
+    </div>
+  );
+}
+
+function DocumentCard({ ticker }: { ticker: string }) {
+  return (
+    <div className="scg-doc-card">
+      <div className="scg-doc-thumb">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+          <polyline points="14 2 14 8 20 8" />
+          <line x1="16" y1="13" x2="8" y2="13" />
+          <line x1="16" y1="17" x2="8" y2="17" />
+        </svg>
+      </div>
+      <div className="scg-doc-info">
+        <span className="scg-doc-name">{ticker}_10-K_Annual_Report.html</span>
+        <span className="scg-doc-meta">10-K Annual Filing</span>
+      </div>
+    </div>
+  );
+}
+
+function PhaseStartCard({ msg }: { msg: Extract<ChatMessage, { type: "phase_start" }> }) {
+  return (
+    <div className="scg-phase-start-card">
+      <div className="scg-phase-start-header">
+        <span className="scg-phase-num">Phase {msg.phase}</span>
+        <span className={`scp-mode-badge ${MODE_COLORS[msg.mode] ?? ""}`}>
+          {MODE_LABELS[msg.mode] ?? msg.mode}
+        </span>
+        <span className="scg-session-ticker">{msg.ticker}</span>
+      </div>
+    </div>
+  );
+}
+
+function TextBubble({ role, content }: { role: "system" | "user" | "assistant"; content: string }) {
+  if (role === "system") {
+    return (
+      <div className="pi-assistant-text" style={{ opacity: 0.7, fontSize: 13 }}>
+        {content}
+      </div>
+    );
+  }
+  if (role === "user") {
+    return <div className="pi-user-bubble">{content}</div>;
+  }
+  return <div className="pi-assistant-text">{content}</div>;
+}
+
+function RetrievedNodesCard({ nodes }: { nodes: RetrievalNode[] }) {
+  return (
+    <div className="pi-step-card completed">
+      <div className="pi-step-left">
+        <span className="pi-step-icon">&#10003;</span>
+        <span>Retrieved {nodes.length} chunks</span>
+      </div>
+      <div className="pi-step-right">
+        {nodes.map((n) => n.title).slice(0, 3).join(", ")}
+        {nodes.length > 3 ? ` +${nodes.length - 3} more` : ""}
+      </div>
+    </div>
+  );
+}
+
+function PhaseOverviewCard({ phase, isCurrent }: { phase: PhaseAssignment; isCurrent: boolean }) {
+  return (
+    <div className={`scg-phase-card ${isCurrent ? "scg-current" : ""}`}>
+      <div className="scg-phase-header">
+        <span className="scg-phase-num">Phase {phase.phase}</span>
+        <span className={`scp-mode-badge ${MODE_COLORS[phase.mode] ?? ""}`}>
+          {MODE_LABELS[phase.mode] ?? phase.mode}
+        </span>
+      </div>
+      <div className="scg-phase-ticker">{phase.ticker}</div>
+      <div className="scg-phase-query">{phase.query}</div>
+      <div className="scg-phase-cps">
+        {phase.checkpoints.length === 0
+          ? "No checkpoints"
+          : phase.checkpoints.map((cp) => (
+              <span key={cp.definition_id} className="scg-cp-tag">
+                {cp.control_type}
+              </span>
+            ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Interactive sub-components ──
 
 function TruncatedContent({ text }: { text: string }) {
   const [expanded, setExpanded] = useState(false);
@@ -1051,7 +840,6 @@ function EditableSummaryCard({
     await onSubmit(taskId, text);
   }
 
-  // Submitted — show original summary inline; if edited, add a notice with right-pane link
   if (phase === "submitted") {
     const wasEdited = text !== summary;
     return (
@@ -1081,7 +869,6 @@ function EditableSummaryCard({
     );
   }
 
-  // Editing — raw textarea
   if (phase === "editing") {
     return (
       <div className="pi-inline-control-card">
@@ -1115,7 +902,6 @@ function EditableSummaryCard({
     );
   }
 
-  // Reviewing — formatted summary with accept/edit buttons
   return (
     <div className="pi-inline-control-card">
       <div className="pi-answer-label">Generated Summary</div>
@@ -1142,18 +928,93 @@ function EditableSummaryCard({
   );
 }
 
-function CheckpointRenderer({ instance }: { instance: CheckpointInstance }) {
+function GeneratePromptCard({
+  taskId,
+  onGenerate,
+  disabled,
+}: {
+  taskId: string;
+  onGenerate: (taskId: string) => Promise<void>;
+  disabled: boolean;
+}) {
+  const [clicked, setClicked] = useState(false);
+
+  async function handleClick() {
+    if (clicked || disabled) return;
+    setClicked(true);
+    await onGenerate(taskId);
+  }
+
+  if (clicked) return null;
+
+  return (
+    <div className="scg-action-prompt">
+      <div className="scg-action-prompt-text">
+        Chunks retrieved. Review above, then generate a summary when ready.
+      </div>
+      <button
+        type="button"
+        className="pi-primary-btn scg-action-prompt-btn"
+        onClick={() => void handleClick()}
+        disabled={disabled}
+      >
+        Generate Summary ▶
+      </button>
+    </div>
+  );
+}
+
+function QuestionnairePromptCard({ onContinue }: { onContinue: () => void }) {
+  const [clicked, setClicked] = useState(false);
+
+  function handleClick() {
+    if (clicked) return;
+    setClicked(true);
+    onContinue();
+  }
+
+  if (clicked) return null;
+
+  return (
+    <div className="scg-action-prompt">
+      <div className="scg-action-prompt-text">
+        Summary complete. Proceed to the questionnaire when you&apos;re ready.
+      </div>
+      <button
+        type="button"
+        className="pi-primary-btn scg-action-prompt-btn"
+        onClick={handleClick}
+      >
+        Continue to Questionnaire ▶
+      </button>
+    </div>
+  );
+}
+
+function ActiveCheckpointCard({
+  definitionId,
+  instance,
+  onSubmit,
+  onSkip,
+}: {
+  definitionId: string;
+  instance: CheckpointInstance;
+  onSubmit: (definitionId: string, data: Record<string, unknown>) => void;
+  onSkip: (definitionId: string) => void;
+}) {
   const [inst, setInst] = useState(instance);
 
   return (
     <DynamicControlRenderer
       instance={inst}
-      onSubmit={(_id, data) =>
-        setInst((prev) => ({ ...prev, state: "submitted" as CheckpointState, submit_result: data }))
-      }
-      onSkip={(_id) =>
-        setInst((prev) => ({ ...prev, state: "skipped" as CheckpointState }))
-      }
+      onSubmit={(_id, data) => {
+        setInst((prev) => ({ ...prev, state: "submitted" as CheckpointState, submit_result: data }));
+        onSubmit(definitionId, data);
+      }}
+      onSkip={(_id) => {
+        setInst((prev) => ({ ...prev, state: "skipped" as CheckpointState }));
+        onSkip(definitionId);
+      }}
       onRetry={(_id) =>
         setInst((prev) => ({
           ...prev,
@@ -1204,165 +1065,5 @@ function SubmittedCheckpointCard({
         View responses
       </button>
     </div>
-  );
-}
-
-function QuestionnairePromptCard({ onContinue }: { onContinue: () => void }) {
-  const [clicked, setClicked] = useState(false);
-
-  function handleClick() {
-    if (clicked) return;
-    setClicked(true);
-    onContinue();
-  }
-
-  if (clicked) return null;
-
-  return (
-    <div className="scg-action-prompt">
-      <div className="scg-action-prompt-text">
-        Summary complete. Proceed to the questionnaire when you&apos;re ready.
-      </div>
-      <button
-        type="button"
-        className="pi-primary-btn scg-action-prompt-btn"
-        onClick={handleClick}
-      >
-        Continue to Questionnaire ▶
-      </button>
-    </div>
-  );
-}
-
-function GeneratePromptCard({
-  taskId,
-  onGenerate,
-  disabled,
-}: {
-  taskId: string;
-  onGenerate: (taskId: string) => Promise<void>;
-  disabled: boolean;
-}) {
-  const [clicked, setClicked] = useState(false);
-
-  async function handleClick() {
-    if (clicked || disabled) return;
-    setClicked(true);
-    await onGenerate(taskId);
-  }
-
-  if (clicked) {
-    return null; // Will be replaced by loading indicator from store
-  }
-
-  return (
-    <div className="scg-action-prompt">
-      <div className="scg-action-prompt-text">
-        Chunks retrieved. Review above, then generate a summary when ready.
-      </div>
-      <button
-        type="button"
-        className="pi-primary-btn scg-action-prompt-btn"
-        onClick={() => void handleClick()}
-        disabled={disabled}
-      >
-        Generate Summary ▶
-      </button>
-    </div>
-  );
-}
-
-function PostGenerationCheckpoint({
-  definitionId,
-  label,
-  onViewCheckpoint,
-  onCheckpointDone,
-}: {
-  definitionId: string;
-  label: string;
-  onViewCheckpoint: (label: string, fields: Array<{ label: string; value: string }>) => void;
-  onCheckpointDone: (msg: ChatMessage) => void;
-}) {
-  const def = SEED_DEFINITIONS.find((d) => d.id === definitionId);
-  if (!def || def.field_schema.length === 0) return null;
-
-  const [instance, setInstance] = useState<CheckpointInstance>({
-    id: `post-gen-${definitionId}`,
-    task_id: "study-task",
-    definition_id: definitionId,
-    control_type: def.control_type,
-    label: label,
-    state: "active",
-    field_schema: def.field_schema,
-    payload: null,
-    submit_result: null,
-    required: def.required,
-    timeout_seconds: def.timeout_seconds,
-    attempt_count: 0,
-    max_retries: def.max_retries,
-    last_error: null,
-    offered_at: new Date().toISOString(),
-    submitted_at: null,
-  });
-
-  // Build field label→value pairs for the right-pane detail view
-  function buildFieldSummary(data: Record<string, unknown>) {
-    return def!.field_schema.map((field) => {
-      const val = data[field.key];
-      const display =
-        val === undefined || val === null || val === ""
-          ? "—"
-          : Array.isArray(val)
-            ? val.join(", ")
-            : String(val);
-      return { label: field.label, value: display };
-    });
-  }
-
-  function handleSubmit(_id: string, data: Record<string, unknown>) {
-    setInstance((prev) => ({ ...prev, state: "submitted", submit_result: data }));
-    const fields = buildFieldSummary(data);
-    onCheckpointDone({
-      id: `cp-done-${definitionId}-${Date.now()}`,
-      type: "submitted_checkpoint",
-      definitionId,
-      label,
-      state: "submitted",
-      fields,
-    });
-  }
-
-  function handleSkip(_id: string) {
-    setInstance((prev) => ({ ...prev, state: "skipped" }));
-    onCheckpointDone({
-      id: `cp-done-${definitionId}-${Date.now()}`,
-      type: "submitted_checkpoint",
-      definitionId,
-      label,
-      state: "skipped",
-      fields: [],
-    });
-  }
-
-  // Once submitted/skipped, this component is hidden (the message stream renders the card)
-  if (instance.state === "submitted" || instance.state === "skipped") {
-    return null;
-  }
-
-  // Active state: render the full form
-  return (
-    <DynamicControlRenderer
-      instance={instance}
-      onSubmit={handleSubmit}
-      onSkip={handleSkip}
-      onRetry={(_id) =>
-        setInstance((prev) => ({
-          ...prev,
-          state: "active",
-          last_error: null,
-          offered_at: new Date().toISOString(),
-        }))
-      }
-    />
   );
 }
