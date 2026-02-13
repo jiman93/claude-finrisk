@@ -63,11 +63,6 @@ export interface EditSummaryResponse {
   edit_completed_at: string;
 }
 
-export interface ChatTaskResponse {
-  task_id: string;
-  reply: string;
-}
-
 // ---------------------------------------------------------------------------
 // Checkpoint / HITL Control Architecture types
 // ---------------------------------------------------------------------------
