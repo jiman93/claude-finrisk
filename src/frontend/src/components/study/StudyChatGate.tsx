@@ -60,8 +60,7 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
     setAssignment,
     startAndRunCurrentPhase,
     advancePhase,
-    askFollowUpChat,
-    askFollowUpSearch,
+    askFollowUp,
     triggerGeneration,
     submitNodeSelection,
     submitEditedSummary,
@@ -166,20 +165,13 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages, session]);
 
-  // Follow-up query handlers
+  // Follow-up query handler
   async function handleFollowUp(e: FormEvent) {
     e.preventDefault();
     const q = followUpInput.trim();
     if (!q || isLoading) return;
     setFollowUpInput("");
-    await askFollowUpChat(q);
-  }
-
-  async function handleFollowUpSearch() {
-    const q = followUpInput.trim();
-    if (!q || isLoading) return;
-    setFollowUpInput("");
-    await askFollowUpSearch(q);
+    await askFollowUp(q);
   }
 
   const canAskFollowUp = started && session && !isLoading && !isRestoredView;
@@ -407,22 +399,10 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
                   disabled={isLoading}
                 />
                 <button
-                  type="button"
-                  className="pi-send-btn scg-search-btn"
-                  disabled={!followUpInput.trim() || isLoading}
-                  title="Search document for new chunks"
-                  onClick={() => void handleFollowUpSearch()}
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="11" cy="11" r="8" />
-                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                  </svg>
-                </button>
-                <button
                   type="submit"
                   className="pi-send-btn"
                   disabled={!followUpInput.trim() || isLoading}
-                  title="Ask AI (conversational)"
+                  title="Send follow-up query"
                 >
                   &#8593;
                 </button>

@@ -6,8 +6,6 @@ from sqlalchemy.orm import Session
 from app.db.database import get_db
 from app.models.task import Task
 from app.schemas.task import (
-    ChatRequest,
-    ChatResponse,
     CompleteTaskResponse,
     EditSummaryRequest,
     EditSummaryResponse,
@@ -144,21 +142,6 @@ def edit_summary(task_id: str, payload: EditSummaryRequest, db: Session = Depend
         hallucinations_flagged=len(task.flagged_spans or []),
         edit_completed_at=task.edit_completed_at,
     )
-
-
-@router.post("/{task_id}/chat", response_model=ChatResponse)
-def chat_with_context(task_id: str, payload: ChatRequest, db: Session = Depends(get_db)):
-    """Conversational follow-up — LLM answers from provided context, no retrieval."""
-    task = db.get(Task, task_id)
-    if not task:
-        raise HTTPException(status_code=404, detail="Task not found")
-
-    try:
-        reply = llm_service.chat_reply(task.ticker, payload.message, payload.context)
-    except LLMServiceError as exc:
-        raise HTTPException(status_code=503, detail=str(exc)) from exc
-
-    return ChatResponse(task_id=task.id, reply=reply)
 
 
 @router.post("/{task_id}/complete", response_model=CompleteTaskResponse)
