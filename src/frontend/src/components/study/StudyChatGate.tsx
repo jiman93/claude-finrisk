@@ -53,15 +53,12 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
     error: studyError,
     activeChatId,
     chatSnapshots,
-    followUpCounts,
     tailAction,
     activeCheckpoints,
     setParticipantId,
     setAssignment,
     startAndRunCurrentPhase,
     advancePhase,
-    askFollowUpChat,
-    askFollowUpSearch,
     triggerGeneration,
     submitNodeSelection,
     submitEditedSummary,
@@ -69,8 +66,6 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
     submitCheckpoint,
     skipCheckpoint,
   } = useStudyStore();
-
-  const [followUpInput, setFollowUpInput] = useState("");
 
   const [started, setStarted] = useState(false);
   const sessionStartedRef = useRef(false);
@@ -165,24 +160,6 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
     onSaveChat(chatIdRef.current, title, assignment);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages, session]);
-
-  // Follow-up query handlers
-  async function handleFollowUp(e: FormEvent) {
-    e.preventDefault();
-    const q = followUpInput.trim();
-    if (!q || isLoading) return;
-    setFollowUpInput("");
-    await askFollowUpChat(q);
-  }
-
-  async function handleFollowUpSearch() {
-    const q = followUpInput.trim();
-    if (!q || isLoading) return;
-    setFollowUpInput("");
-    await askFollowUpSearch(q);
-  }
-
-  const canAskFollowUp = started && session && !isLoading && !isRestoredView;
 
   // ── Right pane (shared between active and restored views) ──
   const rightPane = (
@@ -394,46 +371,7 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
             onAdvancePhase={advancePhase}
           />
 
-          {/* Follow-up query input bar */}
-          {canAskFollowUp && (
-            <div className="scg-followup-bar">
-              <form className="scg-followup-form" onSubmit={handleFollowUp}>
-                <input
-                  className="scg-followup-input"
-                  type="text"
-                  value={followUpInput}
-                  onChange={(e) => setFollowUpInput(e.target.value)}
-                  placeholder="Ask a follow-up question…"
-                  disabled={isLoading}
-                />
-                <button
-                  type="button"
-                  className="pi-send-btn scg-search-btn"
-                  disabled={!followUpInput.trim() || isLoading}
-                  title="Search document for new chunks"
-                  onClick={() => void handleFollowUpSearch()}
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="11" cy="11" r="8" />
-                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                  </svg>
-                </button>
-                <button
-                  type="submit"
-                  className="pi-send-btn"
-                  disabled={!followUpInput.trim() || isLoading}
-                  title="Ask AI (conversational)"
-                >
-                  &#8593;
-                </button>
-              </form>
-              {session && followUpCounts[session.current_phase] ? (
-                <div className="scg-followup-count">
-                  {followUpCounts[session.current_phase]} follow-up{followUpCounts[session.current_phase] > 1 ? "s" : ""} this phase
-                </div>
-              ) : null}
-            </div>
-          )}
+          {/* Follow-up input is intentionally disabled in thesis primary protocol. */}
         </div>
         {rightPane}
       </div>
@@ -588,7 +526,7 @@ interface TailActionZoneProps {
   activeCheckpoints: CheckpointInstance[];
   isLoading: boolean;
   onStartQuestionnaire: () => void;
-  onSubmitCheckpoint: (definitionId: string, data: Record<string, unknown>) => void;
+  onSubmitCheckpoint: (definitionId: string, data: Record<string, unknown>) => Promise<void>;
   onSkipCheckpoint: (definitionId: string) => void;
   onAdvancePhase: () => Promise<void>;
 }
@@ -1040,7 +978,7 @@ function ActiveCheckpointCard({
 }: {
   definitionId: string;
   instance: CheckpointInstance;
-  onSubmit: (definitionId: string, data: Record<string, unknown>) => void;
+  onSubmit: (definitionId: string, data: Record<string, unknown>) => Promise<void>;
   onSkip: (definitionId: string) => void;
 }) {
   const [inst, setInst] = useState(instance);
@@ -1049,8 +987,24 @@ function ActiveCheckpointCard({
     <DynamicControlRenderer
       instance={inst}
       onSubmit={(_id, data) => {
-        setInst((prev) => ({ ...prev, state: "submitted" as CheckpointState, submit_result: data }));
-        onSubmit(definitionId, data);
+        void (async () => {
+          try {
+            await onSubmit(definitionId, data);
+            setInst((prev) => ({
+              ...prev,
+              state: "submitted" as CheckpointState,
+              submit_result: data,
+            }));
+          } catch (error) {
+            const message = error instanceof Error ? error.message : "Submit failed";
+            setInst((prev) => ({
+              ...prev,
+              state: "failed" as CheckpointState,
+              last_error: message,
+              attempt_count: prev.attempt_count + 1,
+            }));
+          }
+        })();
       }}
       onSkip={(_id) => {
         setInst((prev) => ({ ...prev, state: "skipped" as CheckpointState }));

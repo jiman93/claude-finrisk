@@ -11,6 +11,7 @@ This folder contains strategy artifacts to align the thesis user study before re
 - `06-pilot-runbook.md`
 - `07-study-ready-checklist.md`
 - `08-decision-log-template.md`
+- `09-code-cleanup-plan.md`
 
 ## Recommended review order
 1. Scope + RQs

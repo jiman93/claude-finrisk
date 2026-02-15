@@ -63,9 +63,22 @@ export interface EditSummaryResponse {
   edit_completed_at: string;
 }
 
-export interface ChatTaskResponse {
+export interface QuestionnaireSubmitResponse {
   task_id: string;
-  reply: string;
+  questionnaire_response: Record<string, unknown>;
+  questionnaire_submitted_at: string;
+}
+
+export interface CompleteTaskResponse {
+  task_id: string;
+  completed_at: string;
+  time_on_task_seconds: number;
+}
+
+export interface CompleteSessionResponse {
+  status: string;
+  session_id: string;
+  ended_at: string;
 }
 
 // ---------------------------------------------------------------------------

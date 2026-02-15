@@ -82,7 +82,7 @@ export const SEED_DEFINITIONS: CheckpointDefinition[] = [
     pipeline_position: "post_generation",
     sort_order: 0,
     applicable_modes: ["hitl_r", "hitl_g", "hitl_full"],
-    required: false,
+    required: true,
     timeout_seconds: null,
     max_retries: 2,
     circuit_breaker_threshold: 5,

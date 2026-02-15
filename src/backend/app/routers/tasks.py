@@ -15,6 +15,8 @@ from app.schemas.task import (
     GenerateResponse,
     QueryRequest,
     QueryResponse,
+    QuestionnaireSubmitRequest,
+    QuestionnaireSubmitResponse,
     RetrievalNode,
     SelectNodesRequest,
     SelectNodesResponse,
@@ -35,11 +37,16 @@ def query_task(task_id: str, payload: QueryRequest, db: Session = Depends(get_db
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
 
-    query = payload.query or task.query_text
-    task.query_text = query
+    protocol_query = task.query_text
+    requested_query = (payload.query or "").strip()
+    if requested_query and requested_query != protocol_query:
+        raise HTTPException(
+            status_code=400,
+            detail="Protocol query is locked for study tasks",
+        )
 
     try:
-        result = retrieval_service.retrieve(task.ticker, query)
+        result = retrieval_service.retrieve(task.ticker, protocol_query)
     except RetrievalError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
 
@@ -146,19 +153,44 @@ def edit_summary(task_id: str, payload: EditSummaryRequest, db: Session = Depend
     )
 
 
+@router.post("/{task_id}/questionnaire", response_model=QuestionnaireSubmitResponse)
+def submit_questionnaire(
+    task_id: str,
+    payload: QuestionnaireSubmitRequest,
+    db: Session = Depends(get_db),
+):
+    task = db.get(Task, task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    if not task.generated_summary:
+        raise HTTPException(
+            status_code=400,
+            detail="Complete summary generation before questionnaire",
+        )
+
+    task.questionnaire_response = payload.response
+    task.questionnaire_submitted_at = datetime.utcnow()
+    db.commit()
+    db.refresh(task)
+
+    return QuestionnaireSubmitResponse(
+        task_id=task.id,
+        questionnaire_response=task.questionnaire_response or {},
+        questionnaire_submitted_at=task.questionnaire_submitted_at,
+    )
+
+
 @router.post("/{task_id}/chat", response_model=ChatResponse)
-def chat_with_context(task_id: str, payload: ChatRequest, db: Session = Depends(get_db)):
-    """Conversational follow-up — LLM answers from provided context, no retrieval."""
+def chat_with_context(task_id: str, _payload: ChatRequest, db: Session = Depends(get_db)):
+    """Conversational follow-up is disabled for primary study protocol."""
     task = db.get(Task, task_id)
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
 
-    try:
-        reply = llm_service.chat_reply(task.ticker, payload.message, payload.context)
-    except LLMServiceError as exc:
-        raise HTTPException(status_code=503, detail=str(exc)) from exc
-
-    return ChatResponse(task_id=task.id, reply=reply)
+    raise HTTPException(
+        status_code=403,
+        detail="Conversational follow-up is disabled in study protocol",
+    )
 
 
 @router.post("/{task_id}/complete", response_model=CompleteTaskResponse)
@@ -166,8 +198,9 @@ def complete_task(task_id: str, db: Session = Depends(get_db)):
     task = db.get(Task, task_id)
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
-    task.completed_at = datetime.utcnow()
-    task.time_on_task_seconds = int((task.completed_at - task.started_at).total_seconds())
+    if task.completed_at is None:
+        task.completed_at = datetime.utcnow()
+        task.time_on_task_seconds = int((task.completed_at - task.started_at).total_seconds())
     db.commit()
     db.refresh(task)
     return CompleteTaskResponse(

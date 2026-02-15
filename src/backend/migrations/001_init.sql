@@ -33,7 +33,9 @@ CREATE TABLE tasks (
   edited_summary TEXT NULL,
   flagged_spans JSON NULL,
   characters_edited INTEGER NULL,
+  questionnaire_response JSON NULL,
   retrieval_completed_at TIMESTAMP NULL,
   generation_completed_at TIMESTAMP NULL,
-  edit_completed_at TIMESTAMP NULL
+  edit_completed_at TIMESTAMP NULL,
+  questionnaire_submitted_at TIMESTAMP NULL
 );

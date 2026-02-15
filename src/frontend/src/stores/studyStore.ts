@@ -1,13 +1,15 @@
 import { create } from "zustand";
 
 import {
-  chatTask,
+  completeSession,
+  completeTask,
   editSummaryTask,
   generateTask,
   nextPhase,
   queryTask,
   selectNodesTask,
   startSession,
+  submitQuestionnaireTask,
 } from "../api/client";
 import { SEED_DEFINITIONS } from "../data/checkpointDefinitions";
 import type {
@@ -34,9 +36,6 @@ interface StudyState {
   isLoading: boolean;
   error: string | null;
 
-  // Follow-up query tracking
-  followUpCounts: Record<number, number>;
-
   // Pinned tail action zone — lives outside the scrollable stream
   tailAction: TailAction | null;
   activeCheckpoints: CheckpointInstance[];
@@ -51,8 +50,6 @@ interface StudyState {
   setAssignment: (assignment: ParticipantAssignment | null) => void;
   startAndRunCurrentPhase: () => Promise<void>;
   askQuery: (query: string) => Promise<void>;
-  askFollowUpChat: (query: string) => Promise<void>;
-  askFollowUpSearch: (query: string) => Promise<void>;
   triggerGeneration: (taskId: string) => Promise<void>;
   advancePhase: () => Promise<void>;
   submitNodeSelection: (
@@ -63,7 +60,7 @@ interface StudyState {
   ) => Promise<void>;
   submitEditedSummary: (taskId: string, editedText: string) => Promise<void>;
   startQuestionnaire: () => void;
-  submitCheckpoint: (definitionId: string, data: Record<string, unknown>) => void;
+  submitCheckpoint: (definitionId: string, data: Record<string, unknown>) => Promise<void>;
   skipCheckpoint: (definitionId: string) => void;
 
   // Chat history actions
@@ -78,44 +75,6 @@ interface StudyState {
 
 function makeId(prefix: string): string {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-}
-
-/** Find the index of the last `phase_start` message in the array. */
-function getCurrentPhaseStartIdx(msgs: ChatMessage[]): number {
-  for (let i = msgs.length - 1; i >= 0; i--) {
-    if (msgs[i].type === "phase_start") return i;
-  }
-  return 0;
-}
-
-/** Check whether the current phase already has a completed summary. */
-function currentPhaseHasSummary(msgs: ChatMessage[]): boolean {
-  const idx = getCurrentPhaseStartIdx(msgs);
-  return msgs.slice(idx).some((m) => m.type === "summary");
-}
-
-/**
- * Assemble conversational context from the current phase's messages:
- * summary text + any prior follow-up exchanges (user + assistant text messages).
- */
-function assembleContext(msgs: ChatMessage[]): string {
-  const phaseIdx = getCurrentPhaseStartIdx(msgs);
-  const phaseMessages = msgs.slice(phaseIdx);
-  const parts: string[] = [];
-
-  for (const m of phaseMessages) {
-    if (m.type === "summary") {
-      parts.push(`Generated Summary:\n${m.summary}`);
-    } else if (m.type === "text" && m.role === "user") {
-      parts.push(`User: ${m.content}`);
-    } else if (m.type === "text" && m.role === "assistant") {
-      parts.push(`Assistant: ${m.content}`);
-    }
-  }
-
-  // Truncate to ~8000 chars to stay within token limits
-  const joined = parts.join("\n\n");
-  return joined.length > 8000 ? joined.slice(-8000) : joined;
 }
 
 /** Get the current phase assignment from the store's assignment. */
@@ -160,8 +119,6 @@ export const useStudyStore = create<StudyState>((set, get) => ({
   messages: [],
   isLoading: false,
   error: null,
-
-  followUpCounts: {},
 
   tailAction: null,
   activeCheckpoints: [],
@@ -218,148 +175,6 @@ export const useStudyStore = create<StudyState>((set, get) => ({
       query: normalizedQuery,
       mode: session.current_mode,
     });
-  },
-
-  // ── Follow-up: conversational (default) ──
-
-  askFollowUpChat: async (query) => {
-    const session = get().session;
-    const normalizedQuery = query.trim();
-    if (!session || !normalizedQuery) return;
-
-    // Increment follow-up count
-    set((state) => ({
-      followUpCounts: {
-        ...state.followUpCounts,
-        [session.current_phase]: (state.followUpCounts[session.current_phase] ?? 0) + 1,
-      },
-    }));
-
-    const msgs = get().messages;
-    const hasSummary = currentPhaseHasSummary(msgs);
-
-    if (!hasSummary) {
-      // Pre-summary: remove old generate_prompt/selector, re-run full flow
-      set((state) => ({
-        messages: state.messages.filter(
-          (m) => m.type !== "generate_prompt" && m.type !== "selector"
-        ),
-      }));
-      await runTaskFlow({
-        taskId: session.current_task_id,
-        query: normalizedQuery,
-        mode: session.current_mode,
-      });
-      return;
-    }
-
-    // Post-summary: conversational LLM call (no retrieval)
-    const chatLoadingId = makeId("loading-chat");
-    const context = assembleContext(msgs);
-
-    set((state) => ({
-      isLoading: true,
-      error: null,
-      messages: [
-        ...state.messages,
-        { id: makeId("div"), type: "follow_up_divider" as const },
-        { id: makeId("msg"), type: "text" as const, role: "user" as const, content: normalizedQuery },
-        { id: chatLoadingId, type: "loading" as const, content: "Thinking..." },
-      ],
-    }));
-
-    try {
-      const result = await chatTask(session.current_task_id, normalizedQuery, context);
-      set((state) => ({
-        messages: [
-          ...state.messages.filter((m) => m.id !== chatLoadingId),
-          {
-            id: makeId("reply"),
-            type: "text" as const,
-            role: "assistant" as const,
-            content: result.reply,
-          },
-        ],
-        isLoading: false,
-      }));
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Unexpected error";
-      set((state) => ({
-        error: message,
-        isLoading: false,
-        messages: state.messages.filter((m) => m.id !== chatLoadingId),
-      }));
-    }
-  },
-
-  // ── Follow-up: document search (retrieval) ──
-
-  askFollowUpSearch: async (query) => {
-    const session = get().session;
-    const normalizedQuery = query.trim();
-    if (!session || !normalizedQuery) return;
-
-    // Increment follow-up count
-    set((state) => ({
-      followUpCounts: {
-        ...state.followUpCounts,
-        [session.current_phase]: (state.followUpCounts[session.current_phase] ?? 0) + 1,
-      },
-    }));
-
-    const msgs = get().messages;
-    const hasSummary = currentPhaseHasSummary(msgs);
-
-    if (!hasSummary) {
-      // Pre-summary: remove old generate_prompt/selector, re-run full flow
-      set((state) => ({
-        messages: state.messages.filter(
-          (m) => m.type !== "generate_prompt" && m.type !== "selector"
-        ),
-      }));
-      await runTaskFlow({
-        taskId: session.current_task_id,
-        query: normalizedQuery,
-        mode: session.current_mode,
-      });
-      return;
-    }
-
-    // Post-summary: retrieval follow-up (search document)
-    const retrievalLoadingId = makeId("loading-retrieval");
-
-    set((state) => ({
-      isLoading: true,
-      error: null,
-      messages: [
-        ...state.messages,
-        { id: makeId("div"), type: "follow_up_divider" as const },
-        { id: makeId("msg"), type: "text" as const, role: "user" as const, content: normalizedQuery },
-        { id: retrievalLoadingId, type: "loading" as const, content: "Searching document..." },
-      ],
-    }));
-
-    try {
-      const retrieval = await queryTask(session.current_task_id, normalizedQuery);
-      set((state) => ({
-        messages: [
-          ...state.messages.filter((m) => m.id !== retrievalLoadingId),
-          {
-            id: makeId("nodes"),
-            type: "retrieved_nodes" as const,
-            nodes: retrieval.retrieved_nodes,
-          },
-        ],
-        isLoading: false,
-      }));
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Unexpected error";
-      set((state) => ({
-        error: message,
-        isLoading: false,
-        messages: state.messages.filter((m) => m.id !== retrievalLoadingId),
-      }));
-    }
   },
 
   // ── Trigger generation ──
@@ -430,6 +245,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
     set({ isLoading: true, error: null, tailAction: null, activeCheckpoints: [] });
 
     try {
+      await completeTask(session.current_task_id);
       const next = await nextPhase(session.session_id);
       const updated: SessionState = {
         ...session,
@@ -555,7 +371,15 @@ export const useStudyStore = create<StudyState>((set, get) => ({
 
   // ── Submit a checkpoint ──
 
-  submitCheckpoint: (definitionId, data) => {
+  submitCheckpoint: async (definitionId, data) => {
+    const { session } = get();
+    if (!session) return;
+
+    // Persist mandatory post-task questionnaire for backend analysis.
+    if (definitionId === "seed-questionnaire") {
+      await submitQuestionnaireTask(session.current_task_id, data);
+    }
+
     const fields = buildFieldSummary(definitionId, data);
     const def = SEED_DEFINITIONS.find((d) => d.id === definitionId);
     const label = def?.label ?? definitionId;
@@ -651,7 +475,6 @@ export const useStudyStore = create<StudyState>((set, get) => ({
       isLoading: false,
       error: null,
       participantId: "P01",
-      followUpCounts: {},
       tailAction: null,
       activeCheckpoints: [],
     });
@@ -661,6 +484,29 @@ export const useStudyStore = create<StudyState>((set, get) => ({
 // ---------------------------------------------------------------------------
 // Private helpers
 // ---------------------------------------------------------------------------
+
+async function completeCurrentTaskForProtocol() {
+  const { session } = useStudyStore.getState();
+  if (!session) return;
+  try {
+    await completeTask(session.current_task_id);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unexpected error";
+    useStudyStore.setState({ error: message });
+  }
+}
+
+async function completeSessionIfFinalPhase() {
+  const { session } = useStudyStore.getState();
+  if (!session || session.current_phase < 3) return;
+  try {
+    await completeTask(session.current_task_id);
+    await completeSession(session.session_id);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unexpected error";
+    useStudyStore.setState({ error: message });
+  }
+}
 
 /**
  * After a summary is finalized, set the appropriate tail action.
@@ -676,10 +522,12 @@ function setTailActionForPostSummary() {
   if (postGenCps.length > 0) {
     useStudyStore.setState({ tailAction: { type: "questionnaire_prompt" } });
   } else if (session && session.current_phase < 3) {
+    void completeCurrentTaskForProtocol();
     useStudyStore.setState({
       tailAction: { type: "phase_advance", nextPhase: session.current_phase + 1 },
     });
   } else {
+    void completeSessionIfFinalPhase();
     useStudyStore.setState({ tailAction: { type: "session_complete" } });
   }
 }
@@ -707,10 +555,12 @@ function checkAllCheckpointsDone() {
   if (!allDone) return;
 
   if (session && session.current_phase < 3) {
+    void completeCurrentTaskForProtocol();
     useStudyStore.setState({
       tailAction: { type: "phase_advance", nextPhase: session.current_phase + 1 },
     });
   } else {
+    void completeSessionIfFinalPhase();
     useStudyStore.setState({ tailAction: { type: "session_complete" } });
   }
 }

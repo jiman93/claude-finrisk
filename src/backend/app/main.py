@@ -54,6 +54,8 @@ def _apply_sqlite_compat_migrations() -> None:
             "flagged_spans": "JSON",
             "characters_edited": "INTEGER",
             "edit_completed_at": "TIMESTAMP",
+            "questionnaire_response": "JSON",
+            "questionnaire_submitted_at": "TIMESTAMP",
         }
     }
 

@@ -34,8 +34,10 @@ class Task(Base):
     edited_summary: Mapped[str | None] = mapped_column(Text)
     flagged_spans: Mapped[list[dict] | None] = mapped_column(JSON)
     characters_edited: Mapped[int | None] = mapped_column(Integer)
+    questionnaire_response: Mapped[dict | None] = mapped_column(JSON)
     retrieval_completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=False))
     generation_completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=False))
     edit_completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=False))
+    questionnaire_submitted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=False))
 
     session = relationship("Session", back_populates="tasks")

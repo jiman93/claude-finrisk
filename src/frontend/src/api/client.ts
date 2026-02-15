@@ -1,10 +1,12 @@
 import type {
-  ChatTaskResponse,
+  CompleteSessionResponse,
+  CompleteTaskResponse,
   EditSummaryResponse,
   FlaggedSpan,
   GenerateResponse,
   NextPhaseResponse,
   QueryResponse,
+  QuestionnaireSubmitResponse,
   SelectNodesResponse,
   SessionState,
 } from "../types";
@@ -87,13 +89,26 @@ export function editSummaryTask(
   });
 }
 
-export function chatTask(
+export function submitQuestionnaireTask(
   taskId: string,
-  message: string,
-  context: string
-): Promise<ChatTaskResponse> {
-  return request<ChatTaskResponse>(`/api/tasks/${taskId}/chat`, {
+  response: Record<string, unknown>
+): Promise<QuestionnaireSubmitResponse> {
+  return request<QuestionnaireSubmitResponse>(`/api/tasks/${taskId}/questionnaire`, {
     method: "POST",
-    body: JSON.stringify({ message, context }),
+    body: JSON.stringify({ response }),
+  });
+}
+
+export function completeTask(taskId: string): Promise<CompleteTaskResponse> {
+  return request<CompleteTaskResponse>(`/api/tasks/${taskId}/complete`, {
+    method: "POST",
+    body: JSON.stringify({}),
+  });
+}
+
+export function completeSession(sessionId: string): Promise<CompleteSessionResponse> {
+  return request<CompleteSessionResponse>(`/api/sessions/${sessionId}/complete`, {
+    method: "POST",
+    body: JSON.stringify({}),
   });
 }

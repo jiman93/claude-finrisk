@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Any
 
 from pydantic import BaseModel
 
@@ -68,6 +69,16 @@ class CompleteTaskResponse(BaseModel):
     task_id: str
     completed_at: datetime
     time_on_task_seconds: int
+
+
+class QuestionnaireSubmitRequest(BaseModel):
+    response: dict[str, Any]
+
+
+class QuestionnaireSubmitResponse(BaseModel):
+    task_id: str
+    questionnaire_response: dict[str, Any]
+    questionnaire_submitted_at: datetime
 
 
 class ChatRequest(BaseModel):

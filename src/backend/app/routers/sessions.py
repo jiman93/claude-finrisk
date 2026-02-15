@@ -142,6 +142,11 @@ def complete_session(session_id: str, db: Session = Depends(get_db)):
     study_session = db.get(StudySession, session_id)
     if not study_session:
         raise HTTPException(status_code=404, detail="Session not found")
-    study_session.ended_at = datetime.utcnow()
+    if study_session.ended_at is None:
+        study_session.ended_at = datetime.utcnow()
     db.commit()
-    return {"status": "completed", "session_id": session_id}
+    return {
+        "status": "completed",
+        "session_id": session_id,
+        "ended_at": study_session.ended_at,
+    }
