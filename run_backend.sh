@@ -8,11 +8,15 @@ VENV_PATH="$BACKEND_DIR/.venv"
 if [[ ! -d "$VENV_PATH" ]]; then
   echo "Backend virtual environment not found at: $VENV_PATH"
   echo "Create it first:"
-  echo "  cd \"$BACKEND_DIR\" && python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt"
+  echo "  cd \"$BACKEND_DIR\" && python -m venv .venv && pip install -r requirements.txt"
   exit 1
 fi
 
-source "$VENV_PATH/bin/activate"
+if [[ -f "$VENV_PATH/Scripts/activate" ]]; then
+  source "$VENV_PATH/Scripts/activate"
+else
+  source "$VENV_PATH/bin/activate"
+fi
 cd "$BACKEND_DIR"
 
 echo "Starting backend on http://127.0.0.1:8000"

@@ -473,7 +473,7 @@ function StreamRenderer({
             );
 
           case "retrieved_nodes":
-            return <RetrievedNodesCard key={msg.id} nodes={msg.nodes} />;
+            return <RetrievedNodesCard key={msg.id} nodes={msg.nodes} onViewChunks={onViewCheckpoint} />;
 
           case "selector":
             return readOnly || msg.submitted ? (
@@ -482,6 +482,21 @@ function StreamRenderer({
                   <span>Chunk selection submitted</span>
                   <span className="pi-selector-meta">{msg.nodes.length} chunks</span>
                 </div>
+                <button
+                  type="button"
+                  className="pi-show-more-btn"
+                  onClick={() =>
+                    onViewCheckpoint(
+                      "Chunk Selection",
+                      msg.nodes.map((n) => ({
+                        label: `${n.title} (p.${n.page_index})`,
+                        value: n.relevant_content,
+                      }))
+                    )
+                  }
+                >
+                  View selection
+                </button>
               </div>
             ) : (
               <SelectorCard
@@ -513,7 +528,17 @@ function StreamRenderer({
           case "summary":
             return (
               <div key={msg.id} className="pi-answer-card">
-                <div className="pi-answer-label">Generated Summary</div>
+                <div className="pi-answer-label">
+                  Generated Summary
+                  <button
+                    type="button"
+                    className="pi-show-more-btn"
+                    style={{ marginLeft: 8 }}
+                    onClick={() => onViewSummary("Generated Summary", msg.summary)}
+                  >
+                    View in pane
+                  </button>
+                </div>
                 <FormattedMarkdown text={msg.summary} />
               </div>
             );
@@ -704,17 +729,34 @@ function TextBubble({ role, content }: { role: "system" | "user" | "assistant"; 
   return <div className="pi-assistant-text">{content}</div>;
 }
 
-function RetrievedNodesCard({ nodes }: { nodes: RetrievalNode[] }) {
+function RetrievedNodesCard({
+  nodes,
+  onViewChunks,
+}: {
+  nodes: RetrievalNode[];
+  onViewChunks: (label: string, fields: Array<{ label: string; value: string }>) => void;
+}) {
   return (
     <div className="pi-step-card completed">
       <div className="pi-step-left">
         <span className="pi-step-icon">&#10003;</span>
         <span>Retrieved {nodes.length} chunks</span>
       </div>
-      <div className="pi-step-right">
-        {nodes.map((n) => n.title).slice(0, 3).join(", ")}
-        {nodes.length > 3 ? ` +${nodes.length - 3} more` : ""}
-      </div>
+      <button
+        type="button"
+        className="pi-show-more-btn"
+        onClick={() =>
+          onViewChunks(
+            "Retrieved Chunks",
+            nodes.map((n) => ({
+              label: `${n.title} (p.${n.page_index})`,
+              value: n.relevant_content,
+            }))
+          )
+        }
+      >
+        View chunks
+      </button>
     </div>
   );
 }
