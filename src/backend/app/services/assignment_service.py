@@ -38,6 +38,46 @@ DEFAULT_CHECKPOINTS = [
         "sort_order": 0,
         "applicable_modes": ["hitl_r", "hitl_g", "hitl_full"],
     },
+    {
+        "definition_id": "seed-citation-verifier",
+        "control_type": "citation_verifier",
+        "label": "Citation Verification",
+        "pipeline_position": "post_generation",
+        "sort_order": 1,
+        "applicable_modes": ["hitl_g", "hitl_full"],
+    },
+    {
+        "definition_id": "seed-risk-ranking",
+        "control_type": "risk_priority_ranking",
+        "label": "Risk Priority Ranking",
+        "pipeline_position": "post_generation",
+        "sort_order": 2,
+        "applicable_modes": ["hitl_g", "hitl_full"],
+    },
+    {
+        "definition_id": "seed-policy-compliance",
+        "control_type": "policy_compliance",
+        "label": "Policy/Compliance Review",
+        "pipeline_position": "post_generation",
+        "sort_order": 3,
+        "applicable_modes": ["hitl_g", "hitl_full"],
+    },
+    {
+        "definition_id": "seed-source-conflict",
+        "control_type": "source_conflict_resolver",
+        "label": "Source Conflict Resolution",
+        "pipeline_position": "post_generation",
+        "sort_order": 4,
+        "applicable_modes": ["hitl_r", "hitl_full"],
+    },
+    {
+        "definition_id": "seed-confidence-calibration",
+        "control_type": "confidence_calibration",
+        "label": "Confidence Calibration",
+        "pipeline_position": "post_generation",
+        "sort_order": 5,
+        "applicable_modes": ["hitl_r", "hitl_g", "hitl_full"],
+    },
 ]
 
 
