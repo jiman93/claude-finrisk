@@ -40,6 +40,8 @@ def query_task(task_id: str, payload: QueryRequest, db: Session = Depends(get_db
 
     query = payload.query or task.query_text
     task.query_text = query
+    if payload.lane:
+        task.lane = payload.lane
 
     try:
         result = retrieval_service.retrieve(task.ticker, query)

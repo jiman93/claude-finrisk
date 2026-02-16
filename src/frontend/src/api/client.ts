@@ -38,10 +38,10 @@ export function startSession(participantId: string): Promise<SessionState> {
   });
 }
 
-export function queryTask(taskId: string, query?: string): Promise<QueryResponse> {
+export function queryTask(taskId: string, query?: string, lane?: string): Promise<QueryResponse> {
   return request<QueryResponse>(`/api/tasks/${taskId}/query`, {
     method: "POST",
-    body: JSON.stringify({ query }),
+    body: JSON.stringify({ query, lane }),
   });
 }
 

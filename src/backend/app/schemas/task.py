@@ -5,6 +5,7 @@ from pydantic import BaseModel
 
 class QueryRequest(BaseModel):
     query: str | None = None
+    lane: str | None = None
 
 
 class RetrievalNode(BaseModel):

@@ -233,7 +233,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
       }));
 
       try {
-        const retrieval = await queryTask(session.current_task_id, normalizedQuery);
+        const retrieval = await queryTask(session.current_task_id, normalizedQuery, "exploratory");
         set((state) => ({
           messages: [
             ...state.messages.filter((m) => m.id !== retrievalLoadingId),

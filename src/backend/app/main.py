@@ -59,6 +59,7 @@ def _apply_sqlite_compat_migrations() -> None:
             "provider_path": "VARCHAR(20)",
             "provider_error": "TEXT",
             "lane": "VARCHAR(20)",
+            "original_query_text": "TEXT",
         }
     }
 

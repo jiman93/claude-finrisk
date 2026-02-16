@@ -21,6 +21,7 @@ class Task(Base):
     mode: Mapped[ModeType] = mapped_column(Enum(ModeType), nullable=False)
     ticker: Mapped[str] = mapped_column(String(10), nullable=False)
     query_text: Mapped[str] = mapped_column(Text, nullable=False)
+    original_query_text: Mapped[str | None] = mapped_column(Text)
     started_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=False), default=datetime.utcnow, nullable=False
     )

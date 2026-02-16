@@ -83,6 +83,16 @@ export interface QuestionnaireResponse {
   questionnaire_completed_at: string;
 }
 
+export interface ProtocolDeviationResponse {
+  id: string;
+  session_id: string;
+  participant_id: string;
+  phase: number | null;
+  reason: string;
+  affected_metrics: string[] | null;
+  timestamp: string;
+}
+
 // ---------------------------------------------------------------------------
 // Checkpoint / HITL Control Architecture types
 // ---------------------------------------------------------------------------

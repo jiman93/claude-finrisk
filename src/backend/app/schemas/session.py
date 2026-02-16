@@ -28,3 +28,20 @@ class NextPhaseResponse(BaseModel):
     current_task_id: str
     current_ticker: str
     current_query: str
+
+
+class ProtocolDeviationRequest(BaseModel):
+    participant_id: str
+    phase: int | None = None
+    reason: str
+    affected_metrics: list[str] | None = None
+
+
+class ProtocolDeviationResponse(BaseModel):
+    id: str
+    session_id: str
+    participant_id: str
+    phase: int | None
+    reason: str
+    affected_metrics: list[str] | None
+    timestamp: datetime
