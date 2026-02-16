@@ -170,7 +170,7 @@ def ingest_ticker(
     collection_name = f"10k_{ticker.upper()}"
 
     # Check if already exists
-    existing_names = [c.name for c in client.list_collections()]
+    existing_names = client.list_collections()
     if collection_name in existing_names:
         if not force:
             col = client.get_collection(name=collection_name, embedding_function=embedding_fn)
