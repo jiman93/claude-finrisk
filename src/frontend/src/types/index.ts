@@ -83,16 +83,6 @@ export interface QuestionnaireResponse {
   questionnaire_completed_at: string;
 }
 
-export interface ProtocolDeviationResponse {
-  id: string;
-  session_id: string;
-  participant_id: string;
-  phase: number | null;
-  reason: string;
-  affected_metrics: string[] | null;
-  timestamp: string;
-}
-
 // ---------------------------------------------------------------------------
 // Checkpoint / HITL Control Architecture types
 // ---------------------------------------------------------------------------
@@ -300,3 +290,58 @@ export type TailAction =
   | { type: "questionnaire_prompt" }
   | { type: "phase_advance"; nextPhase: number }
   | { type: "session_complete" };
+
+// ---------------------------------------------------------------------------
+// Task Framework Panel (TFP) types
+// ---------------------------------------------------------------------------
+
+export type PipelineStep =
+  | "retrieval"
+  | "selection"
+  | "generation"
+  | "editing"
+  | "checkpoints"
+  | "complete";
+
+export interface TFPStepStatus {
+  step: PipelineStep;
+  label: string;
+  status: "pending" | "active" | "completed" | "skipped";
+}
+
+export interface TFPState {
+  taskDefinition: {
+    phase: number;
+    mode: Mode;
+    ticker: string;
+    query: string;
+  } | null;
+
+  evidence: {
+    retrievedNodes: RetrievalNode[];
+    selectedNodeIds: string[] | null;
+    coverageRatio: number;
+  } | null;
+
+  summary: {
+    generatedText: string | null;
+    editedText: string | null;
+    wasEdited: boolean;
+  } | null;
+
+  checkpoints: Array<{
+    definitionId: string;
+    label: string;
+    state: "submitted" | "skipped";
+    fields: Array<{ label: string; value: string }>;
+  }>;
+
+  pipelineSteps: TFPStepStatus[];
+}
+
+export interface TFPDetailView {
+  label: string;
+  content: "markdown" | "fields";
+  text?: string;
+  fields?: Array<{ label: string; value: string }>;
+}

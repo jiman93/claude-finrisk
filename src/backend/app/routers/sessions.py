@@ -7,13 +7,10 @@ from sqlalchemy.orm import Session
 from app.db.database import get_db
 from app.models.enums import ModeType
 from app.models.participant import Participant
-from app.models.protocol_deviation import ProtocolDeviation
 from app.models.session import Session as StudySession
 from app.models.task import Task
 from app.schemas.session import (
     NextPhaseResponse,
-    ProtocolDeviationRequest,
-    ProtocolDeviationResponse,
     SessionStartRequest,
     SessionStateResponse,
 )
@@ -184,61 +181,3 @@ def complete_session(session_id: str, db: Session = Depends(get_db)):
     study_session.ended_at = datetime.utcnow()
     db.commit()
     return {"status": "completed", "session_id": session_id}
-
-
-@router.post("/{session_id}/deviations", response_model=ProtocolDeviationResponse)
-def create_deviation(
-    session_id: str, payload: ProtocolDeviationRequest, db: Session = Depends(get_db)
-):
-    study_session = db.get(StudySession, session_id)
-    if not study_session:
-        raise HTTPException(status_code=404, detail="Session not found")
-
-    deviation = ProtocolDeviation(
-        session_id=session_id,
-        participant_id=payload.participant_id,
-        phase=payload.phase,
-        reason=payload.reason,
-        affected_metrics=payload.affected_metrics,
-    )
-    db.add(deviation)
-    db.commit()
-    db.refresh(deviation)
-
-    return ProtocolDeviationResponse(
-        id=deviation.id,
-        session_id=deviation.session_id,
-        participant_id=deviation.participant_id,
-        phase=deviation.phase,
-        reason=deviation.reason,
-        affected_metrics=deviation.affected_metrics,
-        timestamp=deviation.timestamp,
-    )
-
-
-@router.get(
-    "/{session_id}/deviations", response_model=list[ProtocolDeviationResponse]
-)
-def list_deviations(session_id: str, db: Session = Depends(get_db)):
-    study_session = db.get(StudySession, session_id)
-    if not study_session:
-        raise HTTPException(status_code=404, detail="Session not found")
-
-    deviations = db.scalars(
-        select(ProtocolDeviation)
-        .where(ProtocolDeviation.session_id == session_id)
-        .order_by(ProtocolDeviation.timestamp)
-    ).all()
-
-    return [
-        ProtocolDeviationResponse(
-            id=d.id,
-            session_id=d.session_id,
-            participant_id=d.participant_id,
-            phase=d.phase,
-            reason=d.reason,
-            affected_metrics=d.affected_metrics,
-            timestamp=d.timestamp,
-        )
-        for d in deviations
-    ]

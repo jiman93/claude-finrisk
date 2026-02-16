@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 
 import { useStudyStore } from "../../stores/studyStore";
 import type {
@@ -10,9 +10,12 @@ import type {
   RetrievalNode,
   SessionState,
   TailAction,
+  TFPDetailView,
 } from "../../types";
 import DynamicControlRenderer from "../controls/DynamicControlRenderer";
 import FormattedMarkdown from "../FormattedMarkdown";
+import { deriveTFPState } from "../../lib/deriveTFPState";
+import TaskFrameworkPanel from "./TaskFrameworkPanel";
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
 const CHUNK_TRUNCATE_LEN = 200;
@@ -88,24 +91,21 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
   const restoredAssignment = activeChatId ? chatSnapshots[activeChatId]?.assignment ?? null : null;
   const effectiveAssignment = isRestoredView ? restoredAssignment : assignment;
 
-  // Right pane: view a summary or checkpoint detail
-  const [paneSummary, setPaneSummary] = useState<{ label: string; text: string } | null>(null);
-  const [paneCheckpoint, setPaneCheckpoint] = useState<{
-    label: string;
-    fields: Array<{ label: string; value: string }>;
-  } | null>(null);
+  // Task Framework Panel state
+  const [tfpOpen, setTfpOpen] = useState(false);
+  const [tfpDetail, setTfpDetail] = useState<TFPDetailView | null>(null);
+  const tfpState = useMemo(
+    () => deriveTFPState(messages, session),
+    [messages, session],
+  );
 
   function openSummaryPane(label: string, text: string) {
-    setPaneCheckpoint(null);
-    setPaneSummary({ label, text });
+    setTfpOpen(true);
+    setTfpDetail({ label, content: "markdown", text });
   }
   function openCheckpointPane(label: string, fields: Array<{ label: string; value: string }>) {
-    setPaneSummary(null);
-    setPaneCheckpoint({ label, fields });
-  }
-  function closePane() {
-    setPaneSummary(null);
-    setPaneCheckpoint(null);
+    setTfpOpen(true);
+    setTfpDetail({ label, content: "fields", fields });
   }
 
   // Fetch the participant's assignment from the study control panel API
@@ -177,42 +177,24 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
 
   const canAskFollowUp = started && session && !isLoading && !isRestoredView;
 
-  // ── Right pane (shared between active and restored views) ──
-  const rightPane = (
+  // ── TFP toggle tab + drawer (shared between active and restored views) ──
+  const tfpElement = (
     <>
-      {paneSummary && (
-        <div className="pi-right-pane">
-          <div className="pi-right-header">
-            <span className="pi-right-file">{paneSummary.label}</span>
-            <button type="button" className="pi-close-pane-btn" onClick={closePane}>
-              Close
-            </button>
-          </div>
-          <div className="pi-right-body">
-            <FormattedMarkdown text={paneSummary.text} />
-          </div>
-        </div>
-      )}
-      {paneCheckpoint && (
-        <div className="pi-right-pane">
-          <div className="pi-right-header">
-            <span className="pi-right-file">{paneCheckpoint.label}</span>
-            <button type="button" className="pi-close-pane-btn" onClick={closePane}>
-              Close
-            </button>
-          </div>
-          <div className="pi-right-body">
-            <div className="scg-cp-detail-list">
-              {paneCheckpoint.fields.map((f, i) => (
-                <div key={i} className="scg-cp-detail-row">
-                  <span className="scg-cp-detail-label">{f.label}</span>
-                  <span className="scg-cp-detail-value">{f.value}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
+      <button
+        type="button"
+        className="tfp-toggle-tab"
+        onClick={() => { setTfpOpen((v) => !v); setTfpDetail(null); }}
+      >
+        {tfpOpen ? "Close" : "Task"}
+      </button>
+      <TaskFrameworkPanel
+        tfpState={tfpState}
+        isOpen={tfpOpen}
+        onClose={() => { setTfpOpen(false); setTfpDetail(null); }}
+        detailView={tfpDetail}
+        onDetailView={setTfpDetail}
+        onCloseDetail={() => setTfpDetail(null)}
+      />
     </>
   );
 
@@ -220,7 +202,7 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
   if (isRestoredView && session && effectiveAssignment) {
     return (
       <section className="pi-chat-shell">
-        <div className={`pi-workspace${paneSummary || paneCheckpoint ? "" : " pane-collapsed"}`}>
+        <div className="pi-workspace">
           <div className="pi-left-pane scg-active-layout">
             <SessionBar assignment={effectiveAssignment} session={session} />
             <div className="pi-chat-stream">
@@ -242,8 +224,8 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
               </div>
             </div>
           </div>
-          {rightPane}
         </div>
+        {tfpElement}
       </section>
     );
   }
@@ -252,7 +234,7 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
   if (!assignment) {
     return (
       <section className="pi-chat-shell">
-        <div className="pi-workspace pane-collapsed">
+        <div className="pi-workspace">
           <div className="pi-left-pane">
             <div className="pi-chat-stream">
               <div className="scg-entry-center">
@@ -296,7 +278,7 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
   if (!started) {
     return (
       <section className="pi-chat-shell">
-        <div className="pi-workspace pane-collapsed">
+        <div className="pi-workspace">
           <div className="pi-left-pane">
             <div className="pi-chat-stream">
               <div className="scg-overview-center">
@@ -353,7 +335,7 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
   // ── Screen 3: Active study session (chat stream) ──
   return (
     <section className="pi-chat-shell">
-      <div className={`pi-workspace${paneSummary || paneCheckpoint ? "" : " pane-collapsed"}`}>
+      <div className="pi-workspace">
         <div className="pi-left-pane scg-active-layout">
           <SessionBar assignment={assignment} session={session} />
 
@@ -417,8 +399,8 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
             </div>
           )}
         </div>
-        {rightPane}
       </div>
+      {tfpElement}
     </section>
   );
 }
