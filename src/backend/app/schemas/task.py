@@ -30,6 +30,7 @@ class GenerateResponse(BaseModel):
     summary: str
     used_node_ids: list[str]
     generation_completed_at: datetime
+    provider_path: str | None = None
 
 
 class SelectNodesRequest(BaseModel):
@@ -68,3 +69,30 @@ class CompleteTaskResponse(BaseModel):
     task_id: str
     completed_at: datetime
     time_on_task_seconds: int
+
+
+class CheckpointEventRequest(BaseModel):
+    checkpoint_instance_id: str
+    definition_id: str
+    event_type: str
+    payload: dict | None = None
+
+
+class CheckpointEventResponse(BaseModel):
+    event_id: str
+    checkpoint_instance_id: str
+    task_id: str
+    event_type: str
+    timestamp: datetime
+
+
+class QuestionnaireRequest(BaseModel):
+    checkpoint_instance_id: str
+    confidence: int
+    citation_helpfulness: str | None = None
+    notes: str | None = None
+
+
+class QuestionnaireResponse(BaseModel):
+    task_id: str
+    questionnaire_completed_at: datetime

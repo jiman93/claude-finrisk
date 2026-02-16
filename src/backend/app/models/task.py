@@ -37,5 +37,10 @@ class Task(Base):
     retrieval_completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=False))
     generation_completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=False))
     edit_completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=False))
+    questionnaire_response: Mapped[dict | None] = mapped_column(JSON)
+    questionnaire_completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=False))
+    provider_path: Mapped[str | None] = mapped_column(String(20))
+    provider_error: Mapped[str | None] = mapped_column(Text)
+    lane: Mapped[str | None] = mapped_column(String(20), default="primary")
 
     session = relationship("Session", back_populates="tasks")

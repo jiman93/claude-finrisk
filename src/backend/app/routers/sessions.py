@@ -5,6 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db.database import get_db
+from app.models.enums import ModeType
 from app.models.participant import Participant
 from app.models.session import Session as StudySession
 from app.models.task import Task
@@ -123,6 +124,22 @@ def next_phase(session_id: str, db: Session = Depends(get_db)):
     if study_session.current_phase >= 3:
         raise HTTPException(status_code=400, detail="Session already at final phase")
 
+    # Gate: non-baseline modes require questionnaire before advancing
+    current_task = db.scalar(
+        select(Task)
+        .where(Task.session_id == study_session.id, Task.phase == study_session.current_phase)
+        .order_by(Task.started_at.desc())
+    )
+    if (
+        current_task
+        and study_session.current_mode != ModeType.baseline
+        and current_task.questionnaire_response is None
+    ):
+        raise HTTPException(
+            status_code=422,
+            detail="Questionnaire must be submitted before advancing phase",
+        )
+
     study_session.current_phase += 1
     study_session.current_mode = modes[study_session.current_phase - 1]
     task = _create_task_for_phase(db, study_session, study_session.current_phase)
@@ -142,6 +159,19 @@ def complete_session(session_id: str, db: Session = Depends(get_db)):
     study_session = db.get(StudySession, session_id)
     if not study_session:
         raise HTTPException(status_code=404, detail="Session not found")
+
+    # Gate: final task must be completed before ending session
+    final_task = db.scalar(
+        select(Task)
+        .where(Task.session_id == study_session.id, Task.phase == study_session.current_phase)
+        .order_by(Task.started_at.desc())
+    )
+    if final_task and final_task.completed_at is None:
+        raise HTTPException(
+            status_code=422,
+            detail="Current task must be completed before ending session",
+        )
+
     study_session.ended_at = datetime.utcnow()
     db.commit()
     return {"status": "completed", "session_id": session_id}

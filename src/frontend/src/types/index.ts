@@ -31,6 +31,7 @@ export interface GenerateResponse {
   summary: string;
   used_node_ids: string[];
   generation_completed_at: string;
+  provider_path?: string;
 }
 
 export interface NextPhaseResponse {
@@ -61,6 +62,25 @@ export interface EditSummaryResponse {
   characters_edited: number;
   hallucinations_flagged: number;
   edit_completed_at: string;
+}
+
+export interface CompleteTaskResponse {
+  task_id: string;
+  completed_at: string;
+  time_on_task_seconds: number;
+}
+
+export interface CheckpointEventResponse {
+  event_id: string;
+  checkpoint_instance_id: string;
+  task_id: string;
+  event_type: string;
+  timestamp: string;
+}
+
+export interface QuestionnaireResponse {
+  task_id: string;
+  questionnaire_completed_at: string;
 }
 
 // ---------------------------------------------------------------------------

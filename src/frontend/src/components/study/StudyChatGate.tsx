@@ -67,6 +67,7 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
     startQuestionnaire,
     submitCheckpoint,
     skipCheckpoint,
+    completeStudySession,
   } = useStudyStore();
 
   const [followUpInput, setFollowUpInput] = useState("");
@@ -384,6 +385,7 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
             onSubmitCheckpoint={submitCheckpoint}
             onSkipCheckpoint={skipCheckpoint}
             onAdvancePhase={advancePhase}
+            onCompleteSession={completeStudySession}
           />
 
           {/* Follow-up query input bar */}
@@ -568,9 +570,10 @@ interface TailActionZoneProps {
   activeCheckpoints: CheckpointInstance[];
   isLoading: boolean;
   onStartQuestionnaire: () => void;
-  onSubmitCheckpoint: (definitionId: string, data: Record<string, unknown>) => void;
-  onSkipCheckpoint: (definitionId: string) => void;
+  onSubmitCheckpoint: (definitionId: string, data: Record<string, unknown>) => Promise<void>;
+  onSkipCheckpoint: (definitionId: string) => Promise<void>;
   onAdvancePhase: () => Promise<void>;
+  onCompleteSession: () => Promise<void>;
 }
 
 function TailActionZone({
@@ -581,6 +584,7 @@ function TailActionZone({
   onSubmitCheckpoint,
   onSkipCheckpoint,
   onAdvancePhase,
+  onCompleteSession,
 }: TailActionZoneProps) {
   if (!tailAction && activeCheckpoints.length === 0) return null;
 
@@ -614,8 +618,15 @@ function TailActionZone({
         </div>
       )}
       {tailAction?.type === "session_complete" && (
-        <div className="pi-run-meta pi-status-row" style={{ marginTop: 8 }}>
-          <span>Study session complete. All 3 phases finished.</span>
+        <div className="scg-advance-section">
+          <button
+            type="button"
+            className="pi-primary-btn"
+            onClick={() => void onCompleteSession()}
+            disabled={isLoading}
+          >
+            Complete Study Session
+          </button>
         </div>
       )}
     </div>

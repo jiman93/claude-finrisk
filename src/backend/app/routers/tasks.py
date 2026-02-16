@@ -4,8 +4,11 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.db.database import get_db
+from app.models.checkpoint_event import CheckpointEvent
 from app.models.task import Task
 from app.schemas.task import (
+    CheckpointEventRequest,
+    CheckpointEventResponse,
     CompleteTaskResponse,
     EditSummaryRequest,
     EditSummaryResponse,
@@ -13,6 +16,8 @@ from app.schemas.task import (
     GenerateResponse,
     QueryRequest,
     QueryResponse,
+    QuestionnaireRequest,
+    QuestionnaireResponse,
     RetrievalNode,
     SelectNodesRequest,
     SelectNodesResponse,
@@ -79,8 +84,11 @@ def generate_summary(task_id: str, payload: GenerateRequest, db: Session = Depen
     nodes = [RetrievalNode(**node) for node in selected_nodes]
     try:
         summary = llm_service.generate_summary(task.ticker, task.query_text, nodes)
-    except LLMServiceError:
+        task.provider_path = "live"
+    except LLMServiceError as exc:
         summary = template_summary(task.ticker, task.query_text, nodes)
+        task.provider_path = "fallback"
+        task.provider_error = str(exc)
 
     task.selected_node_ids = selected_ids
     task.generated_summary = summary
@@ -93,6 +101,7 @@ def generate_summary(task_id: str, payload: GenerateRequest, db: Session = Depen
         summary=summary,
         used_node_ids=selected_ids,
         generation_completed_at=task.generation_completed_at,
+        provider_path=task.provider_path,
     )
 
 
@@ -157,4 +166,64 @@ def complete_task(task_id: str, db: Session = Depends(get_db)):
         task_id=task.id,
         completed_at=task.completed_at,
         time_on_task_seconds=task.time_on_task_seconds,
+    )
+
+
+@router.post("/{task_id}/checkpoint-events", response_model=CheckpointEventResponse)
+def create_checkpoint_event(
+    task_id: str, payload: CheckpointEventRequest, db: Session = Depends(get_db)
+):
+    task = db.get(Task, task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    event = CheckpointEvent(
+        checkpoint_instance_id=payload.checkpoint_instance_id,
+        task_id=task_id,
+        definition_id=payload.definition_id,
+        event_type=payload.event_type,
+        payload=payload.payload,
+    )
+    db.add(event)
+    db.commit()
+    db.refresh(event)
+
+    return CheckpointEventResponse(
+        event_id=event.id,
+        checkpoint_instance_id=event.checkpoint_instance_id,
+        task_id=event.task_id,
+        event_type=event.event_type,
+        timestamp=event.timestamp,
+    )
+
+
+@router.post("/{task_id}/questionnaire", response_model=QuestionnaireResponse)
+def submit_questionnaire(
+    task_id: str, payload: QuestionnaireRequest, db: Session = Depends(get_db)
+):
+    task = db.get(Task, task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    task.questionnaire_response = {
+        "confidence": payload.confidence,
+        "citation_helpfulness": payload.citation_helpfulness,
+        "notes": payload.notes,
+    }
+    task.questionnaire_completed_at = datetime.utcnow()
+
+    event = CheckpointEvent(
+        checkpoint_instance_id=payload.checkpoint_instance_id,
+        task_id=task_id,
+        definition_id="seed-questionnaire",
+        event_type="submitted",
+        payload=task.questionnaire_response,
+    )
+    db.add(event)
+    db.commit()
+    db.refresh(task)
+
+    return QuestionnaireResponse(
+        task_id=task.id,
+        questionnaire_completed_at=task.questionnaire_completed_at,
     )

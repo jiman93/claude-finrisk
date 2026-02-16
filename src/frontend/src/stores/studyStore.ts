@@ -1,12 +1,16 @@
 import { create } from "zustand";
 
 import {
+  completeSession,
+  completeTask,
   editSummaryTask,
   generateTask,
   nextPhase,
   queryTask,
   selectNodesTask,
   startSession,
+  submitCheckpointEvent,
+  submitQuestionnaire,
 } from "../api/client";
 import { SEED_DEFINITIONS } from "../data/checkpointDefinitions";
 import type {
@@ -61,8 +65,9 @@ interface StudyState {
   ) => Promise<void>;
   submitEditedSummary: (taskId: string, editedText: string) => Promise<void>;
   startQuestionnaire: () => void;
-  submitCheckpoint: (definitionId: string, data: Record<string, unknown>) => void;
-  skipCheckpoint: (definitionId: string) => void;
+  submitCheckpoint: (definitionId: string, data: Record<string, unknown>) => Promise<void>;
+  skipCheckpoint: (definitionId: string) => Promise<void>;
+  completeStudySession: () => Promise<void>;
 
   // Chat history actions
   saveChat: (chatId: string, title: string, assignment: ParticipantAssignment) => void;
@@ -332,6 +337,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
     set({ isLoading: true, error: null, tailAction: null, activeCheckpoints: [] });
 
     try {
+      await completeTask(session.current_task_id);
       const next = await nextPhase(session.session_id);
       const updated: SessionState = {
         ...session,
@@ -457,10 +463,37 @@ export const useStudyStore = create<StudyState>((set, get) => ({
 
   // ── Submit a checkpoint ──
 
-  submitCheckpoint: (definitionId, data) => {
+  submitCheckpoint: async (definitionId, data) => {
+    const { session, activeCheckpoints } = get();
     const fields = buildFieldSummary(definitionId, data);
     const def = SEED_DEFINITIONS.find((d) => d.id === definitionId);
     const label = def?.label ?? definitionId;
+    const taskId = session?.current_task_id;
+    const instance = activeCheckpoints.find((cp) => cp.definition_id === definitionId);
+    const instanceId = instance?.id ?? makeId("cp");
+
+    // Persist to backend
+    if (taskId) {
+      try {
+        if (definitionId === "seed-questionnaire") {
+          await submitQuestionnaire(taskId, {
+            checkpoint_instance_id: instanceId,
+            confidence: Number(data.confidence ?? 3),
+            citation_helpfulness: data.citation_helpfulness != null ? String(data.citation_helpfulness) : null,
+            notes: data.notes != null ? String(data.notes) : null,
+          });
+        } else {
+          await submitCheckpointEvent(taskId, {
+            checkpoint_instance_id: instanceId,
+            definition_id: definitionId,
+            event_type: "submitted",
+            payload: data,
+          });
+        }
+      } catch {
+        // Log but don't block UI — data is still in messages for recovery
+      }
+    }
 
     set((state) => ({
       activeCheckpoints: state.activeCheckpoints.filter(
@@ -484,9 +517,26 @@ export const useStudyStore = create<StudyState>((set, get) => ({
 
   // ── Skip a checkpoint ──
 
-  skipCheckpoint: (definitionId) => {
+  skipCheckpoint: async (definitionId) => {
+    const { session, activeCheckpoints } = get();
     const def = SEED_DEFINITIONS.find((d) => d.id === definitionId);
     const label = def?.label ?? definitionId;
+    const taskId = session?.current_task_id;
+    const instance = activeCheckpoints.find((cp) => cp.definition_id === definitionId);
+    const instanceId = instance?.id ?? makeId("cp");
+
+    // Persist skip event to backend
+    if (taskId) {
+      try {
+        await submitCheckpointEvent(taskId, {
+          checkpoint_instance_id: instanceId,
+          definition_id: definitionId,
+          event_type: "skipped",
+        });
+      } catch {
+        // Log but don't block UI
+      }
+    }
 
     set((state) => ({
       activeCheckpoints: state.activeCheckpoints.filter(
@@ -506,6 +556,37 @@ export const useStudyStore = create<StudyState>((set, get) => ({
     }));
 
     checkAllCheckpointsDone();
+  },
+
+  // ── Complete study session ──
+
+  completeStudySession: async () => {
+    const { session } = get();
+    if (!session) return;
+
+    set({ isLoading: true, error: null });
+
+    try {
+      await completeTask(session.current_task_id);
+      await completeSession(session.session_id);
+
+      set((state) => ({
+        tailAction: null,
+        isLoading: false,
+        messages: [
+          ...state.messages,
+          {
+            id: makeId("msg"),
+            type: "text" as const,
+            role: "system" as const,
+            content: "Study session completed. All 3 phases finished.",
+          },
+        ],
+      }));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unexpected error";
+      set({ error: message, isLoading: false });
+    }
   },
 
   // ── Chat history actions ──

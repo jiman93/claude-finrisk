@@ -1,9 +1,12 @@
 import type {
+  CheckpointEventResponse,
+  CompleteTaskResponse,
   EditSummaryResponse,
   FlaggedSpan,
   GenerateResponse,
   NextPhaseResponse,
   QueryResponse,
+  QuestionnaireResponse,
   SelectNodesResponse,
   SessionState,
 } from "../types";
@@ -83,5 +86,49 @@ export function editSummaryTask(
       edited_text: editedText,
       flagged_spans: flaggedSpans,
     }),
+  });
+}
+
+export function completeTask(taskId: string): Promise<CompleteTaskResponse> {
+  return request<CompleteTaskResponse>(`/api/tasks/${taskId}/complete`, {
+    method: "POST",
+    body: JSON.stringify({}),
+  });
+}
+
+export function completeSession(sessionId: string): Promise<{ status: string; session_id: string }> {
+  return request<{ status: string; session_id: string }>(`/api/sessions/${sessionId}/complete`, {
+    method: "POST",
+    body: JSON.stringify({}),
+  });
+}
+
+export function submitCheckpointEvent(
+  taskId: string,
+  body: {
+    checkpoint_instance_id: string;
+    definition_id: string;
+    event_type: string;
+    payload?: Record<string, unknown> | null;
+  }
+): Promise<CheckpointEventResponse> {
+  return request<CheckpointEventResponse>(`/api/tasks/${taskId}/checkpoint-events`, {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export function submitQuestionnaire(
+  taskId: string,
+  body: {
+    checkpoint_instance_id: string;
+    confidence: number;
+    citation_helpfulness?: string | null;
+    notes?: string | null;
+  }
+): Promise<QuestionnaireResponse> {
+  return request<QuestionnaireResponse>(`/api/tasks/${taskId}/questionnaire`, {
+    method: "POST",
+    body: JSON.stringify(body),
   });
 }
