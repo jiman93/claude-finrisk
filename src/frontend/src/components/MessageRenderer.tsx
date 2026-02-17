@@ -7,6 +7,7 @@ import LoadingMessage from "./messages/LoadingMessage";
 import RetrievedNodesMessage from "./messages/RetrievedNodesMessage";
 import SectionSelectorMessage from "./messages/SectionSelectorMessage";
 import SummaryMessage from "./messages/SummaryMessage";
+import TraversalPathMessage from "./messages/TraversalPathMessage";
 
 interface MessageRendererProps {
   message: ChatMessage;
@@ -51,6 +52,13 @@ export default function MessageRenderer({
     return (
       <AssistantBlock>
         <LoadingMessage content={message.content} />
+      </AssistantBlock>
+    );
+  }
+  if (message.type === "traversal_path") {
+    return (
+      <AssistantBlock>
+        <TraversalPathMessage steps={message.steps} />
       </AssistantBlock>
     );
   }

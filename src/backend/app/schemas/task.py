@@ -14,11 +14,21 @@ class RetrievalNode(BaseModel):
     relevant_content: str
 
 
+class TraversalStep(BaseModel):
+    depth: int
+    action: str
+    options: list[str] | None = None
+    selected: list[str] | None = None
+    count: int | None = None
+
+
 class QueryResponse(BaseModel):
     status: str
     task_id: str
     retrieved_nodes: list[RetrievalNode]
     retrieval_completed_at: datetime
+    retrieval_mode: str = "local"
+    traversal_path: list[TraversalStep] | None = None
 
 
 class GenerateRequest(BaseModel):

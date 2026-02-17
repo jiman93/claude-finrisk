@@ -33,6 +33,7 @@ class Task(Base):
     generated_summary: Mapped[str | None] = mapped_column(Text)
     edited_summary: Mapped[str | None] = mapped_column(Text)
     flagged_spans: Mapped[list[dict] | None] = mapped_column(JSON)
+    traversal_path: Mapped[list[dict] | None] = mapped_column(JSON)
     characters_edited: Mapped[int | None] = mapped_column(Integer)
     retrieval_completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=False))
     generation_completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=False))

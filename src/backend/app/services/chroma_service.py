@@ -174,4 +174,4 @@ class ChromaService:
             )
 
         retrieval_id = f"cr-local-{uuid.uuid4().hex[:18]}"
-        return RetrievalResult(retrieval_id=retrieval_id, nodes=nodes)
+        return RetrievalResult(retrieval_id=retrieval_id, nodes=nodes, retrieval_mode="local")

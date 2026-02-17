@@ -19,10 +19,16 @@ class Settings(BaseSettings):
     pageindex_enable_thinking: bool = False
     openai_api_key: str = ""
     openai_base_url: str = "https://api.openai.com/v1"
-    openai_model: str = "gpt-4o-mini"
-    retrieval_mode: str = "local"  # "local" (ChromaDB) or "pageindex"
+    openai_model: str = "gpt-5.2"
+    retrieval_mode: str = "local"  # "local" (ChromaDB), "pageindex", or "tree"
     chroma_db_path: str = "./data/chroma_db"
     embedding_model: str = "all-MiniLM-L6-v2"
+    # Tree traversal tuning (when RETRIEVAL_MODE=tree)
+    tree_nav_model: str = "o3-mini"
+    tree_nav_reasoning_effort: str = "low"
+    tree_max_branches: int = 3
+    tree_max_depth: int = 4
+    tree_max_leaves: int = 8
 
     model_config = SettingsConfigDict(
         env_file=(str(ROOT_ENV_FILE), ".env"),

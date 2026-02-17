@@ -16,6 +16,7 @@ from app.schemas.task import (
     RetrievalNode,
     SelectNodesRequest,
     SelectNodesResponse,
+    TraversalStep,
 )
 from app.services.llm_service import LLMService, LLMServiceError
 from app.services.retrieval_service import RetrievalError, RetrievalService
@@ -47,15 +48,23 @@ def query_task(task_id: str, payload: QueryRequest, db: Session = Depends(get_db
     task.retrieved_nodes = [node.model_dump() for node in result.nodes]
     if result.retrieval_id:
         task.pageindex_retrieval_id = result.retrieval_id
+    if result.traversal_path:
+        task.traversal_path = result.traversal_path
     task.retrieval_completed_at = datetime.utcnow()
     db.commit()
     db.refresh(task)
+
+    traversal_steps = None
+    if result.traversal_path:
+        traversal_steps = [TraversalStep(**step) for step in result.traversal_path]
 
     return QueryResponse(
         status="completed",
         task_id=task.id,
         retrieved_nodes=result.nodes,
         retrieval_completed_at=task.retrieval_completed_at,
+        retrieval_mode=result.retrieval_mode,
+        traversal_path=traversal_steps,
     )
 
 

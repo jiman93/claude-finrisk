@@ -9,28 +9,35 @@ Replace the current flat retrieval (ChromaDB vector search / PageIndex retrieval
 ### What exists
 - `scripts/build_tree_index.py` — fetches tree from PageIndex `/doc/{id}/?type=tree`, layers on canonical PART/ITEM hierarchy, outputs `{TICKER}_tree.json`
 - `scripts/index_pageindex_documents.py` — submits PDFs to PageIndex for processing
-- `data/tree_index/AAPL_tree.json` — test output (96 nodes, 202K chars, depth 3)
+- `data/tree_index/AAPL_tree.json` — test output from proper EDGAR PDF
 - Local ChromaDB retrieval (`chroma_service.py`) with `all-MiniLM-L6-v2`
 - PageIndex retrieval service (`pageindex_service.py`) — currently blocked (`retrieval_ready: false`)
 - Strategy router (`retrieval_service.py`) — delegates to local or PageIndex
 
+### Validated
+- **Proper EDGAR PDFs produce high-quality trees.** Tested with AAPL 10-K PDF downloaded directly from EDGAR (2.5MB native PDF vs 579K Playwright render). PageIndex returns a properly nested tree with all 16 Items correctly grouped under their PARTs, accurate page numbers, and meaningful sub-sections. No sec-api subscription needed — PDFs can be downloaded free from EDGAR filing pages.
+- Playwright-rendered PDFs produce flat, poorly structured trees with page misalignment. **Do not use Playwright PDFs.**
+
 ### Known issues
-- Current test trees use Playwright-rendered PDFs with shifted page boundaries, causing sub-section misassignment
 - PageIndex retrieval API never becomes ready (`retrieval_ready: false`) — not a blocker since we're building our own traversal
+- Only AAPL has been ingested with a proper PDF so far; remaining 7 tickers pending
 
 ## Pipeline Phases
 
 ---
 
-### Phase 0: Proper PDF Acquisition
+### Phase 0: Download Proper PDFs from EDGAR
 
-**Goal:** Get native SEC filing PDFs so page numbers match the filing's own TOC.
+**Goal:** Get native SEC filing PDFs for all tickers. No paid API needed.
+
+**How:** Each 10-K filing on EDGAR has a PDF link on its filing index page. Download manually or write a script to locate and fetch them.
 
 **Steps:**
-1. Subscribe to sec-api.io (or use EDGAR direct PDF links where available)
-2. Write/update download script to pull PDFs for all 8 tickers: MSFT, AAPL, TSLA, JPM, PFE, WMT, XOM, BA
-3. Store in `data/10k_pdfs/` replacing the Playwright-rendered versions
-4. Update `data/metadata/edgar_10k_manifest.json` with new paths
+1. For each ticker, go to the EDGAR filing index page and download the 10-K PDF
+2. Store in `data/10k_pdfs/` (e.g. `aapl-20240928.pdf`)
+3. Update `data/metadata/edgar_10k_manifest.json` with new paths and `"pdf_renderer": "edgar_native"`
+
+**Status:** AAPL done. 7 remaining: MSFT, TSLA, JPM, PFE, WMT, XOM, BA.
 
 **Validation:** Open a PDF, check that the TOC page numbers match actual PDF page numbers.
 
@@ -104,7 +111,15 @@ class TreeRetrievalService:
 - Max traversal depth: 3-4 levels (root → part → item → sub-section)
 - Max branches per level: 3 (prevents exploring entire tree)
 - Each LLM call uses a focused system prompt: "You are navigating a 10-K filing. Given the user's question, select which sections to explore."
+- Uses **structured outputs** (JSON schema) for reliable branch selection
 - Returns `RetrievalResult` (same interface as ChromaDB/PageIndex) so downstream is unchanged
+
+**Model selection:**
+
+| Role | Model | Reasoning |
+|------|-------|-----------|
+| **Tree navigation** (branch selection) | `o3-mini` (reasoning_effort: low) | Has chain-of-thought reasoning to understand *why* a section is relevant before selecting. Structured output support. Fast and cheap at low effort. Can bump to medium for final leaf selection. |
+| **Synthesis** (answer generation) | `gpt-5.2` | Flagship model for quality — generating the final cited answer from retrieved content is where quality matters most. |
 
 **LLM prompt structure per step:**
 ```
@@ -172,9 +187,9 @@ TreeRetrievalService
     |
     +---> Load {TICKER}_tree.json
     |
-    +---> LLM Call 1: Pick PARTs      (root -> parts)
-    +---> LLM Call 2: Pick Items       (part -> items)
-    +---> LLM Call 3: Pick Sub-sections (item -> leaves)
+    +---> o3-mini (low):  Pick PARTs       (root -> parts)
+    +---> o3-mini (low):  Pick Items        (part -> items)
+    +---> o3-mini (low):  Pick Sub-sections (item -> leaves)
     |
     v
 RetrievalResult (nodes with page citations)
@@ -183,7 +198,7 @@ RetrievalResult (nodes with page citations)
 HITL Chunk Selector (existing)
     |
     v
-OpenAI Synthesis (existing)
+gpt-5.2: Synthesis (existing)
     |
     v
 Answer + Citations
@@ -194,14 +209,13 @@ Answer + Citations
 | File | Change |
 |------|--------|
 | `scripts/build_tree_index.py` | Already done (Phase 1) |
-| `scripts/download_sec_pdfs.py` | New — download proper PDFs from sec-api |
 | `src/backend/app/services/tree_service.py` | New — LLM tree traversal |
 | `src/backend/app/services/retrieval_service.py` | Add `tree` mode |
 | `src/backend/app/config.py` | Add `RETRIEVAL_MODE=tree` |
 
 ## Dependencies
 
-- **sec-api subscription** — needed for Phase 0
+- **EDGAR access** — free, no API key needed for PDF downloads
 - **PageIndex API key** — needed for Phase 1 (tree building only, not retrieval)
 - **OpenAI API** — needed for Phase 2 (LLM traversal calls) and Phase 3 (synthesis)
 - No new Python packages required beyond what's already installed
@@ -211,6 +225,7 @@ Answer + Citations
 | Risk | Mitigation |
 |------|------------|
 | LLM picks wrong branch | Allow multi-branch selection (up to 3); add fallback keyword search |
-| Traversal too slow (3-4 LLM calls) | Use fast model (gpt-4o-mini) for navigation; cache common paths |
-| Tree quality poor with some filings | Validate tree output per ticker; flag tickers with < 10 nodes |
+| Traversal too slow (3-4 LLM calls) | Use o3-mini at low reasoning effort for navigation; cache common paths |
+| Tree quality poor with some filings | Validate tree output per ticker; flag tickers with < 10 nodes. Use native EDGAR PDFs only (not Playwright-rendered) |
 | PageIndex API unavailable | Trees are cached locally as JSON; only needed once per filing |
+| Some EDGAR filings don't have a direct PDF | Most modern 10-K filings have a PDF on the filing index page. If not, browser print-to-PDF from the HTML filing is acceptable |

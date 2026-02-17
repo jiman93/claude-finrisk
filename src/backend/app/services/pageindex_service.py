@@ -15,6 +15,8 @@ class PageIndexError(RuntimeError):
 class RetrievalResult:
     retrieval_id: str
     nodes: list[RetrievalNode]
+    retrieval_mode: str = "pageindex"
+    traversal_path: list[dict] | None = None
 
 
 def normalize_pageindex_nodes(ticker: str, raw_nodes: list[dict]) -> list[RetrievalNode]:

@@ -1,12 +1,17 @@
+import logging
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import inspect, text
 
 import app.models  # noqa: F401
+from app.config import settings
 from app.db.database import Base, engine
 from app.routers.sessions import router as sessions_router
 from app.routers.study_assignments import router as study_assignments_router
 from app.routers.tasks import router as tasks_router
+
+log = logging.getLogger(__name__)
 
 app = FastAPI(
     title="FinRisk HITL API",
@@ -30,6 +35,7 @@ app.add_middleware(
 def startup():
     Base.metadata.create_all(bind=engine)
     _apply_sqlite_compat_migrations()
+    _validate_retrieval_mode()
 
 
 @app.get("/health")
@@ -52,6 +58,7 @@ def _apply_sqlite_compat_migrations() -> None:
             "rejected_node_ids": "JSON",
             "edited_summary": "TEXT",
             "flagged_spans": "JSON",
+            "traversal_path": "JSON",
             "characters_edited": "INTEGER",
             "edit_completed_at": "TIMESTAMP",
         }
@@ -67,3 +74,34 @@ def _apply_sqlite_compat_migrations() -> None:
                 connection.execute(
                     text(f"ALTER TABLE {table_name} ADD COLUMN {column_name} {column_type}")
                 )
+
+
+def _validate_retrieval_mode() -> None:
+    """Log startup info and warn about missing config for the chosen retrieval mode."""
+    mode = settings.retrieval_mode
+    log.info("Retrieval mode: %s", mode)
+
+    if mode == "tree":
+        if not settings.openai_api_key:
+            log.warning(
+                "RETRIEVAL_MODE=tree but OPENAI_API_KEY is not set. "
+                "Tree traversal will fail at request time."
+            )
+        log.info(
+            "Tree config: nav_model=%s, reasoning_effort=%s, "
+            "max_branches=%d, max_depth=%d, max_leaves=%d",
+            settings.tree_nav_model,
+            settings.tree_nav_reasoning_effort,
+            settings.tree_max_branches,
+            settings.tree_max_depth,
+            settings.tree_max_leaves,
+        )
+    elif mode == "pageindex":
+        if not settings.pageindex_api_key:
+            log.warning(
+                "RETRIEVAL_MODE=pageindex but PAGEINDEX_API_KEY is not set."
+            )
+    elif mode == "local":
+        log.info("Using local ChromaDB at %s", settings.chroma_db_path)
+    else:
+        log.error("Unknown RETRIEVAL_MODE: '%s'", mode)

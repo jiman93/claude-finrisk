@@ -19,11 +19,21 @@ export interface RetrievalNode {
   relevant_content: string;
 }
 
+export interface TraversalStep {
+  depth: number;
+  action: string;
+  options?: string[];
+  selected?: string[];
+  count?: number;
+}
+
 export interface QueryResponse {
   status: string;
   task_id: string;
   retrieved_nodes: RetrievalNode[];
   retrieval_completed_at: string;
+  retrieval_mode?: string;
+  traversal_path?: TraversalStep[];
 }
 
 export interface GenerateResponse {
@@ -216,6 +226,11 @@ export type ChatMessage =
       id: string;
       type: "loading";
       content: string;
+    }
+  | {
+      id: string;
+      type: "traversal_path";
+      steps: TraversalStep[];
     }
   | {
       id: string;

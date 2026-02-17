@@ -18,6 +18,7 @@ import type {
   PhaseAssignment,
   SessionState,
   TailAction,
+  TraversalStep,
 } from "../types";
 
 // ---------------------------------------------------------------------------
@@ -229,14 +230,26 @@ export const useStudyStore = create<StudyState>((set, get) => ({
 
       try {
         const retrieval = await queryTask(session.current_task_id, normalizedQuery);
+
+        // Build follow-up messages with optional traversal path.
+        const followUpMessages: ChatMessage[] = [];
+        if (retrieval.traversal_path && retrieval.traversal_path.length > 0) {
+          followUpMessages.push({
+            id: makeId("traversal"),
+            type: "traversal_path" as const,
+            steps: retrieval.traversal_path as TraversalStep[],
+          });
+        }
+        followUpMessages.push({
+          id: makeId("nodes"),
+          type: "retrieved_nodes" as const,
+          nodes: retrieval.retrieved_nodes,
+        });
+
         set((state) => ({
           messages: [
             ...state.messages.filter((m) => m.id !== retrievalLoadingId),
-            {
-              id: makeId("nodes"),
-              type: "retrieved_nodes" as const,
-              nodes: retrieval.retrieved_nodes,
-            },
+            ...followUpMessages,
           ],
           isLoading: false,
         }));
@@ -642,10 +655,26 @@ async function runTaskFlow({ taskId, query, mode }: RunTaskFlowParams) {
 
   try {
     const retrieval = await queryTask(taskId, query);
+
+    // Build messages: optionally include traversal path for tree mode.
+    const newMessages: ChatMessage[] = [];
+    if (retrieval.traversal_path && retrieval.traversal_path.length > 0) {
+      newMessages.push({
+        id: makeId("traversal"),
+        type: "traversal_path",
+        steps: retrieval.traversal_path as TraversalStep[],
+      });
+    }
+    newMessages.push({
+      id: makeId("nodes"),
+      type: "retrieved_nodes",
+      nodes: retrieval.retrieved_nodes,
+    });
+
     useStudyStore.setState((state) => ({
       messages: [
         ...state.messages.filter((m) => m.id !== retrievalLoadingId),
-        { id: makeId("nodes"), type: "retrieved_nodes", nodes: retrieval.retrieved_nodes },
+        ...newMessages,
       ],
     }));
 
