@@ -1,0 +1,176 @@
+{
+  "dataset_name": "aapl_tree_available_eval_v1",
+  "ticker": "AAPL",
+  "mode": "tree",
+  "generated_at": "2026-02-18T18:27:18.214944+00:00",
+  "runs": [
+    {
+      "id": "AAPL_AVAIL_001",
+      "query": "What are Apple's hardware component supply concentration risks?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0038",
+        "0010",
+        "0003",
+        "0020",
+        "0009"
+      ]
+    },
+    {
+      "id": "AAPL_AVAIL_002",
+      "query": "Summarize risks from single-source or limited-source components for Apple hardware.",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0038",
+        "0010",
+        "0003",
+        "0020",
+        "0028"
+      ]
+    },
+    {
+      "id": "AAPL_AVAIL_003",
+      "query": "How do outsourcing partners affect Apple's manufacturing and logistics risk?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0010",
+        "0038",
+        "0003",
+        "0009",
+        "0020"
+      ]
+    },
+    {
+      "id": "AAPL_AVAIL_004",
+      "query": "Where is Apple hardware manufacturing concentrated, and why is that a risk?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0010",
+        "0038",
+        "0003",
+        "0020",
+        "0034"
+      ]
+    },
+    {
+      "id": "AAPL_AVAIL_005",
+      "query": "What import/export and trade restriction risks can affect Apple's supply chain?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0009",
+        "0010",
+        "0038",
+        "0003",
+        "0020"
+      ]
+    },
+    {
+      "id": "AAPL_AVAIL_006",
+      "query": "What legal or regulatory changes could force Apple to change its supply chain?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0009",
+        "0010",
+        "0038",
+        "0015",
+        "0042"
+      ]
+    },
+    {
+      "id": "AAPL_AVAIL_007",
+      "query": "How could supply shortages and component cost increases pressure Apple's margins?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0010",
+        "0038",
+        "0020",
+        "0003",
+        "0009"
+      ]
+    },
+    {
+      "id": "AAPL_AVAIL_008",
+      "query": "What happens to Apple's results if a logistics, supply, or manufacturing partner fails?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0010",
+        "0038",
+        "0020",
+        "0003",
+        "0009"
+      ]
+    },
+    {
+      "id": "AAPL_AVAIL_009",
+      "query": "What credit risks are tied to long-term supply agreements and vendor receivables?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0010",
+        "0038",
+        "0020",
+        "0003",
+        "0009"
+      ]
+    },
+    {
+      "id": "AAPL_AVAIL_010",
+      "query": "What are Apple's manufacturing purchase obligations and near-term payment burden?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0038",
+        "0010",
+        "0020",
+        "0028",
+        "0003"
+      ]
+    },
+    {
+      "id": "AAPL_AVAIL_011",
+      "query": "From Note 12, summarize Apple's unconditional purchase obligations and supply concentration disclosures.",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0038",
+        "0010",
+        "0020",
+        "0028",
+        "0035"
+      ]
+    },
+    {
+      "id": "AAPL_AVAIL_012",
+      "query": "How concentrated is Apple in Greater China from a segment reporting perspective?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0039",
+        "0020",
+        "0003",
+        "0043",
+        "0041"
+      ]
+    },
+    {
+      "id": "AAPL_AVAIL_013",
+      "query": "Connect Apple's supplier concentration risks to its custom component strategy.",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0038",
+        "0010",
+        "0003",
+        "0020",
+        "0028"
+      ]
+    },
+    {
+      "id": "AAPL_AVAIL_014",
+      "query": "What general risk does Apple disclose about stock price volatility?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0011",
+        "0018",
+        "0028",
+        "0037",
+        "0030"
+      ]
+    }
+  ]
+}

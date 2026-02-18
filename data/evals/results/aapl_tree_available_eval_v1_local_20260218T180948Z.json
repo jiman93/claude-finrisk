@@ -1,0 +1,143 @@
+{
+  "dataset_name": "aapl_tree_available_eval_v1",
+  "ticker": "AAPL",
+  "mode": "local",
+  "generated_at": "2026-02-18T18:09:48.447260+00:00",
+  "runs": [
+    {
+      "id": "AAPL_AVAIL_001",
+      "query": "What are Apple's hardware component supply concentration risks?",
+      "status": "error",
+      "elapsed_ms": 0,
+      "error": "chromadb and sentence-transformers are required for local retrieval mode.  Install them with:\n  pip install chromadb sentence-transformers",
+      "retrieved_node_ids": [],
+      "retrieved_nodes": []
+    },
+    {
+      "id": "AAPL_AVAIL_002",
+      "query": "Summarize risks from single-source or limited-source components for Apple hardware.",
+      "status": "error",
+      "elapsed_ms": 0,
+      "error": "chromadb and sentence-transformers are required for local retrieval mode.  Install them with:\n  pip install chromadb sentence-transformers",
+      "retrieved_node_ids": [],
+      "retrieved_nodes": []
+    },
+    {
+      "id": "AAPL_AVAIL_003",
+      "query": "How do outsourcing partners affect Apple's manufacturing and logistics risk?",
+      "status": "error",
+      "elapsed_ms": 0,
+      "error": "chromadb and sentence-transformers are required for local retrieval mode.  Install them with:\n  pip install chromadb sentence-transformers",
+      "retrieved_node_ids": [],
+      "retrieved_nodes": []
+    },
+    {
+      "id": "AAPL_AVAIL_004",
+      "query": "Where is Apple hardware manufacturing concentrated, and why is that a risk?",
+      "status": "error",
+      "elapsed_ms": 0,
+      "error": "chromadb and sentence-transformers are required for local retrieval mode.  Install them with:\n  pip install chromadb sentence-transformers",
+      "retrieved_node_ids": [],
+      "retrieved_nodes": []
+    },
+    {
+      "id": "AAPL_AVAIL_005",
+      "query": "What import/export and trade restriction risks can affect Apple's supply chain?",
+      "status": "error",
+      "elapsed_ms": 0,
+      "error": "chromadb and sentence-transformers are required for local retrieval mode.  Install them with:\n  pip install chromadb sentence-transformers",
+      "retrieved_node_ids": [],
+      "retrieved_nodes": []
+    },
+    {
+      "id": "AAPL_AVAIL_006",
+      "query": "What legal or regulatory changes could force Apple to change its supply chain?",
+      "status": "error",
+      "elapsed_ms": 0,
+      "error": "chromadb and sentence-transformers are required for local retrieval mode.  Install them with:\n  pip install chromadb sentence-transformers",
+      "retrieved_node_ids": [],
+      "retrieved_nodes": []
+    },
+    {
+      "id": "AAPL_AVAIL_007",
+      "query": "How could supply shortages and component cost increases pressure Apple's margins?",
+      "status": "error",
+      "elapsed_ms": 0,
+      "error": "chromadb and sentence-transformers are required for local retrieval mode.  Install them with:\n  pip install chromadb sentence-transformers",
+      "retrieved_node_ids": [],
+      "retrieved_nodes": []
+    },
+    {
+      "id": "AAPL_AVAIL_008",
+      "query": "What happens to Apple's results if a logistics, supply, or manufacturing partner fails?",
+      "status": "error",
+      "elapsed_ms": 0,
+      "error": "chromadb and sentence-transformers are required for local retrieval mode.  Install them with:\n  pip install chromadb sentence-transformers",
+      "retrieved_node_ids": [],
+      "retrieved_nodes": []
+    },
+    {
+      "id": "AAPL_AVAIL_009",
+      "query": "What credit risks are tied to long-term supply agreements and vendor receivables?",
+      "status": "error",
+      "elapsed_ms": 0,
+      "error": "chromadb and sentence-transformers are required for local retrieval mode.  Install them with:\n  pip install chromadb sentence-transformers",
+      "retrieved_node_ids": [],
+      "retrieved_nodes": []
+    },
+    {
+      "id": "AAPL_AVAIL_010",
+      "query": "What are Apple's manufacturing purchase obligations and near-term payment burden?",
+      "status": "error",
+      "elapsed_ms": 0,
+      "error": "chromadb and sentence-transformers are required for local retrieval mode.  Install them with:\n  pip install chromadb sentence-transformers",
+      "retrieved_node_ids": [],
+      "retrieved_nodes": []
+    },
+    {
+      "id": "AAPL_AVAIL_011",
+      "query": "From Note 12, summarize Apple's unconditional purchase obligations and supply concentration disclosures.",
+      "status": "error",
+      "elapsed_ms": 0,
+      "error": "chromadb and sentence-transformers are required for local retrieval mode.  Install them with:\n  pip install chromadb sentence-transformers",
+      "retrieved_node_ids": [],
+      "retrieved_nodes": []
+    },
+    {
+      "id": "AAPL_AVAIL_012",
+      "query": "How concentrated is Apple in Greater China from a segment reporting perspective?",
+      "status": "error",
+      "elapsed_ms": 0,
+      "error": "chromadb and sentence-transformers are required for local retrieval mode.  Install them with:\n  pip install chromadb sentence-transformers",
+      "retrieved_node_ids": [],
+      "retrieved_nodes": []
+    },
+    {
+      "id": "AAPL_AVAIL_013",
+      "query": "Connect Apple's supplier concentration risks to its custom component strategy.",
+      "status": "error",
+      "elapsed_ms": 0,
+      "error": "chromadb and sentence-transformers are required for local retrieval mode.  Install them with:\n  pip install chromadb sentence-transformers",
+      "retrieved_node_ids": [],
+      "retrieved_nodes": []
+    },
+    {
+      "id": "AAPL_AVAIL_014",
+      "query": "What general risk does Apple disclose about stock price volatility?",
+      "status": "error",
+      "elapsed_ms": 0,
+      "error": "chromadb and sentence-transformers are required for local retrieval mode.  Install them with:\n  pip install chromadb sentence-transformers",
+      "retrieved_node_ids": [],
+      "retrieved_nodes": []
+    },
+    {
+      "id": "AAPL_GAP_001",
+      "query": "How do geopolitical tensions, conflict, and terrorism disrupt Apple's hardware operations?",
+      "status": "error",
+      "elapsed_ms": 0,
+      "error": "chromadb and sentence-transformers are required for local retrieval mode.  Install them with:\n  pip install chromadb sentence-transformers",
+      "retrieved_node_ids": [],
+      "retrieved_nodes": []
+    }
+  ]
+}

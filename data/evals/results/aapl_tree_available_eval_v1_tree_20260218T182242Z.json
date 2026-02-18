@@ -1,0 +1,605 @@
+{
+  "dataset_name": "aapl_tree_available_eval_v1",
+  "ticker": "AAPL",
+  "mode": "tree",
+  "generated_at": "2026-02-18T18:24:11.408798+00:00",
+  "runs": [
+    {
+      "id": "AAPL_AVAIL_001",
+      "query": "What are Apple's hardware component supply concentration risks?",
+      "status": "ok",
+      "elapsed_ms": 4235,
+      "retrieval_id": "tr-tree-80c3799672504f98a1",
+      "retrieval_mode": "tree",
+      "retrieved_node_ids": [
+        "0038",
+        "0010",
+        "0003",
+        "0020",
+        "0009"
+      ],
+      "retrieved_nodes": [
+        {
+          "node_id": "0038",
+          "title": "Note 12 \u2013 Commitments, Contingencies and Supply Concentrations",
+          "page_index": 62
+        },
+        {
+          "node_id": "0010",
+          "title": "Financial Risks",
+          "page_index": 22
+        },
+        {
+          "node_id": "0003",
+          "title": "Item 1. Business",
+          "page_index": 4
+        },
+        {
+          "node_id": "0020",
+          "title": "Item 7. Management's Discussion and Analysis of Financial Condition and Results of Operations",
+          "page_index": 31
+        },
+        {
+          "node_id": "0009",
+          "title": "Legal and Regulatory Compliance Risks",
+          "page_index": 19
+        }
+      ]
+    },
+    {
+      "id": "AAPL_AVAIL_002",
+      "query": "Summarize risks from single-source or limited-source components for Apple hardware.",
+      "status": "ok",
+      "elapsed_ms": 3560,
+      "retrieval_id": "tr-tree-ffd314e44f1444eba8",
+      "retrieval_mode": "tree",
+      "retrieved_node_ids": [
+        "0038",
+        "0010",
+        "0003",
+        "0020",
+        "0028"
+      ],
+      "retrieved_nodes": [
+        {
+          "node_id": "0038",
+          "title": "Note 12 \u2013 Commitments, Contingencies and Supply Concentrations",
+          "page_index": 62
+        },
+        {
+          "node_id": "0010",
+          "title": "Financial Risks",
+          "page_index": 22
+        },
+        {
+          "node_id": "0003",
+          "title": "Item 1. Business",
+          "page_index": 4
+        },
+        {
+          "node_id": "0020",
+          "title": "Item 7. Management's Discussion and Analysis of Financial Condition and Results of Operations",
+          "page_index": 31
+        },
+        {
+          "node_id": "0028",
+          "title": "Note 2 \u2013 Revenue",
+          "page_index": 47
+        }
+      ]
+    },
+    {
+      "id": "AAPL_AVAIL_003",
+      "query": "How do outsourcing partners affect Apple's manufacturing and logistics risk?",
+      "status": "ok",
+      "elapsed_ms": 5586,
+      "retrieval_id": "tr-tree-8cb1403a5f314c829a",
+      "retrieval_mode": "tree",
+      "retrieved_node_ids": [
+        "0010",
+        "0038",
+        "0003",
+        "0009",
+        "0020"
+      ],
+      "retrieved_nodes": [
+        {
+          "node_id": "0010",
+          "title": "Financial Risks",
+          "page_index": 22
+        },
+        {
+          "node_id": "0038",
+          "title": "Note 12 \u2013 Commitments, Contingencies and Supply Concentrations",
+          "page_index": 62
+        },
+        {
+          "node_id": "0003",
+          "title": "Item 1. Business",
+          "page_index": 4
+        },
+        {
+          "node_id": "0009",
+          "title": "Legal and Regulatory Compliance Risks",
+          "page_index": 19
+        },
+        {
+          "node_id": "0020",
+          "title": "Item 7. Management's Discussion and Analysis of Financial Condition and Results of Operations",
+          "page_index": 31
+        }
+      ]
+    },
+    {
+      "id": "AAPL_AVAIL_004",
+      "query": "Where is Apple hardware manufacturing concentrated, and why is that a risk?",
+      "status": "ok",
+      "elapsed_ms": 4524,
+      "retrieval_id": "tr-tree-de82b9fa1f9c469089",
+      "retrieval_mode": "tree",
+      "retrieved_node_ids": [
+        "0010",
+        "0038",
+        "0003",
+        "0020",
+        "0034"
+      ],
+      "retrieved_nodes": [
+        {
+          "node_id": "0010",
+          "title": "Financial Risks",
+          "page_index": 22
+        },
+        {
+          "node_id": "0038",
+          "title": "Note 12 \u2013 Commitments, Contingencies and Supply Concentrations",
+          "page_index": 62
+        },
+        {
+          "node_id": "0003",
+          "title": "Item 1. Business",
+          "page_index": 4
+        },
+        {
+          "node_id": "0020",
+          "title": "Item 7. Management's Discussion and Analysis of Financial Condition and Results of Operations",
+          "page_index": 31
+        },
+        {
+          "node_id": "0034",
+          "title": "Note 8 \u2013 Leases",
+          "page_index": 57
+        }
+      ]
+    },
+    {
+      "id": "AAPL_AVAIL_005",
+      "query": "What import/export and trade restriction risks can affect Apple's supply chain?",
+      "status": "ok",
+      "elapsed_ms": 4486,
+      "retrieval_id": "tr-tree-5b0bf8c39af1453f8b",
+      "retrieval_mode": "tree",
+      "retrieved_node_ids": [
+        "0009",
+        "0010",
+        "0038",
+        "0003",
+        "0020"
+      ],
+      "retrieved_nodes": [
+        {
+          "node_id": "0009",
+          "title": "Legal and Regulatory Compliance Risks",
+          "page_index": 19
+        },
+        {
+          "node_id": "0010",
+          "title": "Financial Risks",
+          "page_index": 22
+        },
+        {
+          "node_id": "0038",
+          "title": "Note 12 \u2013 Commitments, Contingencies and Supply Concentrations",
+          "page_index": 62
+        },
+        {
+          "node_id": "0003",
+          "title": "Item 1. Business",
+          "page_index": 4
+        },
+        {
+          "node_id": "0020",
+          "title": "Item 7. Management's Discussion and Analysis of Financial Condition and Results of Operations",
+          "page_index": 31
+        }
+      ]
+    },
+    {
+      "id": "AAPL_AVAIL_006",
+      "query": "What legal or regulatory changes could force Apple to change its supply chain?",
+      "status": "ok",
+      "elapsed_ms": 10281,
+      "retrieval_id": "tr-tree-671f1544132d48d480",
+      "retrieval_mode": "tree",
+      "retrieved_node_ids": [
+        "0009",
+        "0010",
+        "0038",
+        "0015",
+        "0042"
+      ],
+      "retrieved_nodes": [
+        {
+          "node_id": "0009",
+          "title": "Legal and Regulatory Compliance Risks",
+          "page_index": 19
+        },
+        {
+          "node_id": "0010",
+          "title": "Financial Risks",
+          "page_index": 22
+        },
+        {
+          "node_id": "0038",
+          "title": "Note 12 \u2013 Commitments, Contingencies and Supply Concentrations",
+          "page_index": 62
+        },
+        {
+          "node_id": "0015",
+          "title": "Item 3. Legal Proceedings",
+          "page_index": 27
+        },
+        {
+          "node_id": "0042",
+          "title": "Item 9. Changes in and Disagreements with Accountants on Accounting and Financial Disclosure",
+          "page_index": 70
+        }
+      ]
+    },
+    {
+      "id": "AAPL_AVAIL_007",
+      "query": "How could supply shortages and component cost increases pressure Apple's margins?",
+      "status": "ok",
+      "elapsed_ms": 5189,
+      "retrieval_id": "tr-tree-6a5507e1e9a24e85bc",
+      "retrieval_mode": "tree",
+      "retrieved_node_ids": [
+        "0010",
+        "0038",
+        "0020",
+        "0003",
+        "0009"
+      ],
+      "retrieved_nodes": [
+        {
+          "node_id": "0010",
+          "title": "Financial Risks",
+          "page_index": 22
+        },
+        {
+          "node_id": "0038",
+          "title": "Note 12 \u2013 Commitments, Contingencies and Supply Concentrations",
+          "page_index": 62
+        },
+        {
+          "node_id": "0020",
+          "title": "Item 7. Management's Discussion and Analysis of Financial Condition and Results of Operations",
+          "page_index": 31
+        },
+        {
+          "node_id": "0003",
+          "title": "Item 1. Business",
+          "page_index": 4
+        },
+        {
+          "node_id": "0009",
+          "title": "Legal and Regulatory Compliance Risks",
+          "page_index": 19
+        }
+      ]
+    },
+    {
+      "id": "AAPL_AVAIL_008",
+      "query": "What happens to Apple's results if a logistics, supply, or manufacturing partner fails?",
+      "status": "ok",
+      "elapsed_ms": 5894,
+      "retrieval_id": "tr-tree-b032a353b6f84630aa",
+      "retrieval_mode": "tree",
+      "retrieved_node_ids": [
+        "0010",
+        "0038",
+        "0020",
+        "0003",
+        "0009"
+      ],
+      "retrieved_nodes": [
+        {
+          "node_id": "0010",
+          "title": "Financial Risks",
+          "page_index": 22
+        },
+        {
+          "node_id": "0038",
+          "title": "Note 12 \u2013 Commitments, Contingencies and Supply Concentrations",
+          "page_index": 62
+        },
+        {
+          "node_id": "0020",
+          "title": "Item 7. Management's Discussion and Analysis of Financial Condition and Results of Operations",
+          "page_index": 31
+        },
+        {
+          "node_id": "0003",
+          "title": "Item 1. Business",
+          "page_index": 4
+        },
+        {
+          "node_id": "0009",
+          "title": "Legal and Regulatory Compliance Risks",
+          "page_index": 19
+        }
+      ]
+    },
+    {
+      "id": "AAPL_AVAIL_009",
+      "query": "What credit risks are tied to long-term supply agreements and vendor receivables?",
+      "status": "ok",
+      "elapsed_ms": 8152,
+      "retrieval_id": "tr-tree-4d6b77f3c20e4685a6",
+      "retrieval_mode": "tree",
+      "retrieved_node_ids": [
+        "0010",
+        "0038",
+        "0020",
+        "0003",
+        "0009"
+      ],
+      "retrieved_nodes": [
+        {
+          "node_id": "0010",
+          "title": "Financial Risks",
+          "page_index": 22
+        },
+        {
+          "node_id": "0038",
+          "title": "Note 12 \u2013 Commitments, Contingencies and Supply Concentrations",
+          "page_index": 62
+        },
+        {
+          "node_id": "0020",
+          "title": "Item 7. Management's Discussion and Analysis of Financial Condition and Results of Operations",
+          "page_index": 31
+        },
+        {
+          "node_id": "0003",
+          "title": "Item 1. Business",
+          "page_index": 4
+        },
+        {
+          "node_id": "0009",
+          "title": "Legal and Regulatory Compliance Risks",
+          "page_index": 19
+        }
+      ]
+    },
+    {
+      "id": "AAPL_AVAIL_010",
+      "query": "What are Apple's manufacturing purchase obligations and near-term payment burden?",
+      "status": "ok",
+      "elapsed_ms": 8529,
+      "retrieval_id": "tr-tree-62e1269e1271476b93",
+      "retrieval_mode": "tree",
+      "retrieved_node_ids": [
+        "0038",
+        "0010",
+        "0020",
+        "0028",
+        "0003"
+      ],
+      "retrieved_nodes": [
+        {
+          "node_id": "0038",
+          "title": "Note 12 \u2013 Commitments, Contingencies and Supply Concentrations",
+          "page_index": 62
+        },
+        {
+          "node_id": "0010",
+          "title": "Financial Risks",
+          "page_index": 22
+        },
+        {
+          "node_id": "0020",
+          "title": "Item 7. Management's Discussion and Analysis of Financial Condition and Results of Operations",
+          "page_index": 31
+        },
+        {
+          "node_id": "0028",
+          "title": "Note 2 \u2013 Revenue",
+          "page_index": 47
+        },
+        {
+          "node_id": "0003",
+          "title": "Item 1. Business",
+          "page_index": 4
+        }
+      ]
+    },
+    {
+      "id": "AAPL_AVAIL_011",
+      "query": "From Note 12, summarize Apple's unconditional purchase obligations and supply concentration disclosures.",
+      "status": "ok",
+      "elapsed_ms": 7972,
+      "retrieval_id": "tr-tree-64c5320920944848ab",
+      "retrieval_mode": "tree",
+      "retrieved_node_ids": [
+        "0038",
+        "0010",
+        "0020",
+        "0028",
+        "0035"
+      ],
+      "retrieved_nodes": [
+        {
+          "node_id": "0038",
+          "title": "Note 12 \u2013 Commitments, Contingencies and Supply Concentrations",
+          "page_index": 62
+        },
+        {
+          "node_id": "0010",
+          "title": "Financial Risks",
+          "page_index": 22
+        },
+        {
+          "node_id": "0020",
+          "title": "Item 7. Management's Discussion and Analysis of Financial Condition and Results of Operations",
+          "page_index": 31
+        },
+        {
+          "node_id": "0028",
+          "title": "Note 2 \u2013 Revenue",
+          "page_index": 47
+        },
+        {
+          "node_id": "0035",
+          "title": "Note 9 \u2013 Debt",
+          "page_index": 59
+        }
+      ]
+    },
+    {
+      "id": "AAPL_AVAIL_012",
+      "query": "How concentrated is Apple in Greater China from a segment reporting perspective?",
+      "status": "ok",
+      "elapsed_ms": 6051,
+      "retrieval_id": "tr-tree-1bbc6ae7ee3142a4ba",
+      "retrieval_mode": "tree",
+      "retrieved_node_ids": [
+        "0039",
+        "0020",
+        "0003",
+        "0043",
+        "0041"
+      ],
+      "retrieved_nodes": [
+        {
+          "node_id": "0039",
+          "title": "Note 13 \u2013 Segment Information and Geographic Data",
+          "page_index": 64
+        },
+        {
+          "node_id": "0020",
+          "title": "Item 7. Management's Discussion and Analysis of Financial Condition and Results of Operations",
+          "page_index": 31
+        },
+        {
+          "node_id": "0003",
+          "title": "Item 1. Business",
+          "page_index": 4
+        },
+        {
+          "node_id": "0043",
+          "title": "Item 9A. Controls and Procedures",
+          "page_index": 70
+        },
+        {
+          "node_id": "0041",
+          "title": "Report of Independent Registered Public Accounting Firm",
+          "page_index": 69
+        }
+      ]
+    },
+    {
+      "id": "AAPL_AVAIL_013",
+      "query": "Connect Apple's supplier concentration risks to its custom component strategy.",
+      "status": "ok",
+      "elapsed_ms": 5411,
+      "retrieval_id": "tr-tree-3a0ea1c40ee64188b6",
+      "retrieval_mode": "tree",
+      "retrieved_node_ids": [
+        "0038",
+        "0010",
+        "0003",
+        "0020",
+        "0028"
+      ],
+      "retrieved_nodes": [
+        {
+          "node_id": "0038",
+          "title": "Note 12 \u2013 Commitments, Contingencies and Supply Concentrations",
+          "page_index": 62
+        },
+        {
+          "node_id": "0010",
+          "title": "Financial Risks",
+          "page_index": 22
+        },
+        {
+          "node_id": "0003",
+          "title": "Item 1. Business",
+          "page_index": 4
+        },
+        {
+          "node_id": "0020",
+          "title": "Item 7. Management's Discussion and Analysis of Financial Condition and Results of Operations",
+          "page_index": 31
+        },
+        {
+          "node_id": "0028",
+          "title": "Note 2 \u2013 Revenue",
+          "page_index": 47
+        }
+      ]
+    },
+    {
+      "id": "AAPL_AVAIL_014",
+      "query": "What general risk does Apple disclose about stock price volatility?",
+      "status": "error",
+      "elapsed_ms": 2803,
+      "error": "Navigation LLM call failed: Server error '500 Internal Server Error' for url 'https://api.openai.com/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/500",
+      "retrieved_node_ids": [],
+      "retrieved_nodes": []
+    },
+    {
+      "id": "AAPL_GAP_001",
+      "query": "How do geopolitical tensions, conflict, and terrorism disrupt Apple's hardware operations?",
+      "status": "ok",
+      "elapsed_ms": 6000,
+      "retrieval_id": "tr-tree-5e5ebf2b983c4359b6",
+      "retrieval_mode": "tree",
+      "retrieved_node_ids": [
+        "0009",
+        "0020",
+        "0010",
+        "0003",
+        "0038"
+      ],
+      "retrieved_nodes": [
+        {
+          "node_id": "0009",
+          "title": "Legal and Regulatory Compliance Risks",
+          "page_index": 19
+        },
+        {
+          "node_id": "0020",
+          "title": "Item 7. Management's Discussion and Analysis of Financial Condition and Results of Operations",
+          "page_index": 31
+        },
+        {
+          "node_id": "0010",
+          "title": "Financial Risks",
+          "page_index": 22
+        },
+        {
+          "node_id": "0003",
+          "title": "Item 1. Business",
+          "page_index": 4
+        },
+        {
+          "node_id": "0038",
+          "title": "Note 12 \u2013 Commitments, Contingencies and Supply Concentrations",
+          "page_index": 62
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,422 @@
+{
+  "dataset_name": "aapl_tree_available_eval_v1",
+  "ticker": "AAPL",
+  "mode": "tree",
+  "generated_at": "2026-02-18T18:17:13.188508+00:00",
+  "runs": [
+    {
+      "id": "AAPL_AVAIL_001",
+      "query": "What are Apple's hardware component supply concentration risks?",
+      "status": "ok",
+      "elapsed_ms": 5287,
+      "retrieval_id": "tr-tree-43f630c250cc46e69a",
+      "retrieval_mode": "tree",
+      "retrieved_node_ids": [
+        "0009",
+        "0010",
+        "0011"
+      ],
+      "retrieved_nodes": [
+        {
+          "node_id": "0009",
+          "title": "Legal and Regulatory Compliance Risks",
+          "page_index": 19
+        },
+        {
+          "node_id": "0010",
+          "title": "Financial Risks",
+          "page_index": 22
+        },
+        {
+          "node_id": "0011",
+          "title": "General Risks",
+          "page_index": 26
+        }
+      ]
+    },
+    {
+      "id": "AAPL_AVAIL_002",
+      "query": "Summarize risks from single-source or limited-source components for Apple hardware.",
+      "status": "ok",
+      "elapsed_ms": 3591,
+      "retrieval_id": "tr-tree-c6bc9058946240d8b1",
+      "retrieval_mode": "tree",
+      "retrieved_node_ids": [
+        "0009",
+        "0010",
+        "0011"
+      ],
+      "retrieved_nodes": [
+        {
+          "node_id": "0009",
+          "title": "Legal and Regulatory Compliance Risks",
+          "page_index": 19
+        },
+        {
+          "node_id": "0010",
+          "title": "Financial Risks",
+          "page_index": 22
+        },
+        {
+          "node_id": "0011",
+          "title": "General Risks",
+          "page_index": 26
+        }
+      ]
+    },
+    {
+      "id": "AAPL_AVAIL_003",
+      "query": "How do outsourcing partners affect Apple's manufacturing and logistics risk?",
+      "status": "ok",
+      "elapsed_ms": 7190,
+      "retrieval_id": "tr-tree-f43f796b2f1048ce89",
+      "retrieval_mode": "tree",
+      "retrieved_node_ids": [
+        "0009",
+        "0010",
+        "0011"
+      ],
+      "retrieved_nodes": [
+        {
+          "node_id": "0009",
+          "title": "Legal and Regulatory Compliance Risks",
+          "page_index": 19
+        },
+        {
+          "node_id": "0010",
+          "title": "Financial Risks",
+          "page_index": 22
+        },
+        {
+          "node_id": "0011",
+          "title": "General Risks",
+          "page_index": 26
+        }
+      ]
+    },
+    {
+      "id": "AAPL_AVAIL_004",
+      "query": "Where is Apple hardware manufacturing concentrated, and why is that a risk?",
+      "status": "ok",
+      "elapsed_ms": 4613,
+      "retrieval_id": "tr-tree-24cce162b4274d6cb8",
+      "retrieval_mode": "tree",
+      "retrieved_node_ids": [
+        "0009",
+        "0010",
+        "0011"
+      ],
+      "retrieved_nodes": [
+        {
+          "node_id": "0009",
+          "title": "Legal and Regulatory Compliance Risks",
+          "page_index": 19
+        },
+        {
+          "node_id": "0010",
+          "title": "Financial Risks",
+          "page_index": 22
+        },
+        {
+          "node_id": "0011",
+          "title": "General Risks",
+          "page_index": 26
+        }
+      ]
+    },
+    {
+      "id": "AAPL_AVAIL_005",
+      "query": "What import/export and trade restriction risks can affect Apple's supply chain?",
+      "status": "ok",
+      "elapsed_ms": 4521,
+      "retrieval_id": "tr-tree-8ae8d3a68e59424c9c",
+      "retrieval_mode": "tree",
+      "retrieved_node_ids": [
+        "0009",
+        "0010",
+        "0011"
+      ],
+      "retrieved_nodes": [
+        {
+          "node_id": "0009",
+          "title": "Legal and Regulatory Compliance Risks",
+          "page_index": 19
+        },
+        {
+          "node_id": "0010",
+          "title": "Financial Risks",
+          "page_index": 22
+        },
+        {
+          "node_id": "0011",
+          "title": "General Risks",
+          "page_index": 26
+        }
+      ]
+    },
+    {
+      "id": "AAPL_AVAIL_006",
+      "query": "What legal or regulatory changes could force Apple to change its supply chain?",
+      "status": "ok",
+      "elapsed_ms": 7075,
+      "retrieval_id": "tr-tree-0573b4d3aa7c4e2594",
+      "retrieval_mode": "tree",
+      "retrieved_node_ids": [
+        "0009",
+        "0010",
+        "0011"
+      ],
+      "retrieved_nodes": [
+        {
+          "node_id": "0009",
+          "title": "Legal and Regulatory Compliance Risks",
+          "page_index": 19
+        },
+        {
+          "node_id": "0010",
+          "title": "Financial Risks",
+          "page_index": 22
+        },
+        {
+          "node_id": "0011",
+          "title": "General Risks",
+          "page_index": 26
+        }
+      ]
+    },
+    {
+      "id": "AAPL_AVAIL_007",
+      "query": "How could supply shortages and component cost increases pressure Apple's margins?",
+      "status": "ok",
+      "elapsed_ms": 3721,
+      "retrieval_id": "tr-tree-7ee3a23f86f94ae5bb",
+      "retrieval_mode": "tree",
+      "retrieved_node_ids": [
+        "0009",
+        "0010",
+        "0011"
+      ],
+      "retrieved_nodes": [
+        {
+          "node_id": "0009",
+          "title": "Legal and Regulatory Compliance Risks",
+          "page_index": 19
+        },
+        {
+          "node_id": "0010",
+          "title": "Financial Risks",
+          "page_index": 22
+        },
+        {
+          "node_id": "0011",
+          "title": "General Risks",
+          "page_index": 26
+        }
+      ]
+    },
+    {
+      "id": "AAPL_AVAIL_008",
+      "query": "What happens to Apple's results if a logistics, supply, or manufacturing partner fails?",
+      "status": "ok",
+      "elapsed_ms": 6284,
+      "retrieval_id": "tr-tree-fdf19ff5369a43939f",
+      "retrieval_mode": "tree",
+      "retrieved_node_ids": [
+        "0009",
+        "0010",
+        "0011"
+      ],
+      "retrieved_nodes": [
+        {
+          "node_id": "0009",
+          "title": "Legal and Regulatory Compliance Risks",
+          "page_index": 19
+        },
+        {
+          "node_id": "0010",
+          "title": "Financial Risks",
+          "page_index": 22
+        },
+        {
+          "node_id": "0011",
+          "title": "General Risks",
+          "page_index": 26
+        }
+      ]
+    },
+    {
+      "id": "AAPL_AVAIL_009",
+      "query": "What credit risks are tied to long-term supply agreements and vendor receivables?",
+      "status": "ok",
+      "elapsed_ms": 6723,
+      "retrieval_id": "tr-tree-f31fa4555d5e4b7a85",
+      "retrieval_mode": "tree",
+      "retrieved_node_ids": [
+        "0009",
+        "0010",
+        "0011"
+      ],
+      "retrieved_nodes": [
+        {
+          "node_id": "0009",
+          "title": "Legal and Regulatory Compliance Risks",
+          "page_index": 19
+        },
+        {
+          "node_id": "0010",
+          "title": "Financial Risks",
+          "page_index": 22
+        },
+        {
+          "node_id": "0011",
+          "title": "General Risks",
+          "page_index": 26
+        }
+      ]
+    },
+    {
+      "id": "AAPL_AVAIL_010",
+      "query": "What are Apple's manufacturing purchase obligations and near-term payment burden?",
+      "status": "ok",
+      "elapsed_ms": 9067,
+      "retrieval_id": "tr-tree-3b1dedc6bc7742308c",
+      "retrieval_mode": "tree",
+      "retrieved_node_ids": [
+        "0038"
+      ],
+      "retrieved_nodes": [
+        {
+          "node_id": "0038",
+          "title": "Note 12 \u2013 Commitments, Contingencies and Supply Concentrations",
+          "page_index": 62
+        }
+      ]
+    },
+    {
+      "id": "AAPL_AVAIL_011",
+      "query": "From Note 12, summarize Apple's unconditional purchase obligations and supply concentration disclosures.",
+      "status": "ok",
+      "elapsed_ms": 7271,
+      "retrieval_id": "tr-tree-464cc1a321f84cf9a4",
+      "retrieval_mode": "tree",
+      "retrieved_node_ids": [
+        "0038"
+      ],
+      "retrieved_nodes": [
+        {
+          "node_id": "0038",
+          "title": "Note 12 \u2013 Commitments, Contingencies and Supply Concentrations",
+          "page_index": 62
+        }
+      ]
+    },
+    {
+      "id": "AAPL_AVAIL_012",
+      "query": "How concentrated is Apple in Greater China from a segment reporting perspective?",
+      "status": "ok",
+      "elapsed_ms": 6505,
+      "retrieval_id": "tr-tree-b31fcafea401458e9e",
+      "retrieval_mode": "tree",
+      "retrieved_node_ids": [
+        "0039"
+      ],
+      "retrieved_nodes": [
+        {
+          "node_id": "0039",
+          "title": "Note 13 \u2013 Segment Information and Geographic Data",
+          "page_index": 64
+        }
+      ]
+    },
+    {
+      "id": "AAPL_AVAIL_013",
+      "query": "Connect Apple's supplier concentration risks to its custom component strategy.",
+      "status": "ok",
+      "elapsed_ms": 4973,
+      "retrieval_id": "tr-tree-9870cd5cbacd4bc5bb",
+      "retrieval_mode": "tree",
+      "retrieved_node_ids": [
+        "0009",
+        "0010",
+        "0011"
+      ],
+      "retrieved_nodes": [
+        {
+          "node_id": "0009",
+          "title": "Legal and Regulatory Compliance Risks",
+          "page_index": 19
+        },
+        {
+          "node_id": "0010",
+          "title": "Financial Risks",
+          "page_index": 22
+        },
+        {
+          "node_id": "0011",
+          "title": "General Risks",
+          "page_index": 26
+        }
+      ]
+    },
+    {
+      "id": "AAPL_AVAIL_014",
+      "query": "What general risk does Apple disclose about stock price volatility?",
+      "status": "ok",
+      "elapsed_ms": 6013,
+      "retrieval_id": "tr-tree-dbbff643d97b487d96",
+      "retrieval_mode": "tree",
+      "retrieved_node_ids": [
+        "0009",
+        "0010",
+        "0011"
+      ],
+      "retrieved_nodes": [
+        {
+          "node_id": "0009",
+          "title": "Legal and Regulatory Compliance Risks",
+          "page_index": 19
+        },
+        {
+          "node_id": "0010",
+          "title": "Financial Risks",
+          "page_index": 22
+        },
+        {
+          "node_id": "0011",
+          "title": "General Risks",
+          "page_index": 26
+        }
+      ]
+    },
+    {
+      "id": "AAPL_GAP_001",
+      "query": "How do geopolitical tensions, conflict, and terrorism disrupt Apple's hardware operations?",
+      "status": "ok",
+      "elapsed_ms": 6799,
+      "retrieval_id": "tr-tree-9e8ad9fe119b468a83",
+      "retrieval_mode": "tree",
+      "retrieved_node_ids": [
+        "0009",
+        "0010",
+        "0011"
+      ],
+      "retrieved_nodes": [
+        {
+          "node_id": "0009",
+          "title": "Legal and Regulatory Compliance Risks",
+          "page_index": 19
+        },
+        {
+          "node_id": "0010",
+          "title": "Financial Risks",
+          "page_index": 22
+        },
+        {
+          "node_id": "0011",
+          "title": "General Risks",
+          "page_index": 26
+        }
+      ]
+    }
+  ]
+}
