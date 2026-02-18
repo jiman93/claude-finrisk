@@ -1,0 +1,132 @@
+{
+  "dataset_name": "aapl_tree_available_eval_v1",
+  "ticker": "AAPL",
+  "tree_index_path": "data/tree_index/AAPL_tree.json",
+  "created_on": "2026-02-18",
+  "default_top_k": 5,
+  "node_reference": {
+    "0003": "Item 1. Business",
+    "0009": "Legal and Regulatory Compliance Risks",
+    "0010": "Financial Risks",
+    "0011": "General Risks",
+    "0015": "Item 3. Legal Proceedings",
+    "0020": "Item 7. MD&A",
+    "0038": "Note 12 - Commitments, Contingencies and Supply Concentrations",
+    "0039": "Note 13 - Segment Information and Geographic Data"
+  },
+  "cases": [
+    {
+      "id": "AAPL_AVAIL_001",
+      "query": "What are Apple's hardware component supply concentration risks?",
+      "intent": "supply_concentration",
+      "must_include_any": ["0003", "0038"],
+      "should_include_any": ["0010"],
+      "must_exclude_all": ["0011"],
+      "note": "Core supply concentration query; should not route to stock-volatility content."
+    },
+    {
+      "id": "AAPL_AVAIL_002",
+      "query": "Summarize risks from single-source or limited-source components for Apple hardware.",
+      "intent": "single_source_components",
+      "must_include_any": ["0003", "0038"],
+      "should_include_any": ["0010"],
+      "must_exclude_all": ["0011"]
+    },
+    {
+      "id": "AAPL_AVAIL_003",
+      "query": "How do outsourcing partners affect Apple's manufacturing and logistics risk?",
+      "intent": "outsourcing_and_logistics",
+      "must_include_any": ["0010", "0038"],
+      "should_include_any": ["0003", "0020"]
+    },
+    {
+      "id": "AAPL_AVAIL_004",
+      "query": "Where is Apple hardware manufacturing concentrated, and why is that a risk?",
+      "intent": "manufacturing_geography",
+      "must_include_any": ["0038", "0003"],
+      "should_include_any": ["0039", "0020"]
+    },
+    {
+      "id": "AAPL_AVAIL_005",
+      "query": "What import/export and trade restriction risks can affect Apple's supply chain?",
+      "intent": "trade_restrictions",
+      "must_include_any": ["0009"],
+      "should_include_any": ["0003", "0010"]
+    },
+    {
+      "id": "AAPL_AVAIL_006",
+      "query": "What legal or regulatory changes could force Apple to change its supply chain?",
+      "intent": "regulatory_supply_chain",
+      "must_include_any": ["0009"],
+      "should_include_any": ["0003"]
+    },
+    {
+      "id": "AAPL_AVAIL_007",
+      "query": "How could supply shortages and component cost increases pressure Apple's margins?",
+      "intent": "margin_pressure_supply",
+      "must_include_any": ["0010"],
+      "should_include_any": ["0003", "0020"]
+    },
+    {
+      "id": "AAPL_AVAIL_008",
+      "query": "What happens to Apple's results if a logistics, supply, or manufacturing partner fails?",
+      "intent": "partner_failure",
+      "must_include_any": ["0010"],
+      "should_include_any": ["0020", "0038"]
+    },
+    {
+      "id": "AAPL_AVAIL_009",
+      "query": "What credit risks are tied to long-term supply agreements and vendor receivables?",
+      "intent": "supply_credit_risk",
+      "must_include_any": ["0010"],
+      "should_include_any": ["0038"]
+    },
+    {
+      "id": "AAPL_AVAIL_010",
+      "query": "What are Apple's manufacturing purchase obligations and near-term payment burden?",
+      "intent": "purchase_obligations_mda",
+      "must_include_any": ["0020"],
+      "should_include_any": ["0038"]
+    },
+    {
+      "id": "AAPL_AVAIL_011",
+      "query": "From Note 12, summarize Apple's unconditional purchase obligations and supply concentration disclosures.",
+      "intent": "note12_supply",
+      "must_include_any": ["0038"],
+      "should_include_any": ["0020", "0003"]
+    },
+    {
+      "id": "AAPL_AVAIL_012",
+      "query": "How concentrated is Apple in Greater China from a segment reporting perspective?",
+      "intent": "geographic_exposure",
+      "must_include_any": ["0039"],
+      "should_include_any": ["0020"]
+    },
+    {
+      "id": "AAPL_AVAIL_013",
+      "query": "Connect Apple's supplier concentration risks to its custom component strategy.",
+      "intent": "supplier_custom_component_link",
+      "must_include_any": ["0003", "0038"],
+      "should_include_any": ["0010"]
+    },
+    {
+      "id": "AAPL_AVAIL_014",
+      "query": "What general risk does Apple disclose about stock price volatility?",
+      "intent": "control_stock_volatility",
+      "must_include_any": ["0011"],
+      "should_include_any": [],
+      "must_exclude_all": ["0038", "0003", "0010"],
+      "note": "Control query to confirm retriever can route outside supply-chain topics."
+    },
+    {
+      "id": "AAPL_GAP_001",
+      "query": "How do geopolitical tensions, conflict, and terrorism disrupt Apple's hardware operations?",
+      "intent": "gap_probe_geopolitical",
+      "must_include_any": ["0009", "0003"],
+      "should_include_any": ["0038", "0010"],
+      "must_exclude_all": [],
+      "scored": false,
+      "note": "Gap probe. True best evidence exists in missing Item 1A sub-sections, so keep out of headline score."
+    }
+  ]
+}
