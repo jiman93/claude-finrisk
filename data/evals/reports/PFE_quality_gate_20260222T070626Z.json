@@ -1,0 +1,232 @@
+{
+  "ticker": "PFE",
+  "tree_path": "/Users/zulhafizzaini/Desktop/Programming/prototype/claude-finrisk/data/tree_index/PFE_tree.json",
+  "timestamp": "2026-02-22T07:06:26.390853+00:00",
+  "overall_pass": false,
+  "checks": [
+    {
+      "name": "required_headings",
+      "passed": true,
+      "missing_patterns": []
+    },
+    {
+      "name": "item1a_child_count",
+      "passed": true,
+      "item1a_found": true,
+      "item1a_child_count": 6,
+      "minimum_required": 3
+    },
+    {
+      "name": "physical_index_continuity",
+      "passed": true,
+      "min_index": 2,
+      "max_index": 124,
+      "missing_count": 0,
+      "missing_ratio": 0.0,
+      "max_consecutive_missing": 0,
+      "max_missing_ratio_allowed": 0.15,
+      "max_consecutive_missing_allowed": 5,
+      "missing_preview": []
+    },
+    {
+      "name": "page_index_gap",
+      "passed": true,
+      "max_gap_allowed": 11,
+      "gap_count": 0,
+      "gaps": []
+    },
+    {
+      "name": "retrieval_eval",
+      "passed": false,
+      "pass_rate": 0.0,
+      "pass_count": 0,
+      "scored_count": 9,
+      "pass_rate_threshold": 0.8,
+      "should_hit_coverage": null,
+      "error_count": 0,
+      "results_path": "/Users/zulhafizzaini/Desktop/Programming/prototype/claude-finrisk/data/evals/results/xom_tree_v1_eval_PFE_gate_20260222T070502Z.json"
+    }
+  ],
+  "eval_cases": [
+    {
+      "id": "xom_001",
+      "scored": true,
+      "status": "ok",
+      "passed": false,
+      "must_ok": false,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0018-split-06",
+        "0021-split-03",
+        "0034",
+        "0005-split-00",
+        "PFE-item-1",
+        "0042-split-00",
+        "0025",
+        "0163"
+      ]
+    },
+    {
+      "id": "xom_002",
+      "scored": true,
+      "status": "ok",
+      "passed": false,
+      "must_ok": false,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0014",
+        "0005-split-01",
+        "0018-split-05",
+        "0019-split-02",
+        "0019",
+        "0019-split-01",
+        "0143",
+        "0019-split-00"
+      ]
+    },
+    {
+      "id": "xom_003",
+      "scored": true,
+      "status": "ok",
+      "passed": false,
+      "must_ok": false,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0021-split-04",
+        "0042-split-01",
+        "0021-split-08",
+        "0103",
+        "0005-split-00",
+        "0005-split-01",
+        "0016",
+        "0034"
+      ]
+    },
+    {
+      "id": "xom_004",
+      "scored": true,
+      "status": "ok",
+      "passed": false,
+      "must_ok": false,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0030",
+        "0034",
+        "0021-split-01",
+        "0019-split-05",
+        "0022",
+        "0018-split-02",
+        "0019-split-03",
+        "0016"
+      ]
+    },
+    {
+      "id": "xom_005",
+      "scored": true,
+      "status": "ok",
+      "passed": false,
+      "must_ok": false,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0042-split-00",
+        "0029",
+        "0005-split-00",
+        "0005-split-01",
+        "0030",
+        "0021-split-03",
+        "0019-split-05",
+        "0005-split-preamble"
+      ]
+    },
+    {
+      "id": "xom_006",
+      "scored": true,
+      "status": "ok",
+      "passed": false,
+      "must_ok": false,
+      "excl_ok": false,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0160",
+        "0005-split-preamble",
+        "0029",
+        "0006",
+        "0159",
+        "PFE-item-7",
+        "0005",
+        "0031-split-00"
+      ]
+    },
+    {
+      "id": "xom_007",
+      "scored": true,
+      "status": "ok",
+      "passed": false,
+      "must_ok": false,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0042-split-00",
+        "0042",
+        "PFE-item-7",
+        "0018-split-05",
+        "0012",
+        "0018-split-01",
+        "0160",
+        "0022"
+      ]
+    },
+    {
+      "id": "xom_008",
+      "scored": true,
+      "status": "ok",
+      "passed": false,
+      "must_ok": false,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0159",
+        "0029",
+        "0030",
+        "0160",
+        "0033",
+        "0161",
+        "0049",
+        "0060"
+      ]
+    },
+    {
+      "id": "xom_009",
+      "scored": true,
+      "status": "ok",
+      "passed": false,
+      "must_ok": false,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0021-split-01",
+        "0042-split-00",
+        "0057",
+        "0073",
+        "0042",
+        "0021-split-06",
+        "0138",
+        "0157"
+      ]
+    }
+  ]
+}

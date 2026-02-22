@@ -1,0 +1,224 @@
+{
+  "ticker": "XOM",
+  "tree_path": "/Users/zulhafizzaini/Desktop/Programming/prototype/claude-finrisk/data/tree_index/XOM_tree.json",
+  "timestamp": "2026-02-21T15:11:47.059256+00:00",
+  "overall_pass": false,
+  "checks": [
+    {
+      "name": "required_headings",
+      "passed": false,
+      "missing_patterns": [
+        "^Item 1\\. Business$",
+        "^Item 8\\."
+      ]
+    },
+    {
+      "name": "item1a_child_count",
+      "passed": true,
+      "item1a_found": true,
+      "item1a_child_count": 4,
+      "minimum_required": 3
+    },
+    {
+      "name": "physical_index_continuity",
+      "passed": true,
+      "min_index": 4,
+      "max_index": 140,
+      "missing_count": 0,
+      "missing_ratio": 0.0,
+      "max_consecutive_missing": 0,
+      "max_missing_ratio_allowed": 0.05,
+      "max_consecutive_missing_allowed": 3,
+      "missing_preview": []
+    },
+    {
+      "name": "page_index_gap",
+      "passed": false,
+      "max_gap_allowed": 5,
+      "gap_count": 3,
+      "gaps": [
+        [
+          82,
+          88,
+          6
+        ],
+        [
+          110,
+          116,
+          6
+        ],
+        [
+          129,
+          136,
+          7
+        ]
+      ]
+    },
+    {
+      "name": "retrieval_eval",
+      "passed": false,
+      "pass_rate": 0.3333,
+      "pass_count": 3,
+      "scored_count": 9,
+      "pass_rate_threshold": 0.75,
+      "should_hit_coverage": null,
+      "error_count": 0,
+      "results_path": "/Users/zulhafizzaini/Desktop/Programming/prototype/claude-finrisk/data/evals/results/xom_tree_v1_eval_XOM_gate_20260221T151118Z.json"
+    }
+  ],
+  "eval_cases": [
+    {
+      "id": "xom_001",
+      "scored": true,
+      "status": "ok",
+      "passed": false,
+      "must_ok": true,
+      "excl_ok": false,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0006",
+        "0069",
+        "0008",
+        "0065-split-02",
+        "0070"
+      ]
+    },
+    {
+      "id": "xom_002",
+      "scored": true,
+      "status": "ok",
+      "passed": false,
+      "must_ok": true,
+      "excl_ok": false,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0007",
+        "0006",
+        "0009",
+        "0063",
+        "0008"
+      ]
+    },
+    {
+      "id": "xom_003",
+      "scored": true,
+      "status": "ok",
+      "passed": false,
+      "must_ok": true,
+      "excl_ok": false,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0008",
+        "0006",
+        "0069",
+        "0007",
+        "0065-split-01"
+      ]
+    },
+    {
+      "id": "xom_004",
+      "scored": true,
+      "status": "ok",
+      "passed": false,
+      "must_ok": true,
+      "excl_ok": false,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0009",
+        "0006",
+        "0007",
+        "0069",
+        "0008"
+      ]
+    },
+    {
+      "id": "xom_005",
+      "scored": true,
+      "status": "ok",
+      "passed": true,
+      "must_ok": true,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0065-split-01",
+        "0009",
+        "0063",
+        "0077",
+        "0065"
+      ]
+    },
+    {
+      "id": "xom_006",
+      "scored": true,
+      "status": "ok",
+      "passed": false,
+      "must_ok": false,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0118",
+        "0067-split-00",
+        "0068",
+        "0064",
+        "0075"
+      ]
+    },
+    {
+      "id": "xom_007",
+      "scored": true,
+      "status": "ok",
+      "passed": false,
+      "must_ok": false,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0073-split-00",
+        "0055",
+        "0068",
+        "0045",
+        "0075"
+      ]
+    },
+    {
+      "id": "xom_008",
+      "scored": true,
+      "status": "ok",
+      "passed": true,
+      "must_ok": true,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0111",
+        "0070",
+        "0060",
+        "0113",
+        "0009"
+      ]
+    },
+    {
+      "id": "xom_009",
+      "scored": true,
+      "status": "ok",
+      "passed": true,
+      "must_ok": true,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0117",
+        "0067-split-01",
+        "0014",
+        "0073-split-00",
+        "0116"
+      ]
+    }
+  ]
+}

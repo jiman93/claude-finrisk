@@ -1,0 +1,399 @@
+{
+  "ticker": "AAPL",
+  "tree_path": "/Users/zulhafizzaini/Desktop/Programming/prototype/claude-finrisk/data/tree_index/AAPL_tree.json",
+  "timestamp": "2026-02-22T07:10:55.366448+00:00",
+  "overall_pass": true,
+  "checks": [
+    {
+      "name": "required_headings",
+      "passed": true,
+      "missing_patterns": []
+    },
+    {
+      "name": "item1a_child_count",
+      "passed": true,
+      "item1a_found": true,
+      "item1a_child_count": 3,
+      "minimum_required": 3
+    },
+    {
+      "name": "physical_index_continuity",
+      "passed": true,
+      "min_index": 1,
+      "max_index": 60,
+      "missing_count": 6,
+      "missing_ratio": 0.1,
+      "max_consecutive_missing": 3,
+      "max_missing_ratio_allowed": 0.15,
+      "max_consecutive_missing_allowed": 5,
+      "missing_preview": [
+        5,
+        6,
+        7,
+        57,
+        58,
+        59
+      ]
+    },
+    {
+      "name": "page_index_gap",
+      "passed": true,
+      "max_gap_allowed": 11,
+      "gap_count": 0,
+      "gaps": []
+    },
+    {
+      "name": "retrieval_eval",
+      "passed": true,
+      "pass_rate": 0.8824,
+      "pass_count": 15,
+      "scored_count": 17,
+      "pass_rate_threshold": 0.8,
+      "should_hit_coverage": 0.7222,
+      "error_count": 0,
+      "results_path": "/Users/zulhafizzaini/Desktop/Programming/prototype/claude-finrisk/data/evals/results/aapl_tree_v2_eval_AAPL_gate_20260222T070903Z.json"
+    }
+  ],
+  "eval_cases": [
+    {
+      "id": "AAPL_V2_001",
+      "scored": true,
+      "status": "ok",
+      "passed": true,
+      "must_ok": true,
+      "excl_ok": true,
+      "should_hits": 1,
+      "should_total": 1,
+      "retrieved": [
+        "0033",
+        "0009",
+        "0007",
+        "AAPL-item-1",
+        "0006",
+        "AAPL-item-7",
+        "0027",
+        "0008"
+      ]
+    },
+    {
+      "id": "AAPL_V2_002",
+      "scored": true,
+      "status": "ok",
+      "passed": true,
+      "must_ok": true,
+      "excl_ok": true,
+      "should_hits": 1,
+      "should_total": 1,
+      "retrieved": [
+        "0033",
+        "0007",
+        "0009",
+        "AAPL-item-1",
+        "AAPL-item-7",
+        "0027",
+        "0019-split-00",
+        "0019"
+      ]
+    },
+    {
+      "id": "AAPL_V2_003",
+      "scored": true,
+      "status": "ok",
+      "passed": true,
+      "must_ok": true,
+      "excl_ok": true,
+      "should_hits": 2,
+      "should_total": 2,
+      "retrieved": [
+        "0007",
+        "0009",
+        "0006",
+        "0019-split-03",
+        "0033",
+        "AAPL-item-1",
+        "AAPL-item-7",
+        "0008"
+      ]
+    },
+    {
+      "id": "AAPL_V2_004",
+      "scored": true,
+      "status": "ok",
+      "passed": true,
+      "must_ok": true,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 1,
+      "retrieved": [
+        "0019-split-03",
+        "0033",
+        "0007",
+        "0009",
+        "0006",
+        "AAPL-item-1",
+        "AAPL-item-7",
+        "0027"
+      ]
+    },
+    {
+      "id": "AAPL_V2_005",
+      "scored": true,
+      "status": "ok",
+      "passed": true,
+      "must_ok": true,
+      "excl_ok": true,
+      "should_hits": 2,
+      "should_total": 2,
+      "retrieved": [
+        "0006",
+        "0008",
+        "0009",
+        "0033",
+        "0007",
+        "AAPL-item-1",
+        "AAPL-item-7",
+        "0027"
+      ]
+    },
+    {
+      "id": "AAPL_V2_006",
+      "scored": true,
+      "status": "ok",
+      "passed": true,
+      "must_ok": true,
+      "excl_ok": true,
+      "should_hits": 1,
+      "should_total": 1,
+      "retrieved": [
+        "0008",
+        "0009",
+        "0033",
+        "0006",
+        "0007",
+        "0038",
+        "AAPL-item-1",
+        "0026-split-03"
+      ]
+    },
+    {
+      "id": "AAPL_V2_007",
+      "scored": true,
+      "status": "ok",
+      "passed": true,
+      "must_ok": true,
+      "excl_ok": true,
+      "should_hits": 2,
+      "should_total": 2,
+      "retrieved": [
+        "0009",
+        "0033",
+        "0007",
+        "AAPL-item-7",
+        "0016",
+        "0006",
+        "AAPL-item-1",
+        "0008"
+      ]
+    },
+    {
+      "id": "AAPL_V2_008",
+      "scored": true,
+      "status": "ok",
+      "passed": true,
+      "must_ok": true,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 1,
+      "retrieved": [
+        "0007",
+        "0009",
+        "0006",
+        "0033",
+        "0019-split-03",
+        "0008",
+        "AAPL-item-7",
+        "0035"
+      ]
+    },
+    {
+      "id": "AAPL_V2_009",
+      "scored": true,
+      "status": "ok",
+      "passed": true,
+      "must_ok": true,
+      "excl_ok": true,
+      "should_hits": 1,
+      "should_total": 1,
+      "retrieved": [
+        "0009",
+        "0027",
+        "0033",
+        "AAPL-item-7",
+        "0008",
+        "0006",
+        "0007",
+        "0021"
+      ]
+    },
+    {
+      "id": "AAPL_V2_010",
+      "scored": true,
+      "status": "ok",
+      "passed": true,
+      "must_ok": true,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 1,
+      "retrieved": [
+        "0019-split-03",
+        "0019-split-04",
+        "0033",
+        "0009",
+        "AAPL-item-7",
+        "0030",
+        "0024",
+        "0007"
+      ]
+    },
+    {
+      "id": "AAPL_V2_011",
+      "scored": true,
+      "status": "ok",
+      "passed": true,
+      "must_ok": true,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 1,
+      "retrieved": [
+        "0033",
+        "0019-split-04",
+        "0009",
+        "0019-split-03",
+        "0024",
+        "AAPL-item-7",
+        "0030",
+        "0019-split-05"
+      ]
+    },
+    {
+      "id": "AAPL_V2_012",
+      "scored": true,
+      "status": "ok",
+      "passed": true,
+      "must_ok": true,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 1,
+      "retrieved": [
+        "0034",
+        "0014",
+        "0024",
+        "0038",
+        "0037",
+        "0019-split-05",
+        "0009",
+        "0026-split-02"
+      ]
+    },
+    {
+      "id": "AAPL_V2_013",
+      "scored": true,
+      "status": "ok",
+      "passed": true,
+      "must_ok": true,
+      "excl_ok": true,
+      "should_hits": 1,
+      "should_total": 1,
+      "retrieved": [
+        "0033",
+        "0007",
+        "0009",
+        "0006",
+        "AAPL-item-1",
+        "0027",
+        "AAPL-item-7",
+        "0024"
+      ]
+    },
+    {
+      "id": "AAPL_V2_014",
+      "scored": true,
+      "status": "ok",
+      "passed": false,
+      "must_ok": true,
+      "excl_ok": false,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0010",
+        "0013",
+        "0022",
+        "0024",
+        "0032",
+        "0031",
+        "0019-split-05",
+        "0006"
+      ]
+    },
+    {
+      "id": "AAPL_V2_015",
+      "scored": true,
+      "status": "ok",
+      "passed": true,
+      "must_ok": true,
+      "excl_ok": true,
+      "should_hits": 1,
+      "should_total": 1,
+      "retrieved": [
+        "0007",
+        "0009",
+        "0006",
+        "0033",
+        "0008",
+        "AAPL-item-7",
+        "0001",
+        "AAPL-item-1"
+      ]
+    },
+    {
+      "id": "AAPL_V2_016",
+      "scored": true,
+      "status": "ok",
+      "passed": false,
+      "must_ok": true,
+      "excl_ok": false,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0012",
+        "0038",
+        "0019-split-05",
+        "0034",
+        "0007",
+        "0002",
+        "0037",
+        "0036"
+      ]
+    },
+    {
+      "id": "AAPL_V2_017",
+      "scored": true,
+      "status": "ok",
+      "passed": true,
+      "must_ok": true,
+      "excl_ok": true,
+      "should_hits": 1,
+      "should_total": 1,
+      "retrieved": [
+        "0006",
+        "0009",
+        "0007",
+        "0008",
+        "0013",
+        "0005",
+        "0002",
+        "0020"
+      ]
+    }
+  ]
+}

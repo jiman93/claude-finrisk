@@ -1,0 +1,212 @@
+{
+  "ticker": "PFE",
+  "tree_path": "/Users/zulhafizzaini/Desktop/Programming/prototype/claude-finrisk/data/tree_index/PFE_tree.json",
+  "timestamp": "2026-02-22T07:16:02.884575+00:00",
+  "overall_pass": false,
+  "checks": [
+    {
+      "name": "required_headings",
+      "passed": true,
+      "missing_patterns": []
+    },
+    {
+      "name": "item1a_child_count",
+      "passed": true,
+      "item1a_found": true,
+      "item1a_child_count": 6,
+      "minimum_required": 3
+    },
+    {
+      "name": "physical_index_continuity",
+      "passed": true,
+      "min_index": 2,
+      "max_index": 124,
+      "missing_count": 0,
+      "missing_ratio": 0.0,
+      "max_consecutive_missing": 0,
+      "max_missing_ratio_allowed": 0.15,
+      "max_consecutive_missing_allowed": 5,
+      "missing_preview": []
+    },
+    {
+      "name": "page_index_gap",
+      "passed": true,
+      "max_gap_allowed": 11,
+      "gap_count": 0,
+      "gaps": []
+    },
+    {
+      "name": "retrieval_eval",
+      "passed": false,
+      "pass_rate": 0.75,
+      "pass_count": 6,
+      "scored_count": 8,
+      "pass_rate_threshold": 0.8,
+      "should_hit_coverage": null,
+      "error_count": 0,
+      "results_path": "/Users/zulhafizzaini/Desktop/Programming/prototype/claude-finrisk/data/evals/results/pfe_tree_v1_eval_PFE_gate_20260222T071442Z.json"
+    }
+  ],
+  "eval_cases": [
+    {
+      "id": "pfe_001",
+      "scored": true,
+      "status": "ok",
+      "passed": true,
+      "must_ok": true,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0013",
+        "0018-split-06",
+        "0163",
+        "PFE-item-1",
+        "0022",
+        "0166",
+        "0021-split-04",
+        "0099"
+      ]
+    },
+    {
+      "id": "pfe_002",
+      "scored": true,
+      "status": "ok",
+      "passed": false,
+      "must_ok": false,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0103",
+        "0040-split-00",
+        "PFE-item-1",
+        "0110",
+        "0073",
+        "0006",
+        "0099",
+        "0052"
+      ]
+    },
+    {
+      "id": "pfe_003",
+      "scored": true,
+      "status": "ok",
+      "passed": true,
+      "must_ok": true,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0018-split-06",
+        "0160",
+        "0005-split-00",
+        "0014",
+        "0021-split-04",
+        "0034",
+        "0018-split-07",
+        "0021-split-03"
+      ]
+    },
+    {
+      "id": "pfe_004",
+      "scored": true,
+      "status": "ok",
+      "passed": true,
+      "must_ok": true,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0018-split-07",
+        "0008",
+        "0005-split-00",
+        "0021-split-04",
+        "0018-split-06",
+        "0022",
+        "0005-split-01",
+        "0078"
+      ]
+    },
+    {
+      "id": "pfe_005",
+      "scored": true,
+      "status": "ok",
+      "passed": false,
+      "must_ok": false,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0005-split-01",
+        "0019-split-01",
+        "0014",
+        "0030",
+        "0018-split-01",
+        "0005-split-00",
+        "0021-split-04",
+        "0105"
+      ]
+    },
+    {
+      "id": "pfe_006",
+      "scored": true,
+      "status": "ok",
+      "passed": true,
+      "must_ok": true,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0020-split-02",
+        "0011",
+        "0005-split-01",
+        "0020-split-01",
+        "0020",
+        "0022",
+        "0100",
+        "0020-split-00"
+      ]
+    },
+    {
+      "id": "pfe_007",
+      "scored": true,
+      "status": "ok",
+      "passed": true,
+      "must_ok": true,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0029",
+        "0160",
+        "0159",
+        "0030",
+        "0033",
+        "0060",
+        "0034",
+        "0006"
+      ]
+    },
+    {
+      "id": "pfe_008",
+      "scored": true,
+      "status": "ok",
+      "passed": true,
+      "must_ok": true,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0113",
+        "0019-split-05",
+        "0073",
+        "0112",
+        "0005-split-01",
+        "0070",
+        "0114",
+        "0152"
+      ]
+    }
+  ]
+}

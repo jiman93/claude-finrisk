@@ -1,0 +1,128 @@
+{
+  "dataset_name": "ba_tree_v1_eval",
+  "ticker": "BA",
+  "mode": "tree",
+  "generated_at": "2026-02-22T07:13:32.782134+00:00",
+  "runs": [
+    {
+      "id": "ba_001",
+      "query": "What are Boeing's key supplier dependencies and supply chain risks?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0144",
+        "0046",
+        "0054",
+        "0025",
+        "0007",
+        "0016",
+        "0034",
+        "0062"
+      ]
+    },
+    {
+      "id": "ba_002",
+      "query": "Describe Boeing's concentration risk with specific component suppliers or geographic supply chains",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0031",
+        "0144",
+        "0016",
+        "0007",
+        "0022",
+        "0025",
+        "0054",
+        "0062"
+      ]
+    },
+    {
+      "id": "ba_003",
+      "query": "What risks does Boeing face from government contract dependencies?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0024",
+        "0180",
+        "0146",
+        "0014",
+        "0066",
+        "0022",
+        "0188",
+        "0061"
+      ]
+    },
+    {
+      "id": "ba_004",
+      "query": "What are Boeing's financing and liquidity risks including customer financing exposure?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0031",
+        "0029",
+        "0079",
+        "0061",
+        "0025",
+        "0129",
+        "0180",
+        "0115"
+      ]
+    },
+    {
+      "id": "ba_005",
+      "query": "Describe Boeing's cybersecurity risks and business disruption vulnerabilities",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0025",
+        "0034",
+        "0024",
+        "0194",
+        "0022",
+        "0046",
+        "0062",
+        "0012"
+      ]
+    },
+    {
+      "id": "ba_006",
+      "query": "What are Boeing's segment revenues and backlog by business segment?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0180",
+        "0022",
+        "0024",
+        "0061",
+        "0048",
+        "0025",
+        "0194",
+        "0053"
+      ]
+    },
+    {
+      "id": "ba_007",
+      "query": "What environmental and legal risks does Boeing face?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0028",
+        "0027",
+        "0037",
+        "0179",
+        "0106",
+        "0082",
+        "0026",
+        "0025"
+      ]
+    },
+    {
+      "id": "ba_008",
+      "query": "How does Boeing manage supply chain financing programs for suppliers?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0144",
+        "0034",
+        "0079",
+        "0031",
+        "0025",
+        "0046",
+        "0054",
+        "0022"
+      ]
+    }
+  ]
+}

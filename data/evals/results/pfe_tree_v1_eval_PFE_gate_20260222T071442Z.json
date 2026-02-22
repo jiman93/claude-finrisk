@@ -1,0 +1,128 @@
+{
+  "dataset_name": "pfe_tree_v1_eval",
+  "ticker": "PFE",
+  "mode": "tree",
+  "generated_at": "2026-02-22T07:16:02.883120+00:00",
+  "runs": [
+    {
+      "id": "pfe_001",
+      "query": "What are Pfizer's raw material supply chain risks and dependencies?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0013",
+        "0018-split-06",
+        "0163",
+        "PFE-item-1",
+        "0022",
+        "0166",
+        "0021-split-04",
+        "0099"
+      ]
+    },
+    {
+      "id": "pfe_002",
+      "query": "Describe Pfizer's concentration risks with suppliers or specific components",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0103",
+        "0040-split-00",
+        "PFE-item-1",
+        "0110",
+        "0073",
+        "0006",
+        "0099",
+        "0052"
+      ]
+    },
+    {
+      "id": "pfe_003",
+      "query": "What are Pfizer's product manufacturing and supply chain operational risks?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0018-split-06",
+        "0160",
+        "0005-split-00",
+        "0014",
+        "0021-split-04",
+        "0034",
+        "0018-split-07",
+        "0021-split-03"
+      ]
+    },
+    {
+      "id": "pfe_004",
+      "query": "How does Pfizer's collaboration with third parties impact supply chain resilience?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0018-split-07",
+        "0008",
+        "0005-split-00",
+        "0021-split-04",
+        "0018-split-06",
+        "0022",
+        "0005-split-01",
+        "0078"
+      ]
+    },
+    {
+      "id": "pfe_005",
+      "query": "What government regulatory and pricing risks does Pfizer face?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0005-split-01",
+        "0019-split-01",
+        "0014",
+        "0030",
+        "0018-split-01",
+        "0005-split-00",
+        "0021-split-04",
+        "0105"
+      ]
+    },
+    {
+      "id": "pfe_006",
+      "query": "Describe Pfizer's intellectual property and cybersecurity risks",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0020-split-02",
+        "0011",
+        "0005-split-01",
+        "0020-split-01",
+        "0020",
+        "0022",
+        "0100",
+        "0020-split-00"
+      ]
+    },
+    {
+      "id": "pfe_007",
+      "query": "What are Pfizer's geographic revenue concentrations and segment performance?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0029",
+        "0160",
+        "0159",
+        "0030",
+        "0033",
+        "0060",
+        "0034",
+        "0006"
+      ]
+    },
+    {
+      "id": "pfe_008",
+      "query": "What contingencies and legal commitments does Pfizer have?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0113",
+        "0019-split-05",
+        "0073",
+        "0112",
+        "0005-split-01",
+        "0070",
+        "0114",
+        "0152"
+      ]
+    }
+  ]
+}

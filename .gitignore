@@ -10,3 +10,4 @@ src/frontend/tsconfig.tsbuildinfo
 data/10k_html/
 data/10k_pdfs/
 data/chroma_db/
+.claude/

@@ -1,0 +1,133 @@
+{
+  "dataset_name": "pfe_tree_v1_eval",
+  "ticker": "PFE",
+  "doc_id": "pi-cmle2qmn5006n0lpf81dp9qcc",
+  "node_reference": {
+    "0013": "RAW MATERIALS",
+    "PFE-item-1a": "Item 1A. RISK FACTORS",
+    "0018": "RISKS RELATED TO OUR BUSINESS, INDUSTRY AND OPERATIONS",
+    "0018-split-03": "CONCENTRATION (supply chain concentration risks)",
+    "0018-split-06": "PRODUCT MANUFACTURING, SALES AND MARKETING RISKS",
+    "0018-split-07": "COLLABORATIONS AND OTHER RELATIONSHIPS WITH THIRD PARTIES",
+    "0019": "RISKS RELATED TO GOVERNMENT REGULATION AND LEGAL PROCEEDINGS",
+    "0020": "RISKS RELATED TO INTELLECTUAL PROPERTY, TECHNOLOGY AND SECURITY",
+    "0021": "GENERAL RISKS",
+    "0112": "Note 16. Contingencies and Certain Commitments",
+    "0159": "Note 17. Segment, Geographic and Other Revenue Information",
+    "0161": "B. Geographic Information"
+  },
+  "cases": [
+    {
+      "query": "What are Pfizer's raw material supply chain risks and dependencies?",
+      "scored": true,
+      "must_include_any": [
+        "0013",
+        "0018-split-03",
+        "0018"
+      ],
+      "must_exclude_all": [
+        "0019",
+        "0021"
+      ],
+      "rationale": "Raw materials query should retrieve supply chain and concentration risk sections",
+      "id": "pfe_001"
+    },
+    {
+      "query": "Describe Pfizer's concentration risks with suppliers or specific components",
+      "scored": true,
+      "must_include_any": [
+        "0018-split-03",
+        "0013"
+      ],
+      "must_exclude_all": [
+        "0020",
+        "0021"
+      ],
+      "rationale": "Concentration query should retrieve specific concentration risk subsection from business risks",
+      "id": "pfe_002"
+    },
+    {
+      "query": "What are Pfizer's product manufacturing and supply chain operational risks?",
+      "scored": true,
+      "must_include_any": [
+        "0018-split-06",
+        "0013",
+        "0018"
+      ],
+      "must_exclude_all": [
+        "0019",
+        "0021"
+      ],
+      "rationale": "Manufacturing risks should retrieve product manufacturing risk subsection and raw materials",
+      "id": "pfe_003"
+    },
+    {
+      "query": "How does Pfizer's collaboration with third parties impact supply chain resilience?",
+      "scored": true,
+      "must_include_any": [
+        "0018-split-07",
+        "0018"
+      ],
+      "must_exclude_all": [
+        "0013",
+        "0020"
+      ],
+      "rationale": "Collaboration query should retrieve third-party relationships subsection",
+      "id": "pfe_004"
+    },
+    {
+      "query": "What government regulatory and pricing risks does Pfizer face?",
+      "scored": true,
+      "must_include_any": [
+        "0019",
+        "PFE-item-1a"
+      ],
+      "must_exclude_all": [
+        "0013",
+        "0018-split-03"
+      ],
+      "rationale": "Regulatory query should retrieve government regulation risks, not supply chain",
+      "id": "pfe_005"
+    },
+    {
+      "query": "Describe Pfizer's intellectual property and cybersecurity risks",
+      "scored": true,
+      "must_include_any": [
+        "0020"
+      ],
+      "must_exclude_all": [
+        "0013",
+        "0018"
+      ],
+      "rationale": "IP/cyber query should retrieve IP and technology risk section, not operational risks",
+      "id": "pfe_006"
+    },
+    {
+      "query": "What are Pfizer's geographic revenue concentrations and segment performance?",
+      "scored": true,
+      "must_include_any": [
+        "0159",
+        "0161"
+      ],
+      "must_exclude_all": [
+        "0013",
+        "0018"
+      ],
+      "rationale": "Geographic segment query should retrieve financial notes on segments and geography",
+      "id": "pfe_007"
+    },
+    {
+      "query": "What contingencies and legal commitments does Pfizer have?",
+      "scored": true,
+      "must_include_any": [
+        "0112"
+      ],
+      "must_exclude_all": [
+        "0013",
+        "0018"
+      ],
+      "rationale": "Contingencies query should retrieve Note 16 on commitments, not operational risks",
+      "id": "pfe_008"
+    }
+  ]
+}

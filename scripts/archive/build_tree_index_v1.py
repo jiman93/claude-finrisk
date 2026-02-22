@@ -39,12 +39,6 @@ Usage
 
     # Overwrite existing tree files
     python scripts/build_tree_index.py --tickers AAPL --force
-
-    # Save raw PageIndex response for inspection (without building tree)
-    python scripts/build_tree_index.py --tickers AAPL --dump-raw data/debug/AAPL_raw.json
-
-    # Full rebuild with raw dump and tree print
-    python scripts/build_tree_index.py --tickers AAPL --force --dump-raw data/debug/AAPL_raw.json --print-tree
 """
 
 from __future__ import annotations
@@ -85,10 +79,6 @@ SUMMARY_MAX_CHARS = 800
 # Minimum content length to keep a leaf node.
 MIN_CONTENT_CHARS = 30
 
-# Leaf nodes larger than this threshold are candidates for embedded-heading
-# splitting (post-processing step that creates synthetic child nodes).
-LARGE_LEAF_THRESHOLD = 8000
-
 # ---------------------------------------------------------------------------
 # Canonical 10-K structure
 # ---------------------------------------------------------------------------
@@ -112,17 +102,6 @@ _ITEM_TO_PART: dict[str, str] = {
     "10": "III", "11": "III", "12": "III", "13": "III", "14": "III",
     "15": "IV", "16": "IV",
 }
-
-# Patterns that identify embedded sub-section headings inside large leaf nodes.
-# We look for markdown headings (### or ####) or common 10-K risk sub-section
-# title patterns that appear at the start of a line.
-_EMBEDDED_HEADING_RE = re.compile(
-    r"^(#{3,4}\s+.+|"
-    r"(?:Macroeconomic|Business|Financial|Legal|Regulatory|General|"
-    r"Operational|Market|Technology|Competition|Supply|Geographic|"
-    r"Strategic|Environmental|Cybersecurity|Data\s+Privacy)\s+Risks?.*)",
-    re.IGNORECASE | re.MULTILINE,
-)
 
 
 def _extract_item_number(title: str) -> str | None:
@@ -178,27 +157,6 @@ def _build_page_to_item(toc: list[TocEntry]) -> list[tuple[int, str, str]]:
 
 
 # ---------------------------------------------------------------------------
-# Physical index utilities
-# ---------------------------------------------------------------------------
-
-_PHYSICAL_INDEX_RE = re.compile(r"<physical_index_(\d+)>")
-
-
-def _extract_physical_indices(text: str) -> list[int]:
-    """Return sorted list of physical_index values found in text."""
-    return sorted({int(m.group(1)) for m in _PHYSICAL_INDEX_RE.finditer(text)})
-
-
-def _page_range_str(indices: list[int]) -> str:
-    """Format a sorted list of physical indices as 'min–max' or '' if empty."""
-    if not indices:
-        return ""
-    if len(indices) == 1:
-        return str(indices[0])
-    return f"{indices[0]}–{indices[-1]}"
-
-
-# ---------------------------------------------------------------------------
 # Tree data structure
 # ---------------------------------------------------------------------------
 
@@ -243,8 +201,8 @@ def fetch_pageindex_tree(
     base_url: str,
     api_key: str,
     doc_id: str,
-) -> tuple[list[dict], dict]:
-    """GET /doc/{doc_id}/?type=tree and return (result_list, full_response)."""
+) -> list[dict]:
+    """GET /doc/{doc_id}/?type=tree and return the ``result`` list."""
     url = f"{base_url.rstrip('/')}/doc/{doc_id}/"
     with httpx.Client(timeout=30) as client:
         resp = client.get(url, headers={"api_key": api_key}, params={"type": "tree"})
@@ -263,7 +221,7 @@ def fetch_pageindex_tree(
         raise RuntimeError(
             f"PageIndex doc {doc_id} not ready: status={status}"
         )
-    return data.get("result", []), data
+    return data.get("result", [])
 
 
 # ---------------------------------------------------------------------------
@@ -307,8 +265,6 @@ def build_tree_from_pageindex(ticker: str, pi_nodes: list[dict]) -> TreeNode:
          in the flat list belongs to Item X, regardless of page numbers.
       4. TOC page ranges are only used to create *missing* Items that
          appear between two known Items when there's a page gap.
-      5. Post-processing: large leaf nodes with embedded headings are split
-         into synthetic child nodes (embedded-heading splitter).
     """
 
     flat = _flatten_pi_nodes(pi_nodes)
@@ -480,12 +436,6 @@ def build_tree_from_pageindex(ticker: str, pi_nodes: list[dict]) -> TreeNode:
 
     # --- Finalize: compute char counts up, generate summaries. ---
     _finalize_tree(root)
-
-    # --- Post-processing: split large leaf nodes with embedded headings. ---
-    _split_large_leaves(root, ticker)
-
-    # --- Re-finalize after splitting (char counts / summaries may change). ---
-    _finalize_tree(root)
     _prune_empty(root)
 
     return root
@@ -517,90 +467,6 @@ def _finalize_tree(node: TreeNode) -> int:
     # Internal nodes don't store full content — it's in children.
     node.content_full = ""
     return total
-
-
-def _split_large_leaves(node: TreeNode, ticker: str) -> None:
-    """Recursively walk the tree and split large item-level leaf nodes.
-
-    If a leaf node at level 2 (item) or level 3 (sub-section) has no
-    children AND char_count > LARGE_LEAF_THRESHOLD, we scan its
-    content_full for embedded markdown headings and split there.
-
-    Splitting is conservative: we only split if we find ≥ 2 heading
-    boundaries so that we actually produce multiple meaningful chunks.
-    """
-    # First recurse into existing children.
-    for child in node.children:
-        _split_large_leaves(child, ticker)
-
-    # Only attempt splitting on leaf nodes with substantial content.
-    if node.children:
-        return
-    if node.char_count <= LARGE_LEAF_THRESHOLD:
-        return
-    # Only split item-level and sub-section-level nodes.
-    if node.level not in (2, 3):
-        return
-
-    content = node.content_full
-    if not content:
-        return
-
-    # Find all embedded heading positions.
-    matches = list(_EMBEDDED_HEADING_RE.finditer(content))
-    if len(matches) < 2:
-        # Not enough structure to warrant splitting.
-        return
-
-    # Build segment boundaries: (start, end, heading_text)
-    segments: list[tuple[int, int, str]] = []
-    for i, m in enumerate(matches):
-        start = m.start()
-        end = matches[i + 1].start() if i + 1 < len(matches) else len(content)
-        heading_text = m.group(0).strip().lstrip("#").strip()
-        segments.append((start, end, heading_text))
-
-    # Prepend content before the first heading as a preamble segment (if any).
-    preamble = content[: matches[0].start()].strip()
-
-    synthetic_children: list[TreeNode] = []
-
-    if preamble and len(preamble) >= MIN_CONTENT_CHARS:
-        synthetic_children.append(
-            TreeNode(
-                node_id=f"{node.node_id}-split-preamble",
-                heading=f"{node.heading} — Introduction",
-                level=node.level + 1,
-                page_index=node.page_index,
-                content_full=preamble,
-                char_count=len(preamble),
-                content_summary=preamble[:SUMMARY_MAX_CHARS],
-            )
-        )
-
-    for i, (start, end, heading_text) in enumerate(segments):
-        seg_text = content[start:end].strip()
-        if len(seg_text) < MIN_CONTENT_CHARS:
-            continue
-        # Derive page_index for this segment from physical_index markers.
-        seg_indices = _extract_physical_indices(seg_text)
-        seg_page = seg_indices[0] if seg_indices else node.page_index
-        synthetic_children.append(
-            TreeNode(
-                node_id=f"{node.node_id}-split-{i:02d}",
-                heading=heading_text[:120],
-                level=node.level + 1,
-                page_index=seg_page,
-                content_full=seg_text,
-                char_count=len(seg_text),
-                content_summary=seg_text[:SUMMARY_MAX_CHARS],
-            )
-        )
-
-    if len(synthetic_children) >= 2:
-        # Replace the leaf with its split children.
-        node.children = synthetic_children
-        node.content_full = ""  # _finalize_tree will set summary from children
 
 
 def _prune_empty(node: TreeNode) -> None:
@@ -635,30 +501,6 @@ def _tree_stats(node: TreeNode, depth: int = 0) -> dict:
     return stats
 
 
-def _node_page_range(node: TreeNode) -> str:
-    """Return 'pages X–Y' (or 'page X') based on physical_index markers in content."""
-    text = node.content_full or node.content_summary or ""
-    indices = _extract_physical_indices(text)
-    # Also gather from children recursively for internal nodes.
-    if not indices and node.children:
-        all_idx: list[int] = []
-        _collect_physical_indices(node, all_idx)
-        indices = sorted(set(all_idx))
-    if not indices:
-        if node.page_index:
-            return f"page {node.page_index}"
-        return ""
-    r = _page_range_str(indices)
-    return f"pages {r}" if "–" in r else f"page {r}"
-
-
-def _collect_physical_indices(node: TreeNode, acc: list[int]) -> None:
-    for text in (node.content_full, node.content_summary):
-        acc.extend(_extract_physical_indices(text))
-    for child in node.children:
-        _collect_physical_indices(child, acc)
-
-
 def print_tree(node: TreeNode, indent: int = 0, max_depth: int = 4) -> None:
     if indent // 2 > max_depth:
         return
@@ -666,9 +508,8 @@ def print_tree(node: TreeNode, indent: int = 0, max_depth: int = 4) -> None:
     label = node.heading[:80]
     chars = f"({node.char_count:,} chars)" if node.char_count else ""
     info = f"[{len(node.children)} children]" if node.children else "[leaf]"
-    page_range = _node_page_range(node)
-    parts = [p for p in [chars, info, page_range] if p]
-    print(f"{prefix}{label}  {'  '.join(parts)}")
+    page = f"p{node.page_index}" if node.page_index else ""
+    print(f"{prefix}{label}  {chars}  {info}  {page}")
     for child in node.children:
         print_tree(child, indent + 2, max_depth)
 
@@ -711,12 +552,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--print-tree", action="store_true",
-        help="Pretty-print the tree structure with page ranges",
-    )
-    parser.add_argument(
-        "--dump-raw", type=Path, default=None, metavar="PATH",
-        help="Save raw PageIndex JSON response to PATH before processing. "
-             "Useful for inspecting the raw node structure returned by the API.",
+        help="Pretty-print the tree structure",
     )
     args = parser.parse_args()
 
@@ -754,29 +590,15 @@ def main() -> None:
         doc_id = record["doc_id"]
 
         out_path = args.output_dir / f"{ticker}_tree.json"
-        if out_path.exists() and not args.force and not args.dump_raw:
+        if out_path.exists() and not args.force:
             print(f"  [{ticker}] Already exists: {out_path.name}. Use --force to overwrite.")
             continue
 
         print(f"  [{ticker}] Fetching tree from PageIndex (doc_id={doc_id}) ...")
         try:
-            pi_result, raw_response = fetch_pageindex_tree(args.base_url, args.api_key, doc_id)
+            pi_result = fetch_pageindex_tree(args.base_url, args.api_key, doc_id)
         except RuntimeError as exc:
             print(f"  [{ticker}] ERROR: {exc}")
-            continue
-
-        # --- Dump raw response if requested ---
-        if args.dump_raw:
-            dump_path = Path(str(args.dump_raw).replace("{ticker}", ticker).replace("{TICKER}", ticker))
-            dump_path.parent.mkdir(parents=True, exist_ok=True)
-            dump_path.write_text(json.dumps(raw_response, indent=2, ensure_ascii=False), encoding="utf-8")
-            print(f"  [{ticker}] Raw response saved: {dump_path} "
-                  f"({len(pi_result)} top-level nodes, "
-                  f"{dump_path.stat().st_size:,} bytes)")
-
-        # Skip building the tree if we're only dumping.
-        if out_path.exists() and not args.force:
-            print(f"  [{ticker}] Skipping tree build (use --force to overwrite).")
             continue
 
         tree = build_tree_from_pageindex(ticker, pi_result)

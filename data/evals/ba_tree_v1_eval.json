@@ -1,0 +1,84 @@
+{
+  "dataset_name": "ba_tree_v1_eval",
+  "ticker": "BA",
+  "doc_id": "pi-cmle2r1ao006t0lpfiw8zvc87",
+  "node_reference": {
+    "0015": "Raw Materials, Parts and Subassemblies",
+    "0016": "Suppliers",
+    "0021": "Item 1A. Risk Factors",
+    "0022": "Risks Related to Our Business and Operations",
+    "0023": "Risks Related to Our Contracts",
+    "0025": "Risks Related to Cybersecurity and Business Disruptions",
+    "0026": "Risks Related to Legal and Regulatory Matters",
+    "0029": "Risks Related to Financing and Liquidity",
+    "0134": "Accrued Liabilities",
+    "0144": "Supply Chain Financing Programs",
+    "0180": "Note 22 – Segment and Revenue Information"
+  },
+  "cases": [
+    {
+      "id": "ba_001",
+      "query": "What are Boeing's key supplier dependencies and supply chain risks?",
+      "scored": true,
+      "must_include_any": ["0015", "0016", "0022", "0144"],
+      "must_exclude_all": ["0029", "0026"],
+      "rationale": "Supply chain query should retrieve supplier and raw materials sections from Item 1 and supply chain financing notes"
+    },
+    {
+      "id": "ba_002",
+      "query": "Describe Boeing's concentration risk with specific component suppliers or geographic supply chains",
+      "scored": true,
+      "must_include_any": ["0015", "0016"],
+      "must_exclude_all": ["0026", "0029"],
+      "rationale": "Supplier concentration should surface Item 1 business section on suppliers and raw materials"
+    },
+    {
+      "id": "ba_003",
+      "query": "What risks does Boeing face from government contract dependencies?",
+      "scored": true,
+      "must_include_any": ["0023", "0022"],
+      "must_exclude_all": ["0015", "0016"],
+      "rationale": "Government contract risks should retrieve contract-specific risk factor section"
+    },
+    {
+      "id": "ba_004",
+      "query": "What are Boeing's financing and liquidity risks including customer financing exposure?",
+      "scored": true,
+      "must_include_any": ["0029", "0021"],
+      "must_exclude_all": ["0015", "0016"],
+      "rationale": "Financial risks query should retrieve financing risk factors, not supply chain"
+    },
+    {
+      "id": "ba_005",
+      "query": "Describe Boeing's cybersecurity risks and business disruption vulnerabilities",
+      "scored": true,
+      "must_include_any": ["0025"],
+      "must_exclude_all": ["0015", "0016", "0029"],
+      "rationale": "Cybersecurity query should retrieve specific cyber risk section, not supply or finance"
+    },
+    {
+      "id": "ba_006",
+      "query": "What are Boeing's segment revenues and backlog by business segment?",
+      "scored": true,
+      "must_include_any": ["0180", "0053"],
+      "must_exclude_all": ["0015", "0016", "0021"],
+      "rationale": "Segment query should retrieve financial note on segment information, not operational risks"
+    },
+    {
+      "id": "ba_007",
+      "query": "What environmental and legal risks does Boeing face?",
+      "scored": true,
+      "must_include_any": ["0026", "0027"],
+      "must_exclude_all": ["0015", "0016"],
+      "rationale": "Legal/environmental query should retrieve regulatory risk sections, not supply chain"
+    },
+    {
+      "id": "ba_008",
+      "query": "How does Boeing manage supply chain financing programs for suppliers?",
+      "scored": true,
+      "must_include_any": ["0144"],
+      "must_exclude_all": ["0021"],
+      "rationale": "Supply chain financing should retrieve specific financial note, not broad risk factors"
+    }
+  ]
+}

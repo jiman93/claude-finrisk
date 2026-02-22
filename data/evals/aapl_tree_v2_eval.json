@@ -1,0 +1,199 @@
+{
+  "dataset_name": "aapl_tree_v2_eval",
+  "ticker": "AAPL",
+  "tree_index_path": "data/tree_index/AAPL_tree.json",
+  "created_on": "2026-02-20",
+  "rebuild_doc_id": "pi-cmle2q6rs006h0lpfpbv1nu9p",
+  "default_top_k": 5,
+  "node_reference": {
+    "AAPL-item-1": "Item 1. Business",
+    "0005": "Item 1A. Risk Factors",
+    "0006": "Macroeconomic and Industry Risks",
+    "0007": "Business Risks (incl. supply chain / component concentration / outsourcing)",
+    "0008": "Legal and Regulatory Compliance Risks",
+    "0009": "Financial Risks (incl. margin pressure, FX, credit risk)",
+    "0010": "General Risks (stock price volatility)",
+    "0012": "Item 1C. Cybersecurity",
+    "AAPL-item-7": "Item 7. MD&A",
+    "0019": "Liquidity and Capital Resources",
+    "0019-split-03": "Manufacturing Purchase Obligations",
+    "0033": "Note 12 – Commitments, Contingencies and Supply Concentrations",
+    "0034": "Note 13 – Segment Information and Geographic Data"
+  },
+  "note": "All node_ids verified to exist in rebuilt AAPL_tree.json (pi-cmle2q6rs006h0lpfpbv1nu9p). Node 0009 (Financial Risks) and 0010 (General Risks) are structurally misassigned under Item 4 and Item 6 respectively due to PageIndex heading detection gaps, but their content is correct. Cases are scored against actual retriever behavior.",
+  "cases": [
+    {
+      "id": "AAPL_V2_001",
+      "query": "What are Apple's hardware component supply concentration risks?",
+      "intent": "supply_concentration",
+      "must_include_any": ["0007", "0033"],
+      "should_include_any": ["0009"],
+      "must_exclude_all": ["0010"],
+      "note": "Business Risks (0007) and Note 12 (0033) both cover supply concentration."
+    },
+    {
+      "id": "AAPL_V2_002",
+      "query": "Summarize risks from single-source or limited-source components for Apple hardware.",
+      "intent": "single_source_components",
+      "must_include_any": ["0007", "0033"],
+      "should_include_any": ["0009"],
+      "must_exclude_all": ["0010"],
+      "note": "Business Risks explicitly discusses single-source and limited-source components."
+    },
+    {
+      "id": "AAPL_V2_003",
+      "query": "How do outsourcing partners affect Apple's manufacturing and logistics risk?",
+      "intent": "outsourcing_and_logistics",
+      "must_include_any": ["0007"],
+      "should_include_any": ["AAPL-item-7", "0019-split-03"],
+      "must_exclude_all": [],
+      "note": "Business Risks (0007) contains detailed outsourcing and partner risk disclosures."
+    },
+    {
+      "id": "AAPL_V2_004",
+      "query": "Where is Apple hardware manufacturing concentrated geographically, and why is that a risk?",
+      "intent": "manufacturing_geography",
+      "must_include_any": ["0007", "0033"],
+      "should_include_any": ["0034"],
+      "must_exclude_all": [],
+      "note": "Business Risks discusses outsourcing partner concentration in Asia."
+    },
+    {
+      "id": "AAPL_V2_005",
+      "query": "What import/export and trade restriction risks can affect Apple's supply chain?",
+      "intent": "trade_restrictions",
+      "must_include_any": ["0008"],
+      "should_include_any": ["0006", "0007"],
+      "must_exclude_all": [],
+      "note": "Legal & Regulatory Compliance Risks (0008) covers export/import regulatory exposure."
+    },
+    {
+      "id": "AAPL_V2_006",
+      "query": "What legal or regulatory changes could force Apple to change its supply chain?",
+      "intent": "regulatory_supply_chain",
+      "must_include_any": ["0008"],
+      "should_include_any": ["0007"],
+      "must_exclude_all": [],
+      "note": "Legal & Regulatory node explicitly covers regulatory changes affecting operations."
+    },
+    {
+      "id": "AAPL_V2_007",
+      "query": "How could supply shortages and component cost increases pressure Apple's gross margins?",
+      "intent": "margin_pressure_supply",
+      "must_include_any": ["0009"],
+      "should_include_any": ["0007", "AAPL-item-7"],
+      "must_exclude_all": [],
+      "note": "Financial Risks (0009) discusses gross margin volatility from supply shortages and component costs."
+    },
+    {
+      "id": "AAPL_V2_008",
+      "query": "What happens to Apple's financial results if a logistics, supply, or manufacturing partner fails?",
+      "intent": "partner_failure",
+      "must_include_any": ["0009", "0007"],
+      "should_include_any": ["0019"],
+      "must_exclude_all": [],
+      "note": "Financial Risks mentions failure of logistics/supply/manufacturing partners; Business Risks covers outsourcing dependency."
+    },
+    {
+      "id": "AAPL_V2_009",
+      "query": "What credit risks are tied to Apple's long-term supply agreements and vendor non-trade receivables?",
+      "intent": "supply_credit_risk",
+      "must_include_any": ["0009"],
+      "should_include_any": ["0033"],
+      "must_exclude_all": [],
+      "note": "Financial Risks explicitly discusses credit risk on vendor non-trade receivables and long-term supply prepayments."
+    },
+    {
+      "id": "AAPL_V2_010",
+      "query": "What are Apple's manufacturing purchase obligations and near-term payment burden?",
+      "intent": "purchase_obligations_mda",
+      "must_include_any": ["0019-split-03", "0033"],
+      "should_include_any": ["0019"],
+      "must_exclude_all": [],
+      "note": "Manufacturing Purchase Obligations split node (0019-split-03) and Note 12 (0033) both quantify commitments."
+    },
+    {
+      "id": "AAPL_V2_011",
+      "query": "From Note 12, summarize Apple's unconditional purchase obligations and supply concentration disclosures.",
+      "intent": "note12_supply",
+      "must_include_any": ["0033"],
+      "should_include_any": ["0019"],
+      "must_exclude_all": [],
+      "note": "Direct note reference; retriever must surface Note 12 (0033)."
+    },
+    {
+      "id": "AAPL_V2_012",
+      "query": "How concentrated is Apple's revenue exposure to Greater China from a segment reporting perspective?",
+      "intent": "geographic_exposure",
+      "must_include_any": ["0034"],
+      "should_include_any": ["AAPL-item-7"],
+      "must_exclude_all": [],
+      "note": "Note 13 (0034) contains segment data and Greater China geographic breakdown."
+    },
+    {
+      "id": "AAPL_V2_013",
+      "query": "Connect Apple's supplier concentration risks to its custom component and custom silicon strategy.",
+      "intent": "supplier_custom_component_link",
+      "must_include_any": ["0007", "0033"],
+      "should_include_any": ["0009"],
+      "must_exclude_all": [],
+      "note": "Business Risks discusses custom components from single sources; Note 12 covers supply concentrations."
+    },
+    {
+      "id": "AAPL_V2_014",
+      "query": "What general risk does Apple disclose about stock price volatility and shareholder expectations?",
+      "intent": "control_stock_volatility",
+      "must_include_any": ["0010"],
+      "should_include_any": [],
+      "must_exclude_all": ["0033", "0007", "0006"],
+      "note": "Control query. Should route to General Risks (0010) and NOT to supply chain nodes."
+    },
+    {
+      "id": "AAPL_V2_015",
+      "query": "How does Apple's reliance on a small number of outsourcing partners create both operational and financial risks?",
+      "intent": "cross_section_operational_financial",
+      "must_include_any": ["0007", "0009"],
+      "should_include_any": ["0033"],
+      "must_exclude_all": [],
+      "note": "Cross-section case: Business Risks (0007) + Financial Risks (0009) both relevant."
+    },
+    {
+      "id": "AAPL_V2_016",
+      "query": "How does Apple manage cybersecurity risk, and what oversight does its Board of Directors provide?",
+      "intent": "control_cybersecurity",
+      "must_include_any": ["0012"],
+      "should_include_any": [],
+      "must_exclude_all": ["0033", "0007", "0006"],
+      "note": "Control query: should route to Cybersecurity (Item 1C) and NOT supply chain nodes."
+    },
+    {
+      "id": "AAPL_V2_017",
+      "query": "What macroeconomic and global economic conditions could adversely affect Apple's operations?",
+      "intent": "macroeconomic_risk",
+      "must_include_any": ["0006"],
+      "should_include_any": ["0009"],
+      "must_exclude_all": ["0010"],
+      "note": "Macroeconomic and Industry Risks (0006) is the primary target."
+    },
+    {
+      "id": "AAPL_V2_GAP_001",
+      "query": "How do geopolitical tensions, armed conflict, and terrorism disrupt Apple's hardware operations and supply chain?",
+      "intent": "gap_probe_geopolitical",
+      "must_include_any": ["0007", "0006"],
+      "should_include_any": ["0033"],
+      "must_exclude_all": [],
+      "scored": false,
+      "note": "Gap probe. Geopolitical/conflict content may be split across Macroeconomic Risks (0006) and Business Risks (0007). Kept unscored because retrieval precision is uncertain without manual verification of exact page coverage."
+    },
+    {
+      "id": "AAPL_V2_GAP_002",
+      "query": "What does Apple's management say about macroeconomic headwinds in fiscal year 2024 in the MD&A section?",
+      "intent": "gap_probe_mda_macro",
+      "must_include_any": ["AAPL-item-7"],
+      "should_include_any": ["0006"],
+      "must_exclude_all": [],
+      "scored": false,
+      "note": "Gap probe. MD&A sub-sections (Company Stock Performance, Segment Operating Performance) may not capture the full macro discussion that belongs in the MD&A narrative. Kept unscored until MD&A node coverage is verified."
+    }
+  ]
+}

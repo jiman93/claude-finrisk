@@ -1,0 +1,128 @@
+{
+  "dataset_name": "tsla_tree_v1_eval",
+  "ticker": "TSLA",
+  "mode": "tree",
+  "generated_at": "2026-02-22T06:22:09.870718+00:00",
+  "runs": [
+    {
+      "id": "tsla_001",
+      "query": "What are Tesla's supply chain risks and dependencies on specific suppliers or components?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0014",
+        "0021",
+        "0105",
+        "0018-split-01",
+        "TSLA-item-1",
+        "0022",
+        "0011",
+        "TSLA-item-7"
+      ]
+    },
+    {
+      "id": "tsla_002",
+      "query": "Describe Tesla's concentration risks including supplier and customer concentrations",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0010",
+        "0028",
+        "0022",
+        "0015-split-01",
+        "0018-split-01",
+        "0021",
+        "0116",
+        "0074"
+      ]
+    },
+    {
+      "id": "tsla_003",
+      "query": "What manufacturing and production risks does Tesla face?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0037",
+        "0026",
+        "0021",
+        "0013",
+        "0022",
+        "0018-split-02",
+        "0029",
+        "0008"
+      ]
+    },
+    {
+      "id": "tsla_004",
+      "query": "What are Tesla's operational risks including insurance, debt, and equipment obsolescence?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0026",
+        "0024",
+        "0110",
+        "0027",
+        "0023",
+        "0129-split-preamble",
+        "0126",
+        "0074"
+      ]
+    },
+    {
+      "id": "tsla_005",
+      "query": "Describe Tesla's business growth risks and market expansion challenges",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0021",
+        "0010",
+        "0027",
+        "0018-split-02",
+        "0133-split-08",
+        "0097",
+        "0024",
+        "0022"
+      ]
+    },
+    {
+      "id": "tsla_006",
+      "query": "What are Tesla's segment revenues and geographic concentration by region?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0136",
+        "0052",
+        "0049",
+        "0006",
+        "0050",
+        "0075",
+        "0053",
+        "0074"
+      ]
+    },
+    {
+      "id": "tsla_007",
+      "query": "What legal proceedings and contingent liabilities does Tesla have?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0030",
+        "0076",
+        "0074",
+        "0133-split-05",
+        "0018-split-02",
+        "0130-split-preamble",
+        "0134",
+        "0027"
+      ]
+    },
+    {
+      "id": "tsla_008",
+      "query": "How does Tesla manage credit risk and counterparty exposure?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "TSLA-item-7",
+        "0018-split-02",
+        "0074",
+        "0129-split-01",
+        "0077",
+        "0104",
+        "0010",
+        "0015-split-01"
+      ]
+    }
+  ]
+}

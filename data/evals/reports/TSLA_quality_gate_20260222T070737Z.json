@@ -1,0 +1,234 @@
+{
+  "ticker": "TSLA",
+  "tree_path": "/Users/zulhafizzaini/Desktop/Programming/prototype/claude-finrisk/data/tree_index/TSLA_tree.json",
+  "timestamp": "2026-02-22T07:07:37.586959+00:00",
+  "overall_pass": false,
+  "checks": [
+    {
+      "name": "required_headings",
+      "passed": true,
+      "missing_patterns": []
+    },
+    {
+      "name": "item1a_child_count",
+      "passed": true,
+      "item1a_found": true,
+      "item1a_child_count": 8,
+      "minimum_required": 3
+    },
+    {
+      "name": "physical_index_continuity",
+      "passed": true,
+      "min_index": 2,
+      "max_index": 95,
+      "missing_count": 1,
+      "missing_ratio": 0.0106,
+      "max_consecutive_missing": 1,
+      "max_missing_ratio_allowed": 0.15,
+      "max_consecutive_missing_allowed": 5,
+      "missing_preview": [
+        47
+      ]
+    },
+    {
+      "name": "page_index_gap",
+      "passed": true,
+      "max_gap_allowed": 11,
+      "gap_count": 0,
+      "gaps": []
+    },
+    {
+      "name": "retrieval_eval",
+      "passed": false,
+      "pass_rate": 0.0,
+      "pass_count": 0,
+      "scored_count": 9,
+      "pass_rate_threshold": 0.8,
+      "should_hit_coverage": null,
+      "error_count": 0,
+      "results_path": "/Users/zulhafizzaini/Desktop/Programming/prototype/claude-finrisk/data/evals/results/xom_tree_v1_eval_TSLA_gate_20260222T070626Z.json"
+    }
+  ],
+  "eval_cases": [
+    {
+      "id": "xom_001",
+      "scored": true,
+      "status": "ok",
+      "passed": false,
+      "must_ok": false,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0039",
+        "0010",
+        "0038",
+        "0016",
+        "0007",
+        "TSLA-item-7",
+        "0083",
+        "0054"
+      ]
+    },
+    {
+      "id": "xom_002",
+      "scored": true,
+      "status": "ok",
+      "passed": false,
+      "must_ok": false,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0015-split-00",
+        "0015",
+        "0015-split-02",
+        "0117",
+        "0022",
+        "0015-split-01",
+        "0028",
+        "0030"
+      ]
+    },
+    {
+      "id": "xom_003",
+      "scored": true,
+      "status": "ok",
+      "passed": false,
+      "must_ok": false,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0022",
+        "0035",
+        "0015-split-02",
+        "0083",
+        "0018-split-01",
+        "0084",
+        "0054",
+        "0125"
+      ]
+    },
+    {
+      "id": "xom_004",
+      "scored": true,
+      "status": "ok",
+      "passed": false,
+      "must_ok": false,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0022",
+        "0021",
+        "0028",
+        "0027",
+        "0038",
+        "0037",
+        "0039",
+        "0015-split-02"
+      ]
+    },
+    {
+      "id": "xom_005",
+      "scored": true,
+      "status": "ok",
+      "passed": false,
+      "must_ok": false,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0027",
+        "0010",
+        "0021",
+        "0097",
+        "0024",
+        "0028",
+        "0022",
+        "0016"
+      ]
+    },
+    {
+      "id": "xom_006",
+      "scored": true,
+      "status": "ok",
+      "passed": false,
+      "must_ok": false,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "TSLA-item-7",
+        "0050",
+        "0136",
+        "0037",
+        "0006",
+        "0021",
+        "0054",
+        "0039"
+      ]
+    },
+    {
+      "id": "xom_007",
+      "scored": true,
+      "status": "ok",
+      "passed": false,
+      "must_ok": false,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0061",
+        "0018-split-02",
+        "TSLA-item-7",
+        "0018-split-00",
+        "0040",
+        "0018",
+        "0113",
+        "0063"
+      ]
+    },
+    {
+      "id": "xom_008",
+      "scored": true,
+      "status": "ok",
+      "passed": false,
+      "must_ok": false,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0136",
+        "0052",
+        "0006",
+        "0049",
+        "0050",
+        "0081",
+        "0053",
+        "0054"
+      ]
+    },
+    {
+      "id": "xom_009",
+      "scored": true,
+      "status": "ok",
+      "passed": false,
+      "must_ok": false,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0018-split-02",
+        "0119",
+        "0120",
+        "0061",
+        "0067",
+        "0018-split-00",
+        "0018",
+        "0002"
+      ]
+    }
+  ]
+}

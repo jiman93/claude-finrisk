@@ -1,0 +1,263 @@
+{
+  "dataset_name": "aapl_tree_v2_eval",
+  "ticker": "AAPL",
+  "mode": "tree",
+  "generated_at": "2026-02-22T07:10:55.365441+00:00",
+  "runs": [
+    {
+      "id": "AAPL_V2_001",
+      "query": "What are Apple's hardware component supply concentration risks?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0033",
+        "0009",
+        "0007",
+        "AAPL-item-1",
+        "0006",
+        "AAPL-item-7",
+        "0027",
+        "0008"
+      ]
+    },
+    {
+      "id": "AAPL_V2_002",
+      "query": "Summarize risks from single-source or limited-source components for Apple hardware.",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0033",
+        "0007",
+        "0009",
+        "AAPL-item-1",
+        "AAPL-item-7",
+        "0027",
+        "0019-split-00",
+        "0019"
+      ]
+    },
+    {
+      "id": "AAPL_V2_003",
+      "query": "How do outsourcing partners affect Apple's manufacturing and logistics risk?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0007",
+        "0009",
+        "0006",
+        "0019-split-03",
+        "0033",
+        "AAPL-item-1",
+        "AAPL-item-7",
+        "0008"
+      ]
+    },
+    {
+      "id": "AAPL_V2_004",
+      "query": "Where is Apple hardware manufacturing concentrated geographically, and why is that a risk?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0019-split-03",
+        "0033",
+        "0007",
+        "0009",
+        "0006",
+        "AAPL-item-1",
+        "AAPL-item-7",
+        "0027"
+      ]
+    },
+    {
+      "id": "AAPL_V2_005",
+      "query": "What import/export and trade restriction risks can affect Apple's supply chain?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0006",
+        "0008",
+        "0009",
+        "0033",
+        "0007",
+        "AAPL-item-1",
+        "AAPL-item-7",
+        "0027"
+      ]
+    },
+    {
+      "id": "AAPL_V2_006",
+      "query": "What legal or regulatory changes could force Apple to change its supply chain?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0008",
+        "0009",
+        "0033",
+        "0006",
+        "0007",
+        "0038",
+        "AAPL-item-1",
+        "0026-split-03"
+      ]
+    },
+    {
+      "id": "AAPL_V2_007",
+      "query": "How could supply shortages and component cost increases pressure Apple's gross margins?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0009",
+        "0033",
+        "0007",
+        "AAPL-item-7",
+        "0016",
+        "0006",
+        "AAPL-item-1",
+        "0008"
+      ]
+    },
+    {
+      "id": "AAPL_V2_008",
+      "query": "What happens to Apple's financial results if a logistics, supply, or manufacturing partner fails?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0007",
+        "0009",
+        "0006",
+        "0033",
+        "0019-split-03",
+        "0008",
+        "AAPL-item-7",
+        "0035"
+      ]
+    },
+    {
+      "id": "AAPL_V2_009",
+      "query": "What credit risks are tied to Apple's long-term supply agreements and vendor non-trade receivables?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0009",
+        "0027",
+        "0033",
+        "AAPL-item-7",
+        "0008",
+        "0006",
+        "0007",
+        "0021"
+      ]
+    },
+    {
+      "id": "AAPL_V2_010",
+      "query": "What are Apple's manufacturing purchase obligations and near-term payment burden?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0019-split-03",
+        "0019-split-04",
+        "0033",
+        "0009",
+        "AAPL-item-7",
+        "0030",
+        "0024",
+        "0007"
+      ]
+    },
+    {
+      "id": "AAPL_V2_011",
+      "query": "From Note 12, summarize Apple's unconditional purchase obligations and supply concentration disclosures.",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0033",
+        "0019-split-04",
+        "0009",
+        "0019-split-03",
+        "0024",
+        "AAPL-item-7",
+        "0030",
+        "0019-split-05"
+      ]
+    },
+    {
+      "id": "AAPL_V2_012",
+      "query": "How concentrated is Apple's revenue exposure to Greater China from a segment reporting perspective?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0034",
+        "0014",
+        "0024",
+        "0038",
+        "0037",
+        "0019-split-05",
+        "0009",
+        "0026-split-02"
+      ]
+    },
+    {
+      "id": "AAPL_V2_013",
+      "query": "Connect Apple's supplier concentration risks to its custom component and custom silicon strategy.",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0033",
+        "0007",
+        "0009",
+        "0006",
+        "AAPL-item-1",
+        "0027",
+        "AAPL-item-7",
+        "0024"
+      ]
+    },
+    {
+      "id": "AAPL_V2_014",
+      "query": "What general risk does Apple disclose about stock price volatility and shareholder expectations?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0010",
+        "0013",
+        "0022",
+        "0024",
+        "0032",
+        "0031",
+        "0019-split-05",
+        "0006"
+      ]
+    },
+    {
+      "id": "AAPL_V2_015",
+      "query": "How does Apple's reliance on a small number of outsourcing partners create both operational and financial risks?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0007",
+        "0009",
+        "0006",
+        "0033",
+        "0008",
+        "AAPL-item-7",
+        "0001",
+        "AAPL-item-1"
+      ]
+    },
+    {
+      "id": "AAPL_V2_016",
+      "query": "How does Apple manage cybersecurity risk, and what oversight does its Board of Directors provide?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0012",
+        "0038",
+        "0019-split-05",
+        "0034",
+        "0007",
+        "0002",
+        "0037",
+        "0036"
+      ]
+    },
+    {
+      "id": "AAPL_V2_017",
+      "query": "What macroeconomic and global economic conditions could adversely affect Apple's operations?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0006",
+        "0009",
+        "0007",
+        "0008",
+        "0013",
+        "0005",
+        "0002",
+        "0020"
+      ]
+    }
+  ]
+}
