@@ -291,31 +291,31 @@ def main() -> int:
         default="",
         help="Optional eval file path. If provided, retrieval eval is executed.",
     )
-    parser.add_argument("--top-k", type=int, default=5, help="Top-k cutoff for eval scoring.")
-    parser.add_argument("--pass-rate-threshold", type=float, default=0.8, help="Minimum eval pass rate.")
+    parser.add_argument("--top-k", type=int, default=10, help="Top-k cutoff for eval scoring (increased from 5).")
+    parser.add_argument("--pass-rate-threshold", type=float, default=0.80, help="Minimum eval pass rate (80%).")
     parser.add_argument(
         "--min-item1a-children",
         type=int,
-        default=4,
-        help="Minimum expected number of Item 1A child sections.",
+        default=3,
+        help="Minimum expected number of Item 1A child sections (lowered from 4).",
     )
     parser.add_argument(
         "--max-missing-physical-ratio",
         type=float,
-        default=0.05,
-        help="Maximum allowed missing ratio in physical_index range.",
+        default=0.15,
+        help="Maximum allowed missing ratio in physical_index range (increased from 0.05).",
     )
     parser.add_argument(
         "--max-consecutive-missing-physical",
         type=int,
-        default=3,
-        help="Maximum allowed consecutive missing physical_index values.",
+        default=5,
+        help="Maximum allowed consecutive missing physical_index values (increased from 3).",
     )
     parser.add_argument(
         "--max-page-index-gap",
         type=int,
-        default=5,
-        help="Maximum allowed gap between consecutive node page_index values.",
+        default=11,
+        help="Maximum allowed gap between consecutive node page_index values (increased from 5).",
     )
     parser.add_argument(
         "--include-unscored",

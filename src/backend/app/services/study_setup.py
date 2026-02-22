@@ -1,16 +1,20 @@
 from app.models.enums import GroupType, ModeType
 
-TICKERS = ["MSFT", "AAPL", "TSLA", "JPM", "PFE", "WMT", "XOM", "BA"]
+# Quality tiers based on retrieval evaluation results:
+# Tier 1 (90%+): WMT (100%), AMZN (93.3%), BA (100%)
+# Tier 2 (80-89%): AAPL (88.2%), MSFT (80%)
+# Tier 3 (75-79%): XOM (77.78%), PFE (75%), TSLA (75%)
+TICKERS = ["AAPL", "AMZN", "BA", "MSFT", "PFE", "TSLA", "WMT", "XOM"]
 
 QUERIES = {
-    "MSFT": "What are the key technology and cybersecurity risks that could impact Microsoft's cloud business?",
     "AAPL": "Identify and summarize the supply chain and geopolitical risks facing Apple's hardware operations.",
-    "TSLA": "What regulatory and safety risks does Tesla face related to its autonomous driving technology?",
-    "JPM": "Summarize the credit risk and market volatility exposures disclosed by JPMorgan Chase.",
+    "AMZN": "What are Amazon's key operational and competitive risks in e-commerce and cloud services?",
+    "BA": "Summarize the safety, quality control, and litigation risks disclosed by Boeing.",
+    "MSFT": "What are the key technology and cybersecurity risks that could impact Microsoft's cloud business?",
     "PFE": "What are the key regulatory approval and patent expiration risks affecting Pfizer's drug pipeline?",
+    "TSLA": "What regulatory and safety risks does Tesla face related to its autonomous driving technology?",
     "WMT": "Identify the competitive and supply chain risks facing Walmart's retail and e-commerce business.",
     "XOM": "What environmental and regulatory compliance risks does ExxonMobil disclose related to climate policy?",
-    "BA": "Summarize the safety, quality control, and litigation risks disclosed by Boeing.",
 }
 
 
