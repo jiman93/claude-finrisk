@@ -1,0 +1,104 @@
+{
+  "dataset_name": "ba_tree_v1_eval",
+  "ticker": "BA",
+  "mode": "tree",
+  "generated_at": "2026-02-21T15:04:43.289240+00:00",
+  "runs": [
+    {
+      "id": "",
+      "query": "What are Boeing's key supplier dependencies and supply chain risks?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0144",
+        "0046",
+        "0054",
+        "0025",
+        "0007"
+      ]
+    },
+    {
+      "id": "",
+      "query": "Describe Boeing's concentration risk with specific component suppliers or geographic supply chains",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0031",
+        "0144",
+        "0007",
+        "0016",
+        "0022"
+      ]
+    },
+    {
+      "id": "",
+      "query": "What risks does Boeing face from government contract dependencies?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0024",
+        "0180",
+        "0146",
+        "0014",
+        "0066"
+      ]
+    },
+    {
+      "id": "",
+      "query": "What are Boeing's financing and liquidity risks including customer financing exposure?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0031",
+        "0029",
+        "0079",
+        "0061",
+        "0025"
+      ]
+    },
+    {
+      "id": "",
+      "query": "Describe Boeing's cybersecurity risks and business disruption vulnerabilities",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0025",
+        "0034",
+        "0024",
+        "0194",
+        "0022"
+      ]
+    },
+    {
+      "id": "",
+      "query": "What are Boeing's segment revenues and backlog by business segment?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0180",
+        "0022",
+        "0024",
+        "0061",
+        "0048"
+      ]
+    },
+    {
+      "id": "",
+      "query": "What environmental and legal risks does Boeing face?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0028",
+        "0027",
+        "0037",
+        "0179",
+        "0106"
+      ]
+    },
+    {
+      "id": "",
+      "query": "How does Boeing manage supply chain financing programs for suppliers?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0144",
+        "0034",
+        "0079",
+        "0031",
+        "0025"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,196 @@
+{
+  "ticker": "TSLA",
+  "tree_path": "/Users/zulhafizzaini/Desktop/Programming/prototype/claude-finrisk/data/tree_index/TSLA_tree.json",
+  "timestamp": "2026-02-21T15:15:03.874169+00:00",
+  "overall_pass": false,
+  "checks": [
+    {
+      "name": "required_headings",
+      "passed": true,
+      "missing_patterns": []
+    },
+    {
+      "name": "item1a_child_count",
+      "passed": true,
+      "item1a_found": true,
+      "item1a_child_count": 8,
+      "minimum_required": 3
+    },
+    {
+      "name": "physical_index_continuity",
+      "passed": true,
+      "min_index": 2,
+      "max_index": 95,
+      "missing_count": 1,
+      "missing_ratio": 0.0106,
+      "max_consecutive_missing": 1,
+      "max_missing_ratio_allowed": 0.05,
+      "max_consecutive_missing_allowed": 3,
+      "missing_preview": [
+        47
+      ]
+    },
+    {
+      "name": "page_index_gap",
+      "passed": false,
+      "max_gap_allowed": 5,
+      "gap_count": 1,
+      "gaps": [
+        [
+          24,
+          30,
+          6
+        ]
+      ]
+    },
+    {
+      "name": "retrieval_eval",
+      "passed": false,
+      "pass_rate": 0.625,
+      "pass_count": 5,
+      "scored_count": 8,
+      "pass_rate_threshold": 0.75,
+      "should_hit_coverage": null,
+      "error_count": 0,
+      "results_path": "/Users/zulhafizzaini/Desktop/Programming/prototype/claude-finrisk/data/evals/results/tsla_tree_v1_eval_TSLA_gate_20260221T151358Z.json"
+    }
+  ],
+  "eval_cases": [
+    {
+      "id": "tsla_001",
+      "scored": true,
+      "status": "ok",
+      "passed": true,
+      "must_ok": true,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0014",
+        "0021",
+        "0105",
+        "0018-split-01",
+        "TSLA-item-1"
+      ]
+    },
+    {
+      "id": "tsla_002",
+      "scored": true,
+      "status": "ok",
+      "passed": false,
+      "must_ok": false,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0010",
+        "0028",
+        "0022",
+        "0015-split-01",
+        "0018-split-01"
+      ]
+    },
+    {
+      "id": "tsla_003",
+      "scored": true,
+      "status": "ok",
+      "passed": true,
+      "must_ok": true,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0037",
+        "0021",
+        "0026",
+        "0013",
+        "0022"
+      ]
+    },
+    {
+      "id": "tsla_004",
+      "scored": true,
+      "status": "ok",
+      "passed": true,
+      "must_ok": true,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0026",
+        "0024",
+        "0110",
+        "0023",
+        "0129-split-preamble"
+      ]
+    },
+    {
+      "id": "tsla_005",
+      "scored": true,
+      "status": "ok",
+      "passed": true,
+      "must_ok": true,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0021",
+        "0010",
+        "0027",
+        "0018-split-02",
+        "0133-split-08"
+      ]
+    },
+    {
+      "id": "tsla_006",
+      "scored": true,
+      "status": "ok",
+      "passed": true,
+      "must_ok": true,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0136",
+        "0052",
+        "0049",
+        "0050",
+        "0006"
+      ]
+    },
+    {
+      "id": "tsla_007",
+      "scored": true,
+      "status": "ok",
+      "passed": false,
+      "must_ok": false,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0030",
+        "0076",
+        "0074",
+        "0018-split-02",
+        "0130-split-preamble"
+      ]
+    },
+    {
+      "id": "tsla_008",
+      "scored": true,
+      "status": "ok",
+      "passed": false,
+      "must_ok": false,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "TSLA-item-7",
+        "0018-split-02",
+        "0074",
+        "0129-split-01",
+        "0077"
+      ]
+    }
+  ]
+}

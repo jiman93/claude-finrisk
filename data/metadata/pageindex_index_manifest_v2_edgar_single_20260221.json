@@ -1,0 +1,14 @@
+{
+  "generated_at": "2026-02-21T22:36:14Z",
+  "records": [
+    {
+      "ticker": "MSFT",
+      "pdf_path": "data/10k_pdfs/msft-20240630.pdf",
+      "doc_id": "pi-cmlwf8jcp038l09pa7m4uf1t1",
+      "status": "completed",
+      "source": "edgar",
+      "submitted_at": "2026-02-21T22:36:14Z",
+      "completed_at": "2026-02-21T22:36:14Z"
+    }
+  ]
+}

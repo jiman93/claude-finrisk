@@ -1,0 +1,226 @@
+{
+  "ticker": "BA",
+  "tree_path": "/Users/zulhafizzaini/Desktop/Programming/prototype/claude-finrisk/data/tree_index/BA_tree.json",
+  "timestamp": "2026-02-22T07:13:32.782979+00:00",
+  "overall_pass": false,
+  "checks": [
+    {
+      "name": "required_headings",
+      "passed": true,
+      "missing_patterns": []
+    },
+    {
+      "name": "item1a_child_count",
+      "passed": true,
+      "item1a_found": true,
+      "item1a_child_count": 10,
+      "minimum_required": 3
+    },
+    {
+      "name": "physical_index_continuity",
+      "passed": false,
+      "min_index": 1,
+      "max_index": 132,
+      "missing_count": 13,
+      "missing_ratio": 0.0985,
+      "max_consecutive_missing": 10,
+      "max_missing_ratio_allowed": 0.15,
+      "max_consecutive_missing_allowed": 5,
+      "missing_preview": [
+        54,
+        55,
+        56,
+        57,
+        58,
+        59,
+        60,
+        61,
+        62,
+        63,
+        128,
+        129,
+        130
+      ]
+    },
+    {
+      "name": "page_index_gap",
+      "passed": true,
+      "max_gap_allowed": 11,
+      "gap_count": 0,
+      "gaps": []
+    },
+    {
+      "name": "retrieval_eval",
+      "passed": true,
+      "pass_rate": 1.0,
+      "pass_count": 8,
+      "scored_count": 8,
+      "pass_rate_threshold": 0.8,
+      "should_hit_coverage": null,
+      "error_count": 0,
+      "results_path": "/Users/zulhafizzaini/Desktop/Programming/prototype/claude-finrisk/data/evals/results/ba_tree_v1_eval_BA_gate_20260222T071234Z.json"
+    }
+  ],
+  "eval_cases": [
+    {
+      "id": "ba_001",
+      "scored": true,
+      "status": "ok",
+      "passed": true,
+      "must_ok": true,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0144",
+        "0046",
+        "0054",
+        "0025",
+        "0007",
+        "0016",
+        "0034",
+        "0062"
+      ]
+    },
+    {
+      "id": "ba_002",
+      "scored": true,
+      "status": "ok",
+      "passed": true,
+      "must_ok": true,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0031",
+        "0144",
+        "0016",
+        "0007",
+        "0022",
+        "0025",
+        "0054",
+        "0062"
+      ]
+    },
+    {
+      "id": "ba_003",
+      "scored": true,
+      "status": "ok",
+      "passed": true,
+      "must_ok": true,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0024",
+        "0180",
+        "0146",
+        "0014",
+        "0066",
+        "0022",
+        "0188",
+        "0061"
+      ]
+    },
+    {
+      "id": "ba_004",
+      "scored": true,
+      "status": "ok",
+      "passed": true,
+      "must_ok": true,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0031",
+        "0029",
+        "0079",
+        "0061",
+        "0025",
+        "0129",
+        "0180",
+        "0115"
+      ]
+    },
+    {
+      "id": "ba_005",
+      "scored": true,
+      "status": "ok",
+      "passed": true,
+      "must_ok": true,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0025",
+        "0034",
+        "0024",
+        "0194",
+        "0022",
+        "0046",
+        "0062",
+        "0012"
+      ]
+    },
+    {
+      "id": "ba_006",
+      "scored": true,
+      "status": "ok",
+      "passed": true,
+      "must_ok": true,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0180",
+        "0022",
+        "0024",
+        "0061",
+        "0048",
+        "0025",
+        "0194",
+        "0053"
+      ]
+    },
+    {
+      "id": "ba_007",
+      "scored": true,
+      "status": "ok",
+      "passed": true,
+      "must_ok": true,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0028",
+        "0027",
+        "0037",
+        "0179",
+        "0106",
+        "0082",
+        "0026",
+        "0025"
+      ]
+    },
+    {
+      "id": "ba_008",
+      "scored": true,
+      "status": "ok",
+      "passed": true,
+      "must_ok": true,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0144",
+        "0034",
+        "0079",
+        "0031",
+        "0025",
+        "0046",
+        "0054",
+        "0022"
+      ]
+    }
+  ]
+}

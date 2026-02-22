@@ -1,0 +1,257 @@
+{
+  "ticker": "MSFT",
+  "tree_path": "/Users/zulhafizzaini/Desktop/Programming/prototype/claude-finrisk/data/tree_index/MSFT_tree.json",
+  "timestamp": "2026-02-22T07:14:42.233190+00:00",
+  "overall_pass": true,
+  "checks": [
+    {
+      "name": "required_headings",
+      "passed": true,
+      "missing_patterns": []
+    },
+    {
+      "name": "item1a_child_count",
+      "passed": true,
+      "item1a_found": true,
+      "item1a_child_count": 16,
+      "minimum_required": 3
+    },
+    {
+      "name": "physical_index_continuity",
+      "passed": true,
+      "min_index": 4,
+      "max_index": 102,
+      "missing_count": 4,
+      "missing_ratio": 0.0404,
+      "max_consecutive_missing": 4,
+      "max_missing_ratio_allowed": 0.15,
+      "max_consecutive_missing_allowed": 5,
+      "missing_preview": [
+        36,
+        37,
+        38,
+        39
+      ]
+    },
+    {
+      "name": "page_index_gap",
+      "passed": true,
+      "max_gap_allowed": 11,
+      "gap_count": 0,
+      "gaps": []
+    },
+    {
+      "name": "retrieval_eval",
+      "passed": true,
+      "pass_rate": 0.8,
+      "pass_count": 8,
+      "scored_count": 10,
+      "pass_rate_threshold": 0.8,
+      "should_hit_coverage": 0.0,
+      "error_count": 0,
+      "results_path": "/Users/zulhafizzaini/Desktop/Programming/prototype/claude-finrisk/data/evals/results/msft_tree_v1_eval_MSFT_gate_20260222T071333Z.json"
+    }
+  ],
+  "eval_cases": [
+    {
+      "id": "MSFT_V1_001",
+      "scored": true,
+      "status": "ok",
+      "passed": true,
+      "must_ok": true,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0061",
+        "0009",
+        "0197",
+        "0062",
+        "0069",
+        "0015",
+        "0045",
+        "0008"
+      ]
+    },
+    {
+      "id": "MSFT_V1_002",
+      "scored": true,
+      "status": "ok",
+      "passed": true,
+      "must_ok": true,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 2,
+      "retrieved": [
+        "0009",
+        "0063",
+        "0064",
+        "0062",
+        "0036",
+        "0088",
+        "0059",
+        "0027"
+      ]
+    },
+    {
+      "id": "MSFT_V1_003",
+      "scored": true,
+      "status": "ok",
+      "passed": true,
+      "must_ok": true,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 1,
+      "retrieved": [
+        "0069",
+        "0067",
+        "0052",
+        "0128",
+        "0045",
+        "0010",
+        "0068",
+        "0033"
+      ]
+    },
+    {
+      "id": "MSFT_V1_004",
+      "scored": true,
+      "status": "ok",
+      "passed": true,
+      "must_ok": true,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0088",
+        "0008",
+        "0068",
+        "0018",
+        "0210",
+        "0059",
+        "0053",
+        "0109"
+      ]
+    },
+    {
+      "id": "MSFT_V1_005",
+      "scored": true,
+      "status": "ok",
+      "passed": true,
+      "must_ok": true,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0036",
+        "0070",
+        "0163",
+        "0045",
+        "0047",
+        "0046",
+        "0086",
+        "0009"
+      ]
+    },
+    {
+      "id": "MSFT_V1_006",
+      "scored": true,
+      "status": "ok",
+      "passed": true,
+      "must_ok": true,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 2,
+      "retrieved": [
+        "0059",
+        "0088",
+        "0069",
+        "0058",
+        "0009",
+        "0060",
+        "0027",
+        "0094"
+      ]
+    },
+    {
+      "id": "MSFT_V1_007",
+      "scored": true,
+      "status": "ok",
+      "passed": false,
+      "must_ok": false,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 1,
+      "retrieved": [
+        "0091",
+        "0085",
+        "0088",
+        "0212",
+        "0017",
+        "0009",
+        "0169",
+        "0092"
+      ]
+    },
+    {
+      "id": "MSFT_V1_008",
+      "scored": true,
+      "status": "ok",
+      "passed": true,
+      "must_ok": true,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0123",
+        "0219",
+        "0143",
+        "0147",
+        "0115",
+        "0222",
+        "0218",
+        "0124"
+      ]
+    },
+    {
+      "id": "MSFT_V1_009",
+      "scored": true,
+      "status": "ok",
+      "passed": false,
+      "must_ok": false,
+      "excl_ok": false,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0053",
+        "0034",
+        "0102",
+        "0045",
+        "0009",
+        "0016",
+        "0086",
+        "0069"
+      ]
+    },
+    {
+      "id": "MSFT_V1_010",
+      "scored": true,
+      "status": "ok",
+      "passed": true,
+      "must_ok": true,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 1,
+      "retrieved": [
+        "0069",
+        "0009",
+        "0088",
+        "0062",
+        "0008",
+        "0059",
+        "0067",
+        "0094"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,143 @@
+{
+  "dataset_name": "xom_tree_v1_eval",
+  "ticker": "AAPL",
+  "mode": "tree",
+  "generated_at": "2026-02-22T07:01:16.698824+00:00",
+  "runs": [
+    {
+      "id": "xom_001",
+      "query": "What are ExxonMobil's supply and demand risks in the energy market?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0009",
+        "0033",
+        "0007",
+        "0006",
+        "AAPL-item-1",
+        "0026-split-01",
+        "AAPL-item-7",
+        "0001"
+      ]
+    },
+    {
+      "id": "xom_002",
+      "query": "Describe ExxonMobil's exposure to government regulation and political risks",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0008",
+        "0006",
+        "0009",
+        "0026-split-02",
+        "0007",
+        "0026-split-03",
+        "0019-split-05",
+        "0026-split-01"
+      ]
+    },
+    {
+      "id": "xom_003",
+      "query": "What climate change and energy transition risks does ExxonMobil face?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0008",
+        "0026-split-03",
+        "0007",
+        "0019-split-05",
+        "0006",
+        "0038",
+        "0009",
+        "0001"
+      ]
+    },
+    {
+      "id": "xom_004",
+      "query": "What operational risks including production and refining does ExxonMobil have?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0007",
+        "0006",
+        "0008",
+        "0038",
+        "0009",
+        "0033",
+        "0012",
+        "0030"
+      ]
+    },
+    {
+      "id": "xom_005",
+      "query": "Describe ExxonMobil's business environment and market outlook",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0007",
+        "0026-split-01",
+        "0001",
+        "0008",
+        "0006",
+        "0002",
+        "0012",
+        "AAPL-item-1"
+      ]
+    },
+    {
+      "id": "xom_006",
+      "query": "What are ExxonMobil's upstream exploration and production segment results?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0034",
+        "0019-split-05",
+        "0014",
+        "0007",
+        "0009",
+        "0008",
+        "AAPL-item-7",
+        "0002"
+      ]
+    },
+    {
+      "id": "xom_007",
+      "query": "How does ExxonMobil manage liquidity and capital resources?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0019-split-00",
+        "0019",
+        "AAPL-item-7",
+        "0009",
+        "0019-split-05",
+        "0007",
+        "0012",
+        "0038"
+      ]
+    },
+    {
+      "id": "xom_008",
+      "query": "What are ExxonMobil's geographic revenue concentrations and segment performance?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0034",
+        "0024",
+        "0014",
+        "0013",
+        "0015",
+        "0019-split-05",
+        "0033",
+        "0009"
+      ]
+    },
+    {
+      "id": "xom_009",
+      "query": "Describe ExxonMobil's recent acquisitions of Denbury and Pioneer Natural Resources",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0019-split-00",
+        "0019",
+        "0006",
+        "0019-split-05",
+        "0001",
+        "0007",
+        "0002",
+        "0013"
+      ]
+    }
+  ]
+}

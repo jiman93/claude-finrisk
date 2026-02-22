@@ -1,0 +1,246 @@
+{
+  "ticker": "BA",
+  "tree_path": "/Users/zulhafizzaini/Desktop/Programming/prototype/claude-finrisk/data/tree_index/BA_tree.json",
+  "timestamp": "2026-02-22T07:03:53.416763+00:00",
+  "overall_pass": false,
+  "checks": [
+    {
+      "name": "required_headings",
+      "passed": true,
+      "missing_patterns": []
+    },
+    {
+      "name": "item1a_child_count",
+      "passed": true,
+      "item1a_found": true,
+      "item1a_child_count": 10,
+      "minimum_required": 3
+    },
+    {
+      "name": "physical_index_continuity",
+      "passed": false,
+      "min_index": 1,
+      "max_index": 132,
+      "missing_count": 13,
+      "missing_ratio": 0.0985,
+      "max_consecutive_missing": 10,
+      "max_missing_ratio_allowed": 0.15,
+      "max_consecutive_missing_allowed": 5,
+      "missing_preview": [
+        54,
+        55,
+        56,
+        57,
+        58,
+        59,
+        60,
+        61,
+        62,
+        63,
+        128,
+        129,
+        130
+      ]
+    },
+    {
+      "name": "page_index_gap",
+      "passed": true,
+      "max_gap_allowed": 11,
+      "gap_count": 0,
+      "gaps": []
+    },
+    {
+      "name": "retrieval_eval",
+      "passed": false,
+      "pass_rate": 0.2222,
+      "pass_count": 2,
+      "scored_count": 9,
+      "pass_rate_threshold": 0.8,
+      "should_hit_coverage": null,
+      "error_count": 0,
+      "results_path": "/Users/zulhafizzaini/Desktop/Programming/prototype/claude-finrisk/data/evals/results/xom_tree_v1_eval_BA_gate_20260222T070241Z.json"
+    }
+  ],
+  "eval_cases": [
+    {
+      "id": "xom_001",
+      "scored": true,
+      "status": "ok",
+      "passed": false,
+      "must_ok": false,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0046",
+        "0022",
+        "0028",
+        "0007",
+        "0073",
+        "0144",
+        "0094",
+        "0095"
+      ]
+    },
+    {
+      "id": "xom_002",
+      "scored": true,
+      "status": "ok",
+      "passed": false,
+      "must_ok": false,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0024",
+        "0014",
+        "0066",
+        "0146",
+        "0022",
+        "0179",
+        "0026",
+        "0030"
+      ]
+    },
+    {
+      "id": "xom_003",
+      "scored": true,
+      "status": "ok",
+      "passed": false,
+      "must_ok": false,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0028",
+        "0093",
+        "0170",
+        "0024",
+        "0155",
+        "0025",
+        "0003",
+        "0190"
+      ]
+    },
+    {
+      "id": "xom_004",
+      "scored": true,
+      "status": "ok",
+      "passed": false,
+      "must_ok": false,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0022",
+        "0024",
+        "0188",
+        "0062",
+        "0014",
+        "0060",
+        "0080",
+        "0025"
+      ]
+    },
+    {
+      "id": "xom_005",
+      "scored": true,
+      "status": "ok",
+      "passed": true,
+      "must_ok": true,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0046",
+        "0057",
+        "0073",
+        "0028",
+        "0022",
+        "0014",
+        "0065",
+        "0080"
+      ]
+    },
+    {
+      "id": "xom_006",
+      "scored": true,
+      "status": "ok",
+      "passed": true,
+      "must_ok": true,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0180",
+        "0009",
+        "0055",
+        "0067",
+        "0151",
+        "0008",
+        "0062",
+        "0022"
+      ]
+    },
+    {
+      "id": "xom_007",
+      "scored": true,
+      "status": "ok",
+      "passed": false,
+      "must_ok": false,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0078",
+        "0080",
+        "0043",
+        "0157",
+        "0034",
+        "0186",
+        "0194",
+        "0029"
+      ]
+    },
+    {
+      "id": "xom_008",
+      "scored": true,
+      "status": "ok",
+      "passed": false,
+      "must_ok": false,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0180",
+        "0048",
+        "0068",
+        "0024",
+        "0087",
+        "0051",
+        "0075",
+        "0165"
+      ]
+    },
+    {
+      "id": "xom_009",
+      "scored": true,
+      "status": "ok",
+      "passed": false,
+      "must_ok": false,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0080",
+        "0194",
+        "0078",
+        "0157",
+        "0034",
+        "0090",
+        "0120",
+        "0026"
+      ]
+    }
+  ]
+}

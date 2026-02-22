@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-02-08T18:47:52.707309+00:00",
+  "generated_at": "2026-02-22T05:36:14.324648+00:00",
   "records": [
     {
       "ticker": "AAPL",
@@ -11,6 +11,17 @@
       "completed_at": null,
       "last_checked_at": "2026-02-08T18:47:51.511473+00:00",
       "error": "PageIndex poll failed (403): Invalid API key"
+    },
+    {
+      "ticker": "AMZN",
+      "pdf_path": "data/playwright_10_pdfs/AMZN_10-K_2025-02-07_0001018724-25-000004.pdf",
+      "doc_id": "pi-cmlxaooca005b0gqpim3yhs27",
+      "status": "completed",
+      "retrieval_ready": false,
+      "submitted_at": "2026-02-22T05:16:08.179729+00:00",
+      "completed_at": null,
+      "last_checked_at": "2026-02-22T05:36:14.321505+00:00",
+      "error": "status=completed, retrieval_ready=False"
     },
     {
       "ticker": "BA",
@@ -33,6 +44,17 @@
       "completed_at": null,
       "last_checked_at": "2026-02-08T18:47:51.908727+00:00",
       "error": "PageIndex poll failed (403): Invalid API key"
+    },
+    {
+      "ticker": "META",
+      "pdf_path": "data/playwright_10_pdfs/META_10-K_2025-01-30_0001326801-25-000017.pdf",
+      "doc_id": "pi-cmlx64p7v00si0dqp66vfjx0g",
+      "status": "completed",
+      "retrieval_ready": false,
+      "submitted_at": "2026-02-22T03:08:37.892991+00:00",
+      "completed_at": null,
+      "last_checked_at": "2026-02-22T03:28:40.962450+00:00",
+      "error": "status=completed, retrieval_ready=False"
     },
     {
       "ticker": "MSFT",

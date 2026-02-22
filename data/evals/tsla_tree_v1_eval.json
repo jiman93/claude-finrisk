@@ -1,0 +1,83 @@
+{
+  "dataset_name": "tsla_tree_v1_eval",
+  "ticker": "TSLA",
+  "doc_id": "pi-cmle2qbq9006j0lpf1l8e4yzk",
+  "node_reference": {
+    "0014": "Supply Chain",
+    "0013": "Manufacturing",
+    "TSLA-item-1a": "Item 1A. Risk Factors",
+    "0021": "Risks Related to Our Ability to Grow Our Business",
+    "0022": "Risks Related to Our Operations",
+    "0103": "Concentration of Risk",
+    "0104": "Credit Risk",
+    "0105": "Supply Risk",
+    "0133": "Note 15 – Commitments and Contingencies",
+    "0136": "Note 18 - Segment Reporting and Information about Geographic Areas"
+  },
+  "cases": [
+    {
+      "id": "tsla_001",
+      "query": "What are Tesla's supply chain risks and dependencies on specific suppliers or components?",
+      "scored": true,
+      "must_include_any": ["0014", "0105", "0103", "0022"],
+      "must_exclude_all": [],
+      "rationale": "Supply chain query should retrieve supply chain, supply risk, or operational risk sections"
+    },
+    {
+      "id": "tsla_002",
+      "query": "Describe Tesla's concentration risks including supplier and customer concentrations",
+      "scored": true,
+      "must_include_any": ["0103", "0105", "0014"],
+      "must_exclude_all": [],
+      "rationale": "Concentration query should retrieve concentration of risk or supply risk sections"
+    },
+    {
+      "id": "tsla_003",
+      "query": "What manufacturing and production risks does Tesla face?",
+      "scored": true,
+      "must_include_any": ["0013", "0022"],
+      "must_exclude_all": ["0136"],
+      "rationale": "Manufacturing query should retrieve manufacturing or operational sections, not segment data"
+    },
+    {
+      "id": "tsla_004",
+      "query": "What are Tesla's operational risks including insurance, debt, and equipment obsolescence?",
+      "scored": true,
+      "must_include_any": ["0022", "0023", "0024", "0026"],
+      "must_exclude_all": ["0136"],
+      "rationale": "Operational risks query should retrieve operational risk factors, not financial notes"
+    },
+    {
+      "id": "tsla_005",
+      "query": "Describe Tesla's business growth risks and market expansion challenges",
+      "scored": true,
+      "must_include_any": ["0021"],
+      "must_exclude_all": ["0136"],
+      "rationale": "Growth risks query should retrieve growth-related risk factors"
+    },
+    {
+      "id": "tsla_006",
+      "query": "What are Tesla's segment revenues and geographic concentration by region?",
+      "scored": true,
+      "must_include_any": ["0136"],
+      "must_exclude_all": ["TSLA-item-1a"],
+      "rationale": "Segment query should retrieve segment note, not Item 1A risk factors"
+    },
+    {
+      "id": "tsla_007",
+      "query": "What legal proceedings and contingent liabilities does Tesla have?",
+      "scored": true,
+      "must_include_any": ["0133"],
+      "must_exclude_all": [],
+      "rationale": "Legal contingencies query should retrieve Note 15 commitments"
+    },
+    {
+      "id": "tsla_008",
+      "query": "How does Tesla manage credit risk and counterparty exposure?",
+      "scored": true,
+      "must_include_any": ["0104", "0103"],
+      "must_exclude_all": ["0014", "0013"],
+      "rationale": "Credit risk query should retrieve credit/concentration risk notes, not Item 1 business sections"
+    }
+  ]
+}

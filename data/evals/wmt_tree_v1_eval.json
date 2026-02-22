@@ -1,0 +1,138 @@
+{
+  "dataset_name": "wmt_tree_v1_eval",
+  "ticker": "WMT",
+  "doc_id": "pi-cmle2qruo006p0lpfjctw3peu",
+  "node_reference": {
+    "0014": "Suppliers and Supply Chain",
+    "WMT-item-1a": "Item 1A. Risk Factors",
+    "0021": "Strategic Risks",
+    "0025": "Operational Risks",
+    "0028": "Risks associated with our suppliers could materially adversely affect our financial performance",
+    "0029": "Product quality and safety risks",
+    "0031": "Information and financial systems risks",
+    "0034": "Associate attraction, retention and labor costs risks",
+    "0035": "Financial Risks",
+    "0037": "Foreign exchange rate risks",
+    "0038": "Legal, Tax, Regulatory, Compliance, Reputational and Other Risks",
+    "0135": "Note 10. Contingencies",
+    "0144": "Note 13. Segments and Disaggregated Revenue",
+    "0145": "Segments"
+  },
+  "cases": [
+    {
+      "query": "What are Walmart's supplier dependencies and supply chain risks?",
+      "scored": true,
+      "must_include_any": [
+        "0014",
+        "0028"
+      ],
+      "must_exclude_all": [
+        "0021",
+        "0035"
+      ],
+      "rationale": "Supply chain query should retrieve Item 1 supplier section and supplier risk factor",
+      "id": "wmt_001"
+    },
+    {
+      "query": "Describe Walmart's concentration risk with specific suppliers or product categories",
+      "scored": true,
+      "must_include_any": [
+        "0014",
+        "0028"
+      ],
+      "must_exclude_all": [
+        "0037",
+        "0038"
+      ],
+      "rationale": "Supplier concentration should retrieve supplier and supply chain sections",
+      "id": "wmt_002"
+    },
+    {
+      "query": "What operational risks does Walmart face including systems and technology?",
+      "scored": true,
+      "must_include_any": [
+        "0025",
+        "0031",
+        "0032"
+      ],
+      "must_exclude_all": [
+        "0014",
+        "0028"
+      ],
+      "rationale": "Operational risks query should retrieve operational risk section, not supply chain specifics",
+      "id": "wmt_003"
+    },
+    {
+      "query": "How do product quality and safety risks impact Walmart's business?",
+      "scored": true,
+      "must_include_any": [
+        "0029",
+        "0030"
+      ],
+      "must_exclude_all": [
+        "0028",
+        "0014"
+      ],
+      "rationale": "Product quality query should retrieve quality/safety risk factors, distinct from supplier risks",
+      "id": "wmt_004"
+    },
+    {
+      "query": "What are Walmart's strategic and competitive risks?",
+      "scored": true,
+      "must_include_any": [
+        "0021",
+        "0022",
+        "0023"
+      ],
+      "must_exclude_all": [
+        "0028",
+        "0025"
+      ],
+      "rationale": "Strategic risks query should retrieve strategic risk section, not supplier or operational risks",
+      "id": "wmt_005"
+    },
+    {
+      "query": "Describe Walmart's foreign exchange and financial risks",
+      "scored": true,
+      "must_include_any": [
+        "0035",
+        "0037"
+      ],
+      "must_exclude_all": [
+        "0014",
+        "0028",
+        "0025"
+      ],
+      "rationale": "Financial risks query should retrieve financial risk sections, not operational risks",
+      "id": "wmt_006"
+    },
+    {
+      "query": "What are Walmart's segment revenues and performance by business unit?",
+      "scored": true,
+      "must_include_any": [
+        "0144",
+        "0145"
+      ],
+      "must_exclude_all": [
+        "WMT-item-1a",
+        "0014"
+      ],
+      "rationale": "Segment query should retrieve financial note on segments, not business description or risks",
+      "id": "wmt_007"
+    },
+    {
+      "query": "What legal and regulatory contingencies does Walmart face?",
+      "scored": true,
+      "must_include_any": [
+        "0135",
+        "0038"
+      ],
+      "must_exclude_all": [
+        "0014",
+        "0028"
+      ],
+      "rationale": "Legal contingencies query should retrieve legal risk factors and contingencies note",
+      "id": "wmt_008"
+    }
+  ]
+}

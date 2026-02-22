@@ -1,0 +1,158 @@
+{
+  "dataset_name": "msft_tree_v1_eval",
+  "ticker": "MSFT",
+  "mode": "tree",
+  "generated_at": "2026-02-22T07:14:42.231354+00:00",
+  "runs": [
+    {
+      "id": "MSFT_V1_001",
+      "query": "What are Microsoft's cybersecurity and data privacy risks?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0061",
+        "0009",
+        "0197",
+        "0062",
+        "0069",
+        "0015",
+        "0045",
+        "0008"
+      ]
+    },
+    {
+      "id": "MSFT_V1_002",
+      "query": "How does Microsoft describe security risks to its cloud infrastructure and IT systems?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0009",
+        "0063",
+        "0064",
+        "0062",
+        "0036",
+        "0088",
+        "0059",
+        "0027"
+      ]
+    },
+    {
+      "id": "MSFT_V1_003",
+      "query": "What legal and regulatory risks does Microsoft face?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0069",
+        "0067",
+        "0052",
+        "0128",
+        "0045",
+        "0010",
+        "0068",
+        "0033"
+      ]
+    },
+    {
+      "id": "MSFT_V1_004",
+      "query": "What are Microsoft's operational risks related to business execution?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0088",
+        "0008",
+        "0068",
+        "0018",
+        "0210",
+        "0059",
+        "0053",
+        "0109"
+      ]
+    },
+    {
+      "id": "MSFT_V1_005",
+      "query": "What intellectual property risks does Microsoft disclose in its 10-K?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0036",
+        "0070",
+        "0163",
+        "0045",
+        "0047",
+        "0046",
+        "0086",
+        "0009"
+      ]
+    },
+    {
+      "id": "MSFT_V1_006",
+      "query": "How does competition in the cloud services market affect Microsoft's business?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0059",
+        "0088",
+        "0069",
+        "0058",
+        "0009",
+        "0060",
+        "0027",
+        "0094"
+      ]
+    },
+    {
+      "id": "MSFT_V1_007",
+      "query": "What are Microsoft's reportable segments and how is revenue distributed across them?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0091",
+        "0085",
+        "0088",
+        "0212",
+        "0017",
+        "0009",
+        "0169",
+        "0092"
+      ]
+    },
+    {
+      "id": "MSFT_V1_008",
+      "query": "What are Microsoft's critical accounting policies and estimates for revenue recognition?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0123",
+        "0219",
+        "0143",
+        "0147",
+        "0115",
+        "0222",
+        "0218",
+        "0124"
+      ]
+    },
+    {
+      "id": "MSFT_V1_009",
+      "query": "What general risks unrelated to specific operations does Microsoft disclose?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0053",
+        "0034",
+        "0102",
+        "0045",
+        "0009",
+        "0016",
+        "0086",
+        "0069"
+      ]
+    },
+    {
+      "id": "MSFT_V1_010",
+      "query": "How do cybersecurity threats and legal/regulatory changes create combined risks for Microsoft's cloud business?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0069",
+        "0009",
+        "0088",
+        "0062",
+        "0008",
+        "0059",
+        "0067",
+        "0094"
+      ]
+    }
+  ]
+}

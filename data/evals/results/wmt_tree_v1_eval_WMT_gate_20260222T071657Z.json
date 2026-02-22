@@ -1,0 +1,128 @@
+{
+  "dataset_name": "wmt_tree_v1_eval",
+  "ticker": "WMT",
+  "mode": "tree",
+  "generated_at": "2026-02-22T07:17:49.980081+00:00",
+  "runs": [
+    {
+      "id": "wmt_001",
+      "query": "What are Walmart's supplier dependencies and supply chain risks?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0014",
+        "WMT-item-1",
+        "0010",
+        "0061",
+        "0016",
+        "0028",
+        "0033",
+        "0011"
+      ]
+    },
+    {
+      "id": "wmt_002",
+      "query": "Describe Walmart's concentration risk with specific suppliers or product categories",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0010",
+        "0028",
+        "0014",
+        "0061",
+        "0115",
+        "0011",
+        "0029",
+        "0016"
+      ]
+    },
+    {
+      "id": "wmt_003",
+      "query": "What operational risks does Walmart face including systems and technology?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0032",
+        "0041",
+        "0031",
+        "0010",
+        "0033",
+        "0040",
+        "0011",
+        "0017"
+      ]
+    },
+    {
+      "id": "wmt_004",
+      "query": "How do product quality and safety risks impact Walmart's business?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0029",
+        "0030",
+        "0026",
+        "0032",
+        "0010",
+        "0033",
+        "0061",
+        "0011"
+      ]
+    },
+    {
+      "id": "wmt_005",
+      "query": "What are Walmart's strategic and competitive risks?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0010",
+        "0011",
+        "0024",
+        "0061",
+        "0033",
+        "0021",
+        "0051",
+        "0017"
+      ]
+    },
+    {
+      "id": "wmt_006",
+      "query": "Describe Walmart's foreign exchange and financial risks",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0037",
+        "0038",
+        "0082",
+        "0011",
+        "0051",
+        "0045",
+        "0088",
+        "0095"
+      ]
+    },
+    {
+      "id": "wmt_007",
+      "query": "What are Walmart's segment revenues and performance by business unit?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0061",
+        "0011",
+        "0145",
+        "0010",
+        "0033",
+        "0060",
+        "0022",
+        "0024"
+      ]
+    },
+    {
+      "id": "wmt_008",
+      "query": "What legal and regulatory contingencies does Walmart face?",
+      "status": "ok",
+      "retrieved_node_ids": [
+        "0038",
+        "0087",
+        "0077",
+        "0136",
+        "0139",
+        "0030",
+        "0033",
+        "0044"
+      ]
+    }
+  ]
+}

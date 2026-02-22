@@ -1,0 +1,164 @@
+{
+  "eval_id": "amzn_tree_v1_eval",
+  "ticker": "AMZN",
+  "created_at": "2026-02-22T05:45:00Z",
+  "description": "AMZN tree retrieval evaluation set v1 - covers supply chain, competition, international, technology, financial, and regulatory risks",
+  "tree_path": "data/tree_index/AMZN_tree.json",
+  "node_reference": {
+    "item_1": "0011",
+    "item_1a": "0025",
+    "item_1a_business_risks": "0026",
+    "item_1a_competition": "0027",
+    "item_1a_expansion": "0028",
+    "item_1a_international": "0029",
+    "item_1a_retail_variability": "0030",
+    "item_1a_fraudulent_sellers": "0031",
+    "item_1a_ip_rights": "0032",
+    "item_1a_fx_risk": "0033",
+    "item_1a_operating_risks": "0034",
+    "item_1a_management_strain": "0035",
+    "item_1a_fluctuations": "0036",
+    "item_1a_fulfillment": "0037",
+    "item_1a_data_loss": "0038",
+    "item_1a_system_interruption": "0039",
+    "item_1a_personnel": "0040",
+    "item_1a_supplier": "0041",
+    "item_1a_commercial_agreements": "0042",
+    "item_1a_acquisitions": "0043",
+    "item_1a_inventory": "0044",
+    "item_1a_payments": "0045",
+    "item_1a_stock_volatility": "0046",
+    "item_1a_legal_risks": "0047",
+    "item_1a_regulation": "0048",
+    "item_1a_litigation": "0049",
+    "item_1a_product_liability": "0050",
+    "item_1a_tax": "0051",
+    "item_1a_government_contracts": "0052",
+    "item_1c": "0053",
+    "item_2": "0054",
+    "item_7": "0058",
+    "item_8": "0087"
+  },
+  "cases": [
+    {
+      "id": "amzn_001",
+      "query": "What are the main risks related to Amazon's supplier relationships and supply chain dependencies?",
+      "scored": true,
+      "must_include_any": ["0041"],
+      "must_exclude": [],
+      "should_include": ["0037", "0044", "0029"]
+    },
+    {
+      "id": "amzn_002",
+      "query": "Describe Amazon's inventory management risks and challenges with unsold or returned products",
+      "scored": true,
+      "must_include_any": ["0044"],
+      "must_exclude": [],
+      "should_include": ["0037", "0030"]
+    },
+    {
+      "id": "amzn_003",
+      "query": "What competitive threats does Amazon face in its retail and cloud computing businesses?",
+      "scored": true,
+      "must_include_any": ["0027"],
+      "must_exclude": [],
+      "should_include": ["0028", "0011"]
+    },
+    {
+      "id": "amzn_004",
+      "query": "How do international operations and foreign exchange exposure impact Amazon's business?",
+      "scored": true,
+      "must_include_any": ["0029", "0033"],
+      "must_exclude": [],
+      "should_include": []
+    },
+    {
+      "id": "amzn_005",
+      "query": "What are Amazon's cybersecurity and data protection risk factors?",
+      "scored": true,
+      "must_include_any": ["0038", "0053"],
+      "must_exclude": [],
+      "should_include": ["0039"]
+    },
+    {
+      "id": "amzn_006",
+      "query": "Describe risks related to Amazon's fulfillment network operations and infrastructure",
+      "scored": true,
+      "must_include_any": ["0037"],
+      "must_exclude": [],
+      "should_include": ["0035", "0030"]
+    },
+    {
+      "id": "amzn_007",
+      "query": "What legal and regulatory risks does Amazon face, including government investigations?",
+      "scored": true,
+      "must_include_any": ["0048", "0049"],
+      "must_exclude": [],
+      "should_include": ["0047"]
+    },
+    {
+      "id": "amzn_008",
+      "query": "How does Amazon handle payment processing risks and fraud in transactions?",
+      "scored": true,
+      "must_include_any": ["0045"],
+      "must_exclude": [],
+      "should_include": ["0031"]
+    },
+    {
+      "id": "amzn_009",
+      "query": "What are the risks from third-party sellers engaging in fraudulent or unlawful activities on Amazon's platform?",
+      "scored": true,
+      "must_include_any": ["0031"],
+      "must_exclude": [],
+      "should_include": ["0050"]
+    },
+    {
+      "id": "amzn_010",
+      "query": "Describe Amazon's tax-related risks including international tax obligations and collection responsibilities",
+      "scored": true,
+      "must_include_any": ["0051"],
+      "must_exclude": ["0041", "0044", "0037"],
+      "should_include": ["0029"]
+    },
+    {
+      "id": "amzn_011",
+      "query": "What risks does Amazon face regarding acquisitions, investments, and strategic alliances?",
+      "scored": true,
+      "must_include_any": ["0043"],
+      "must_exclude": [],
+      "should_include": ["0042"]
+    },
+    {
+      "id": "amzn_012",
+      "query": "How volatile is Amazon's stock price and what factors contribute to business model evolution risks?",
+      "scored": true,
+      "must_include_any": ["0046"],
+      "must_exclude": ["0041", "0044", "0037"],
+      "should_include": ["0036"]
+    },
+    {
+      "id": "amzn_013",
+      "query": "What are the key personnel and talent retention risks for Amazon?",
+      "scored": true,
+      "must_include_any": ["0040"],
+      "must_exclude": ["0041", "0044"],
+      "should_include": []
+    },
+    {
+      "id": "amzn_014",
+      "query": "Describe system reliability risks including data center interruptions and lack of redundancy",
+      "scored": true,
+      "must_include_any": ["0039"],
+      "must_exclude": [],
+      "should_include": ["0037", "0038"]
+    },
+    {
+      "id": "amzn_015",
+      "query": "What are Amazon's AWS revenue trends by geographic region?",
+      "scored": true,
+      "must_include_any": ["0058", "0087"],
+      "must_exclude": ["0025", "0027", "0041", "0044"],
+      "should_include": []
+    }
+  ]
+}

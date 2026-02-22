@@ -45,16 +45,16 @@
       "pdf_renderer": "playwright"
     },
     {
-      "ticker": "JPM",
-      "cik": "0000019617",
-      "accession_number": "0000019617-25-000270",
-      "filing_date": "2025-02-14",
+      "ticker": "AMZN",
+      "cik": "0001018724",
+      "accession_number": "0001018724-25-000004",
+      "filing_date": "2025-02-07",
       "report_date": "2024-12-31",
       "form": "10-K",
-      "primary_document": "jpm-20241231.htm",
-      "html_url": "https://www.sec.gov/Archives/edgar/data/19617/000001961725000270/jpm-20241231.htm",
-      "html_path": "data/10k_html/JPM_10-K_2025-02-14_0000019617-25-000270.html",
-      "pdf_path": "data/10k_pdfs/JPM_10-K_2025-02-14_0000019617-25-000270.pdf",
+      "primary_document": "amzn-20241231.htm",
+      "html_url": "https://www.sec.gov/Archives/edgar/data/1018724/000101872425000004/amzn-20241231.htm",
+      "html_path": "data/10k_html/AMZN_10-K_2025-02-07_0001018724-25-000004.html",
+      "pdf_path": "data/playwright_10_pdfs/AMZN_10-K_2025-02-07_0001018724-25-000004.pdf",
       "pdf_renderer": "playwright"
     },
     {

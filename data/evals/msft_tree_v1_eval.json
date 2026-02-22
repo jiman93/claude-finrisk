@@ -1,0 +1,109 @@
+{
+  "dataset_name": "msft_tree_v1_eval",
+  "ticker": "MSFT",
+  "tree_index_path": "data/tree_index/MSFT_tree.json",
+  "created_on": "2026-02-20",
+  "doc_id": "pi-cmle2q1ke006f0lpf1mwrt30t",
+  "default_top_k": 5,
+  "node_reference": {
+    "0061": "CYBERSECURITY, DATA PRIVACY, AND PLATFORM ABUSE RISKS",
+    "0062": "Security of our information technology",
+    "0063": "Security of our products, services, devices, and customers' data",
+    "0068": "OPERATIONAL RISKS",
+    "0069": "LEGAL, REGULATORY, AND LITIGATION RISKS",
+    "0070": "INTELLECTUAL PROPERTY RISKS",
+    "0071": "GENERAL RISKS",
+    "0058": "STRATEGIC AND COMPETITIVE RISKS",
+    "0024": "Intelligent Cloud segment",
+    "0025": "Server Products and Cloud Services",
+    "0209": "NOTE 19 – SEGMENT INFORMATION AND GEOGRAPHIC DATA",
+    "0145": "Revenue (accounting policy)",
+    "0124": "Revenue Recognition (critical accounting estimate)"
+  },
+  "note": "All node_ids verified to exist in MSFT_tree.json (pi-cmle2q1ke006f0lpf1mwrt30t). MSFT tree has clean structure with all 16 risk sub-sections properly nested under Item 1A.",
+  "cases": [
+    {
+      "id": "MSFT_V1_001",
+      "query": "What are Microsoft's cybersecurity and data privacy risks?",
+      "intent": "cybersecurity_risks",
+      "must_include_any": ["0061", "0062", "0063"],
+      "should_include_any": [],
+      "must_exclude_all": ["0071"],
+      "note": "Primary cybersecurity risks section in Item 1A."
+    },
+    {
+      "id": "MSFT_V1_002",
+      "query": "How does Microsoft describe security risks to its cloud infrastructure and IT systems?",
+      "intent": "it_security_risks",
+      "must_include_any": ["0062"],
+      "should_include_any": ["0061", "0024"],
+      "must_exclude_all": []
+    },
+    {
+      "id": "MSFT_V1_003",
+      "query": "What legal and regulatory risks does Microsoft face?",
+      "intent": "legal_regulatory_risks",
+      "must_include_any": ["0069"],
+      "should_include_any": ["0061"],
+      "must_exclude_all": ["0071"]
+    },
+    {
+      "id": "MSFT_V1_004",
+      "query": "What are Microsoft's operational risks related to business execution?",
+      "intent": "operational_risks",
+      "must_include_any": ["0068"],
+      "should_include_any": [],
+      "must_exclude_all": ["0071"]
+    },
+    {
+      "id": "MSFT_V1_005",
+      "query": "What intellectual property risks does Microsoft disclose in its 10-K?",
+      "intent": "ip_risks",
+      "must_include_any": ["0070"],
+      "should_include_any": [],
+      "must_exclude_all": ["0071"]
+    },
+    {
+      "id": "MSFT_V1_006",
+      "query": "How does competition in the cloud services market affect Microsoft's business?",
+      "intent": "cloud_competition",
+      "must_include_any": ["0058"],
+      "should_include_any": ["0024", "0025"],
+      "must_exclude_all": []
+    },
+    {
+      "id": "MSFT_V1_007",
+      "query": "What are Microsoft's reportable segments and how is revenue distributed across them?",
+      "intent": "segment_information",
+      "must_include_any": ["0209"],
+      "should_include_any": ["0024"],
+      "must_exclude_all": []
+    },
+    {
+      "id": "MSFT_V1_008",
+      "query": "What are Microsoft's critical accounting policies and estimates for revenue recognition?",
+      "intent": "revenue_accounting",
+      "must_include_any": ["0124", "0145"],
+      "should_include_any": [],
+      "must_exclude_all": []
+    },
+    {
+      "id": "MSFT_V1_009",
+      "query": "What general risks unrelated to specific operations does Microsoft disclose?",
+      "intent": "control_general_risks",
+      "must_include_any": ["0071"],
+      "should_include_any": [],
+      "must_exclude_all": ["0061", "0062", "0068", "0069"],
+      "note": "Control query: should route to GENERAL RISKS and NOT specific risk categories."
+    },
+    {
+      "id": "MSFT_V1_010",
+      "query": "How do cybersecurity threats and legal/regulatory changes create combined risks for Microsoft's cloud business?",
+      "intent": "cross_section_cyber_legal_cloud",
+      "must_include_any": ["0061", "0069"],
+      "should_include_any": ["0024"],
+      "must_exclude_all": [],
+      "note": "Cross-section case: cybersecurity + legal/regulatory + cloud segment."
+    }
+  ]
+}

@@ -1,0 +1,238 @@
+{
+  "ticker": "AMZN",
+  "tree_path": "/Users/zulhafizzaini/Desktop/Programming/prototype/claude-finrisk/data/tree_index/AMZN_tree.json",
+  "timestamp": "2026-02-22T07:02:41.636915+00:00",
+  "overall_pass": false,
+  "checks": [
+    {
+      "name": "required_headings",
+      "passed": true,
+      "missing_patterns": []
+    },
+    {
+      "name": "item1a_child_count",
+      "passed": true,
+      "item1a_found": true,
+      "item1a_child_count": 27,
+      "minimum_required": 3
+    },
+    {
+      "name": "physical_index_continuity",
+      "passed": true,
+      "min_index": 2,
+      "max_index": 121,
+      "missing_count": 5,
+      "missing_ratio": 0.0417,
+      "max_consecutive_missing": 5,
+      "max_missing_ratio_allowed": 0.15,
+      "max_consecutive_missing_allowed": 5,
+      "missing_preview": [
+        115,
+        116,
+        117,
+        118,
+        119
+      ]
+    },
+    {
+      "name": "page_index_gap",
+      "passed": true,
+      "max_gap_allowed": 11,
+      "gap_count": 0,
+      "gaps": []
+    },
+    {
+      "name": "retrieval_eval",
+      "passed": false,
+      "pass_rate": 0.0,
+      "pass_count": 0,
+      "scored_count": 9,
+      "pass_rate_threshold": 0.8,
+      "should_hit_coverage": null,
+      "error_count": 0,
+      "results_path": "/Users/zulhafizzaini/Desktop/Programming/prototype/claude-finrisk/data/evals/results/xom_tree_v1_eval_AMZN_gate_20260222T070116Z.json"
+    }
+  ],
+  "eval_cases": [
+    {
+      "id": "xom_001",
+      "scored": true,
+      "status": "ok",
+      "passed": false,
+      "must_ok": false,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0011",
+        "0135",
+        "0030",
+        "0070",
+        "0125",
+        "0108",
+        "0083",
+        "0036"
+      ]
+    },
+    {
+      "id": "xom_002",
+      "scored": true,
+      "status": "ok",
+      "passed": false,
+      "must_ok": false,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0048",
+        "0029",
+        "0052",
+        "0049",
+        "0036",
+        "0062",
+        "0135",
+        "0051"
+      ]
+    },
+    {
+      "id": "xom_003",
+      "scored": true,
+      "status": "ok",
+      "passed": false,
+      "must_ok": false,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0048",
+        "0051",
+        "0044",
+        "0036",
+        "0085",
+        "0080",
+        "0033",
+        "0039"
+      ]
+    },
+    {
+      "id": "xom_004",
+      "scored": true,
+      "status": "ok",
+      "passed": false,
+      "must_ok": false,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0051",
+        "0049",
+        "0029",
+        "0027",
+        "0041",
+        "0038",
+        "0046",
+        "0053"
+      ]
+    },
+    {
+      "id": "xom_005",
+      "scored": true,
+      "status": "ok",
+      "passed": false,
+      "must_ok": false,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0046",
+        "0029",
+        "0018",
+        "0048",
+        "0135",
+        "0043",
+        "0049",
+        "0042"
+      ]
+    },
+    {
+      "id": "xom_006",
+      "scored": true,
+      "status": "ok",
+      "passed": false,
+      "must_ok": false,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0160",
+        "0064",
+        "0085",
+        "0036",
+        "0099",
+        "0049",
+        "0073",
+        "0163"
+      ]
+    },
+    {
+      "id": "xom_007",
+      "scored": true,
+      "status": "ok",
+      "passed": false,
+      "must_ok": false,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0063",
+        "0035",
+        "0058",
+        "0040",
+        "0167",
+        "0021",
+        "0178",
+        "0158"
+      ]
+    },
+    {
+      "id": "xom_008",
+      "scored": true,
+      "status": "ok",
+      "passed": false,
+      "must_ok": false,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0102",
+        "0160",
+        "0130",
+        "0064",
+        "0060",
+        "0028",
+        "0012",
+        "0163"
+      ]
+    },
+    {
+      "id": "xom_009",
+      "scored": true,
+      "status": "ok",
+      "passed": false,
+      "must_ok": false,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0043",
+        "0035",
+        "0063",
+        "0139",
+        "0060",
+        "0036",
+        "0126",
+        "0030"
+      ]
+    }
+  ]
+}

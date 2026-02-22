@@ -1,0 +1,94 @@
+{
+  "dataset_name": "xom_tree_v1_eval",
+  "ticker": "XOM",
+  "doc_id": "pi-cmle2qw7q006r0lpf074pnhaf",
+  "node_reference": {
+    "0005": "ITEM 1A. RISK FACTORS",
+    "0006": "Supply and Demand",
+    "0007": "Government and Political Factors",
+    "0008": "Climate Change and the Energy Transition",
+    "0009": "Operational and Other Factors",
+    "0065": "BUSINESS ENVIRONMENT",
+    "0067": "Upstream (exploration and production)",
+    "0073": "LIQUIDITY AND CAPITAL RESOURCES",
+    "0111": "Note 18. Disclosures about Segments and Related Information",
+    "0112": "Revenue from Contracts with Customers",
+    "0113": "Geographic",
+    "0116": "Denbury Inc. (merger)",
+    "0117": "Pioneer Natural Resources Company (acquisition)"
+  },
+  "cases": [
+    {
+      "id": "xom_001",
+      "query": "What are ExxonMobil's supply and demand risks in the energy market?",
+      "scored": true,
+      "must_include_any": ["0006", "0005"],
+      "must_exclude_all": [],
+      "rationale": "Supply/demand query should retrieve supply/demand risk factor or Item 1A"
+    },
+    {
+      "id": "xom_002",
+      "query": "Describe ExxonMobil's exposure to government regulation and political risks",
+      "scored": true,
+      "must_include_any": ["0007", "0005"],
+      "must_exclude_all": [],
+      "rationale": "Government/political query should retrieve government factors risk or Item 1A"
+    },
+    {
+      "id": "xom_003",
+      "query": "What climate change and energy transition risks does ExxonMobil face?",
+      "scored": true,
+      "must_include_any": ["0008", "0005"],
+      "must_exclude_all": [],
+      "rationale": "Climate query should retrieve climate change risk factor or Item 1A"
+    },
+    {
+      "id": "xom_004",
+      "query": "What operational risks including production and refining does ExxonMobil have?",
+      "scored": true,
+      "must_include_any": ["0009", "0005"],
+      "must_exclude_all": [],
+      "rationale": "Operational risks query should retrieve operational factors from Item 1A"
+    },
+    {
+      "id": "xom_005",
+      "query": "Describe ExxonMobil's business environment and market outlook",
+      "scored": true,
+      "must_include_any": ["0065"],
+      "must_exclude_all": ["0005"],
+      "rationale": "Business environment query should retrieve MD&A section, not Item 1A risks"
+    },
+    {
+      "id": "xom_006",
+      "query": "What are ExxonMobil's upstream exploration and production segment results?",
+      "scored": true,
+      "must_include_any": ["0067"],
+      "must_exclude_all": ["0005"],
+      "rationale": "Upstream segment query should retrieve upstream results from MD&A, not risks"
+    },
+    {
+      "id": "xom_007",
+      "query": "How does ExxonMobil manage liquidity and capital resources?",
+      "scored": true,
+      "must_include_any": ["0073"],
+      "must_exclude_all": ["0005"],
+      "rationale": "Liquidity query should retrieve liquidity section, not risk factors"
+    },
+    {
+      "id": "xom_008",
+      "query": "What are ExxonMobil's geographic revenue concentrations and segment performance?",
+      "scored": true,
+      "must_include_any": ["0111", "0113"],
+      "must_exclude_all": ["0005"],
+      "rationale": "Geographic segment query should retrieve Note 18 segments, not risks"
+    },
+    {
+      "id": "xom_009",
+      "query": "Describe ExxonMobil's recent acquisitions of Denbury and Pioneer Natural Resources",
+      "scored": true,
+      "must_include_any": ["0116", "0117"],
+      "must_exclude_all": ["0005"],
+      "rationale": "M&A query should retrieve specific acquisition notes, not risk factors"
+    }
+  ]
+}

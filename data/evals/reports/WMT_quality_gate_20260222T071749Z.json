@@ -1,0 +1,212 @@
+{
+  "ticker": "WMT",
+  "tree_path": "/Users/zulhafizzaini/Desktop/Programming/prototype/claude-finrisk/data/tree_index/WMT_tree.json",
+  "timestamp": "2026-02-22T07:17:49.981578+00:00",
+  "overall_pass": true,
+  "checks": [
+    {
+      "name": "required_headings",
+      "passed": true,
+      "missing_patterns": []
+    },
+    {
+      "name": "item1a_child_count",
+      "passed": true,
+      "item1a_found": true,
+      "item1a_child_count": 19,
+      "minimum_required": 3
+    },
+    {
+      "name": "physical_index_continuity",
+      "passed": true,
+      "min_index": 1,
+      "max_index": 87,
+      "missing_count": 0,
+      "missing_ratio": 0.0,
+      "max_consecutive_missing": 0,
+      "max_missing_ratio_allowed": 0.15,
+      "max_consecutive_missing_allowed": 5,
+      "missing_preview": []
+    },
+    {
+      "name": "page_index_gap",
+      "passed": true,
+      "max_gap_allowed": 11,
+      "gap_count": 0,
+      "gaps": []
+    },
+    {
+      "name": "retrieval_eval",
+      "passed": true,
+      "pass_rate": 1.0,
+      "pass_count": 8,
+      "scored_count": 8,
+      "pass_rate_threshold": 0.8,
+      "should_hit_coverage": null,
+      "error_count": 0,
+      "results_path": "/Users/zulhafizzaini/Desktop/Programming/prototype/claude-finrisk/data/evals/results/wmt_tree_v1_eval_WMT_gate_20260222T071657Z.json"
+    }
+  ],
+  "eval_cases": [
+    {
+      "id": "wmt_001",
+      "scored": true,
+      "status": "ok",
+      "passed": true,
+      "must_ok": true,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0014",
+        "WMT-item-1",
+        "0010",
+        "0061",
+        "0016",
+        "0028",
+        "0033",
+        "0011"
+      ]
+    },
+    {
+      "id": "wmt_002",
+      "scored": true,
+      "status": "ok",
+      "passed": true,
+      "must_ok": true,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0010",
+        "0028",
+        "0014",
+        "0061",
+        "0115",
+        "0011",
+        "0029",
+        "0016"
+      ]
+    },
+    {
+      "id": "wmt_003",
+      "scored": true,
+      "status": "ok",
+      "passed": true,
+      "must_ok": true,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0032",
+        "0041",
+        "0031",
+        "0010",
+        "0033",
+        "0040",
+        "0011",
+        "0017"
+      ]
+    },
+    {
+      "id": "wmt_004",
+      "scored": true,
+      "status": "ok",
+      "passed": true,
+      "must_ok": true,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0029",
+        "0030",
+        "0026",
+        "0032",
+        "0010",
+        "0033",
+        "0061",
+        "0011"
+      ]
+    },
+    {
+      "id": "wmt_005",
+      "scored": true,
+      "status": "ok",
+      "passed": true,
+      "must_ok": true,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0010",
+        "0011",
+        "0024",
+        "0061",
+        "0033",
+        "0021",
+        "0051",
+        "0017"
+      ]
+    },
+    {
+      "id": "wmt_006",
+      "scored": true,
+      "status": "ok",
+      "passed": true,
+      "must_ok": true,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0037",
+        "0038",
+        "0082",
+        "0011",
+        "0051",
+        "0045",
+        "0088",
+        "0095"
+      ]
+    },
+    {
+      "id": "wmt_007",
+      "scored": true,
+      "status": "ok",
+      "passed": true,
+      "must_ok": true,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0061",
+        "0011",
+        "0145",
+        "0010",
+        "0033",
+        "0060",
+        "0022",
+        "0024"
+      ]
+    },
+    {
+      "id": "wmt_008",
+      "scored": true,
+      "status": "ok",
+      "passed": true,
+      "must_ok": true,
+      "excl_ok": true,
+      "should_hits": 0,
+      "should_total": 0,
+      "retrieved": [
+        "0038",
+        "0087",
+        "0077",
+        "0136",
+        "0139",
+        "0030",
+        "0033",
+        "0044"
+      ]
+    }
+  ]
+}

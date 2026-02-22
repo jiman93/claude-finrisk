@@ -46,6 +46,31 @@ MAX_TRAVERSAL_DEPTH: int = settings.tree_max_depth
 # Max total leaf nodes to return (prevents returning the whole tree).
 MAX_LEAF_NODES: int = settings.tree_max_leaves
 
+# Lightweight stop-word list for lexical fallback/reranking.
+QUERY_STOPWORDS = {
+    "what", "are", "is", "the", "a", "an", "and", "or", "to", "of", "for", "from",
+    "on", "in", "by", "with", "how", "could", "can", "that", "this", "its", "if",
+    "do", "does", "where", "why", "about", "into", "their", "near", "term",
+    "apple", "apples", "risk", "risks", "summarize",
+}
+
+# Intent keyword sets used for simple query-intent boosts.
+SUPPLY_TERMS = {
+    "supply", "component", "components", "manufacturing", "manufactur", "outsourcing",
+    "logistics", "vendor", "inventory", "shortage", "single", "source", "hardware",
+}
+TRADE_TERMS = {
+    "import", "export", "tariff", "trade", "geopolitical", "geopolitics", "conflict",
+    "terrorism", "sanction", "regulatory", "restriction", "restrictions",
+}
+FINANCE_TERMS = {
+    "margin", "margins", "cost", "obligations", "obligation", "payable", "receivables",
+    "credit", "prepayment", "prepayments", "cash", "liquidity", "payment", "payments",
+    "burden",
+}
+GEOGRAPHY_TERMS = {"geographic", "segment", "china", "taiwan", "asia", "greater"}
+STOCK_TERMS = {"stock", "volatility", "share", "price"}
+
 
 # ---------------------------------------------------------------------------
 # Errors
@@ -150,13 +175,14 @@ def _call_nav_llm(
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt},
         ],
-        "temperature": 0.0,
         "response_format": {"type": "json_object"},
     }
 
     # o3-mini supports reasoning_effort parameter.
     if NAV_MODEL.startswith("o3"):
         payload["reasoning_effort"] = NAV_REASONING_EFFORT
+    else:
+        payload["temperature"] = 0.0
 
     headers = {
         "Authorization": f"Bearer {api_key}",
@@ -213,6 +239,145 @@ def _extract_node_ids_fallback(text: str, children: list[dict]) -> list[str]:
 # ---------------------------------------------------------------------------
 # Tree traversal
 # ---------------------------------------------------------------------------
+
+def _tokenize_query(query: str) -> set[str]:
+    """Return normalized, low-noise query tokens for lexical scoring."""
+    raw = re.findall(r"[a-z0-9]+", query.lower())
+    tokens = {t for t in raw if len(t) >= 3 and t not in QUERY_STOPWORDS}
+
+    # Add lightweight stems for common inflections.
+    if any(t.startswith("manufactur") for t in tokens):
+        tokens.add("manufactur")
+    if any(t.startswith("obligation") for t in tokens):
+        tokens.add("obligation")
+
+    return tokens
+
+
+def _iter_content_nodes(node: dict) -> list[dict]:
+    """Collect nodes that contain content (summary/full) and are section-level or deeper."""
+    out: list[dict] = []
+
+    def walk(n: dict) -> None:
+        level = int(n.get("level", 99) or 99)
+        has_content = bool(n.get("content_full") or n.get("content_summary"))
+        if level >= 2 and has_content:
+            out.append(n)
+        for child in n.get("children", []) or []:
+            walk(child)
+
+    walk(node)
+    return out
+
+
+def _rank_nodes_for_query(
+    query: str,
+    candidates: list[dict],
+    traversed_leaf_ids: set[str],
+    top_k: int,
+) -> list[dict]:
+    """Rank nodes using lexical relevance + intent-aware heading boosts."""
+    tokens = _tokenize_query(query)
+    if not tokens:
+        ranked = list(candidates)
+        ranked.sort(key=lambda n: int(n.get("char_count", 0) or 0), reverse=True)
+        return ranked[:top_k]
+
+    has_supply = bool(tokens & SUPPLY_TERMS)
+    has_trade = bool(tokens & TRADE_TERMS)
+    has_finance = bool(tokens & FINANCE_TERMS)
+    has_geo = bool(tokens & GEOGRAPHY_TERMS)
+    has_stock = bool(tokens & STOCK_TERMS)
+
+    scored: list[tuple[float, dict]] = []
+    for node in candidates:
+        node_id = str(node.get("node_id") or "")
+        if not node_id:
+            continue
+
+        heading = str(node.get("heading") or "")
+        heading_l = heading.lower()
+        content = str(node.get("content_summary") or "")
+        if node.get("content_full"):
+            content += " " + str(node.get("content_full"))[:7000]
+        content_l = re.sub(r"<physical_index_\d+>", " ", content.lower())
+
+        score = 0.0
+
+        # Token overlap signal.
+        for token in tokens:
+            token_count = content_l.count(token)
+            if token_count:
+                score += min(token_count, 6)
+            if token in heading_l:
+                score += 4
+
+        # Intent-aware heading boosts.
+        if has_supply and "item 1. business" in heading_l:
+            score += 10
+        if has_supply and "supply concentrations" in heading_l:
+            score += 12
+        if has_supply and "financial risks" in heading_l:
+            score += 8
+        if has_supply and "management's discussion" in heading_l:
+            score += 7
+        if has_trade and "legal and regulatory compliance risks" in heading_l:
+            score += 10
+        if has_geo and "segment information and geographic data" in heading_l:
+            score += 12
+        if has_finance and "management's discussion" in heading_l:
+            score += 11
+        if has_finance and "financial risks" in heading_l:
+            score += 9
+        if has_stock and "general risks" in heading_l:
+            score += 14
+
+        # Penalties to avoid overly generic sections for focused intents.
+        if "general risks" in heading_l and not has_stock:
+            score -= 9
+        if "financial risks" in heading_l and has_stock and not has_finance:
+            score -= 3
+        if "item 1. business" in heading_l and has_stock and not has_supply:
+            score -= 8
+
+        # Traversal retains influence but does not dominate ranking.
+        if node_id in traversed_leaf_ids:
+            score += 2
+
+        # Slight preference for section/item nodes.
+        if int(node.get("level", 99) or 99) == 2:
+            score += 0.5
+
+        if score > 0:
+            scored.append((score, node))
+
+    if not scored:
+        ranked = list(candidates)
+        ranked.sort(key=lambda n: int(n.get("char_count", 0) or 0), reverse=True)
+        return ranked[:top_k]
+
+    # Stable sort by score, then by section size.
+    scored.sort(
+        key=lambda pair: (
+            pair[0],
+            int(pair[1].get("char_count", 0) or 0),
+        ),
+        reverse=True,
+    )
+
+    ranked_nodes: list[dict] = []
+    seen_ids: set[str] = set()
+    for _, node in scored:
+        node_id = str(node.get("node_id") or "")
+        if not node_id or node_id in seen_ids:
+            continue
+        seen_ids.add(node_id)
+        ranked_nodes.append(node)
+        if len(ranked_nodes) >= top_k:
+            break
+
+    return ranked_nodes
+
 
 def _collect_leaves(node: dict) -> list[dict]:
     """Recursively collect all leaf nodes under a given node."""
@@ -337,17 +502,43 @@ class TreeRetrievalService:
             raise TreeServiceError("OPENAI_API_KEY is not configured")
 
         tree = load_tree(ticker, self.tree_dir)
+        try:
+            leaves, path = traverse_tree(
+                tree=tree,
+                query=query,
+                api_key=self.api_key,
+                base_url=self.base_url,
+            )
+        except TreeServiceError as exc:
+            # Degrade gracefully: still return best-effort lexical ranking.
+            log.warning("Tree traversal failed for %s, using lexical fallback: %s", ticker, exc)
+            leaves = []
+            path = [{"depth": 0, "action": "fallback_lexical", "reason": str(exc)}]
 
-        leaves, path = traverse_tree(
-            tree=tree,
+        # Hybrid ranking: preserve traversal signal but re-rank against the full tree.
+        traversed_leaf_ids = {str(n.get("node_id") or "") for n in leaves if n.get("node_id")}
+        content_nodes = _iter_content_nodes(tree)
+        ranked_nodes = _rank_nodes_for_query(
             query=query,
-            api_key=self.api_key,
-            base_url=self.base_url,
+            candidates=content_nodes,
+            traversed_leaf_ids=traversed_leaf_ids,
+            top_k=MAX_LEAF_NODES,
+        )
+        if not ranked_nodes:
+            ranked_nodes = leaves
+
+        path.append(
+            {
+                "depth": len(path),
+                "action": "hybrid_rank",
+                "count": len(ranked_nodes),
+                "selected": [n.get("heading", "") for n in ranked_nodes[:5]],
+            }
         )
 
         # Convert leaves to RetrievalNode objects.
         nodes: list[RetrievalNode] = []
-        for leaf in leaves:
+        for leaf in ranked_nodes:
             content = leaf.get("content_full", "") or leaf.get("content_summary", "")
             if not content:
                 continue
