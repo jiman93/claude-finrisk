@@ -10,26 +10,27 @@
 
 ### Why not a simple progress tracker?
 
-| Aspect | Progress Tracker (v1 — rejected) | Session Ledger (v2 — this design) |
-|--------|----------------------------------|-----------------------------------|
-| **Shows** | Status labels + checkmarks | Actual queries, chunk counts, summaries |
-| **Purpose** | "Where am I?" | "What did I produce? What do I own?" |
-| **Interactivity** | Passive | Clickable — drill into chunks, view summaries |
-| **After completion** | Useless | Reviewable evidence trail |
-| **Relationship to chat** | Supplements it | **Replaces it** as the authoritative record |
+| Aspect                         | Progress Tracker (v1 — rejected) | Session Ledger (v2 — this design)                |
+| ------------------------------ | --------------------------------- | ------------------------------------------------- |
+| **Shows**                | Status labels + checkmarks        | Actual queries, chunk counts, summaries           |
+| **Purpose**              | "Where am I?"                     | "What did I produce? What do I own?"              |
+| **Interactivity**        | Passive                           | Clickable — drill into chunks, view summaries    |
+| **After completion**     | Useless                           | Reviewable evidence trail                         |
+| **Relationship to chat** | Supplements it                    | **Replaces it** as the authoritative record |
 
 ### Core insight
 
-> The chat stream contains generated intermediate content (retrieval animations, loading states, system messages) that the participant didn't choose. The right panel should only show **things the participant deliberately chose or produced** — their query, their chunk selections, their final summary, their questionnaire responses.
+> The chat stream contains generated intermediate content (retrieval animations, loading states, system messages) that the participant didn't choose. The right panel should only show **things the participant deliberately chose or produced** — their query, their chunk selections, their final summa`ry, their questionnaire responses.
 
 ### Name Options
-| Name | Rationale |
-|------|-----------|
+
+| Name                        | Rationale                                                                               |
+| --------------------------- | --------------------------------------------------------------------------------------- |
 | **Session Ledger** ✅ | Implies a formal record of decisions/transactions — fits the "owned artifacts" concept |
-| Session Artifact Panel | Accurate but verbose |
-| Decision Trail | Good but sounds forensic |
-| Session Roadmap | Too "progress-tracker", doesn't convey content |
-| Phase Journal | Close, but "journal" implies notes |
+| Session Artifact Panel      | Accurate but verbose                                                                    |
+| Decision Trail              | Good but sounds forensic                                                                |
+| Session Roadmap             | Too "progress-tracker", doesn't convey content                                          |
+| Phase Journal               | Close, but "journal" implies notes                                                      |
 
 **Chosen: Session Ledger**
 
@@ -111,6 +112,7 @@
 Each completed phase shows 4 artifact sections. Content varies by mode:
 
 ### 3.1 QUERY section (all modes)
+
 Always shows the actual query text in a quote block.
 
 ```
@@ -125,12 +127,14 @@ QUERY
 ### 3.2 RETRIEVAL section (varies by mode)
 
 **Baseline / HITL-G** (no chunk selection):
+
 ```
 RETRIEVAL
 8 chunks retrieved (auto-selected)
 ```
 
 **HITL-R / HITL-Full** (chunk selection):
+
 ```
 RETRIEVAL                                    [View]
 10 retrieved → 7 selected
@@ -140,6 +144,7 @@ RETRIEVAL                                    [View]
 ```
 
 **Chunk boxes:**
+
 - `✓` green background = selected by participant
 - `✗` grey/red background = deselected by participant
 - **Clickable** — clicking a box slides in a detail panel showing:
@@ -151,6 +156,7 @@ RETRIEVAL                                    [View]
 ### 3.3 SUMMARY section (varies by mode)
 
 **Baseline / HITL-R** (no editing):
+
 ```
 SUMMARY                                     [View]
 ┌─────────────────────────────────────────┐
@@ -161,6 +167,7 @@ SUMMARY                                     [View]
 ```
 
 **HITL-G / HITL-Full** (summary edited):
+
 ```
 SUMMARY (edited)                            [View]
 ┌─────────────────────────────────────────┐
@@ -191,19 +198,19 @@ Control: 2  ·  Citations: Partly
 
 Each section transitions through states as the phase progresses:
 
-| State | Appearance | Example |
-|-------|-----------|---------|
-| **Upcoming** | Greyed out label only | `○ Pending` |
-| **Active** | Highlighted, may show partial data | `● 10 retrieved → selecting...` with `← CURRENT` marker |
-| **Completed** | Full artifact content | Query text, chunk boxes, summary preview, scores |
+| State               | Appearance                         | Example                                                        |
+| ------------------- | ---------------------------------- | -------------------------------------------------------------- |
+| **Upcoming**  | Greyed out label only              | `○ Pending`                                                 |
+| **Active**    | Highlighted, may show partial data | `● 10 retrieved → selecting...` with `← CURRENT` marker |
+| **Completed** | Full artifact content              | Query text, chunk boxes, summary preview, scores               |
 
 ### Phase-level states
 
-| Phase State | Header | Content |
-|-------------|--------|---------|
-| **Completed** | `✓ PHASE 1 · Baseline  AMZN` (green check) | All 4 sections with full content |
-| **Active** | `● PHASE 2 · HITL-R  MSFT` (blue dot) | Sections filled progressively |
-| **Upcoming** | `○ PHASE 3 · HITL-Full  AAPL` (grey) | Collapsed one-liner: "Upcoming — query, select chunks, edit summary, questionnaire" |
+| Phase State         | Header                                         | Content                                                                              |
+| ------------------- | ---------------------------------------------- | ------------------------------------------------------------------------------------ |
+| **Completed** | `✓ PHASE 1 · Baseline  AMZN` (green check) | All 4 sections with full content                                                     |
+| **Active**    | `● PHASE 2 · HITL-R  MSFT` (blue dot)      | Sections filled progressively                                                        |
+| **Upcoming**  | `○ PHASE 3 · HITL-Full  AAPL` (grey)       | Collapsed one-liner: "Upcoming — query, select chunks, edit summary, questionnaire" |
 
 ---
 
@@ -308,14 +315,14 @@ interface LedgerFeedback {
 
 Most data already exists in `studyStore` and the chat messages:
 
-| Ledger field | Source |
-|-------------|--------|
-| `query.text` | `session.current_query` or `PhaseAssignment.query` |
-| `retrieval.chunks` | From `queryTask()` API response (retrieval nodes) |
-| `retrieval.totalSelected` | From `submitNodeSelection()` args |
-| `summary.text` | From `generateTask()` response or `submitEditedSummary()` args |
-| `summary.wasEdited` | `mode` is `hitl_g` or `hitl_full` and edit was submitted |
-| `feedback.*` | From `submitCheckpoint("seed-questionnaire", data)` |
+| Ledger field                | Source                                                             |
+| --------------------------- | ------------------------------------------------------------------ |
+| `query.text`              | `session.current_query` or `PhaseAssignment.query`             |
+| `retrieval.chunks`        | From `queryTask()` API response (retrieval nodes)                |
+| `retrieval.totalSelected` | From `submitNodeSelection()` args                                |
+| `summary.text`            | From `generateTask()` response or `submitEditedSummary()` args |
+| `summary.wasEdited`       | `mode` is `hitl_g` or `hitl_full` and edit was submitted     |
+| `feedback.*`              | From `submitCheckpoint("seed-questionnaire", data)`              |
 
 **New state needed in store:** A `ledgerPhases: LedgerPhase[]` array that accumulates artifacts as they're produced. Each action (query, retrieval, generation, checkpoint submit) appends to the current phase's ledger.
 
@@ -338,11 +345,13 @@ SessionLedger
 ```
 
 **Detail overlays (reuse existing right-panel mechanism):**
+
 - `ChunkDetailView` — shown when clicking a chunk box
 - Existing `paneSummary` — shown when clicking [View] on summary
 - Existing `paneCheckpoint` — shown when clicking [View responses]
 
 ### Proposed Files
+
 ```
 src/frontend/src/components/study/SessionLedger.tsx      — main component
 src/frontend/src/components/study/LedgerPhaseCard.tsx    — per-phase card
@@ -354,6 +363,7 @@ src/frontend/src/components/study/ChunkDetailView.tsx    — chunk drill-in
 ## 8. Styling Spec
 
 ### Phase cards
+
 ```css
 .ledger-phase                { padding: 16px; border-bottom: 1px solid #1f2937; }
 .ledger-phase.completed      { }
@@ -368,6 +378,7 @@ src/frontend/src/components/study/ChunkDetailView.tsx    — chunk drill-in
 ```
 
 ### Artifact sections
+
 ```css
 .ledger-section              { margin: 8px 0; }
 .ledger-section-label        { font-size: 10px; letter-spacing: 0.08em; color: #6b7280;
@@ -384,6 +395,7 @@ src/frontend/src/components/study/ChunkDetailView.tsx    — chunk drill-in
 ```
 
 ### Chunk boxes
+
 ```css
 .ledger-chunk-grid           { display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0; }
 .ledger-chunk-box            { width: 32px; height: 28px; border-radius: 4px; display: flex;
@@ -396,6 +408,7 @@ src/frontend/src/components/study/ChunkDetailView.tsx    — chunk drill-in
 ```
 
 ### Feedback inline
+
 ```css
 .ledger-feedback-row         { display: flex; flex-wrap: wrap; gap: 8px; font-size: 12px; color: #9ca3af; }
 .ledger-feedback-item        { display: flex; gap: 4px; }
@@ -404,6 +417,7 @@ src/frontend/src/components/study/ChunkDetailView.tsx    — chunk drill-in
 ```
 
 ### Progress bar (in header)
+
 ```css
 .ledger-progress             { height: 3px; background: #1f2937; border-radius: 2px; margin-top: 8px; }
 .ledger-progress-fill        { height: 100%; background: #60a5fa; border-radius: 2px;
@@ -415,21 +429,23 @@ src/frontend/src/components/study/ChunkDetailView.tsx    — chunk drill-in
 ## 9. Interaction Model
 
 ### Default behavior
+
 - Ledger is **always visible** in the right panel
 - Scrollable — as phases complete, user scrolls to see earlier work
 - Active phase auto-scrolls into view when phase advances
 
 ### Click interactions
 
-| Target | Action |
-|--------|--------|
-| Chunk box (`✓3`) | Opens `ChunkDetailView` as overlay (with ← Back) |
-| `[View]` on summary | Opens full summary in existing `paneSummary` overlay |
-| `[View responses]` on feedback | Opens questionnaire detail in existing `paneCheckpoint` overlay |
-| Collapsed upcoming phase | No interaction (read-only preview) |
-| `← Back to Ledger` (in any overlay) | Returns to main ledger scroll position |
+| Target                                 | Action                                                            |
+| -------------------------------------- | ----------------------------------------------------------------- |
+| Chunk box (`✓3`)                    | Opens `ChunkDetailView` as overlay (with ← Back)               |
+| `[View]` on summary                  | Opens full summary in existing `paneSummary` overlay            |
+| `[View responses]` on feedback       | Opens questionnaire detail in existing `paneCheckpoint` overlay |
+| Collapsed upcoming phase               | No interaction (read-only preview)                                |
+| `← Back to Ledger` (in any overlay) | Returns to main ledger scroll position                            |
 
 ### Overlay priority
+
 ```
 Layer 0: SessionLedger (always rendered, may be hidden)
 Layer 1: ChunkDetailView | paneSummary | paneCheckpoint (one at a time)
@@ -589,14 +605,15 @@ Note how completed phases **auto-compact** — query truncated to one line, summ
 
 Completed phases auto-compact to save vertical space, but remain expandable:
 
-| Phase state | Display mode | Rationale |
-|-------------|-------------|-----------|
-| **Active** | **Expanded** — full query block, chunk grid, summary preview | Participant needs to see current work |
-| **Completed** (most recent) | **Expanded** | Still fresh, may want to reference |
-| **Completed** (older) | **Compact** — one-line per section | Save space, click to expand |
-| **Upcoming** | **Collapsed** — single line with step preview | Not yet relevant |
+| Phase state                       | Display mode                                                        | Rationale                             |
+| --------------------------------- | ------------------------------------------------------------------- | ------------------------------------- |
+| **Active**                  | **Expanded** — full query block, chunk grid, summary preview | Participant needs to see current work |
+| **Completed** (most recent) | **Expanded**                                                  | Still fresh, may want to reference    |
+| **Completed** (older)       | **Compact** — one-line per section                           | Save space, click to expand           |
+| **Upcoming**                | **Collapsed** — single line with step preview                | Not yet relevant                      |
 
 ### Compact format
+
 ```
 ✓ PHASE 1 · Baseline                           AMZN
   QUERY  "What are the main supply chain..."
@@ -606,6 +623,7 @@ Completed phases auto-compact to save vertical space, but remain expandable:
 ```
 
 ### Expanded format (click to toggle)
+
 Shows full query block, chunk grid, summary preview (as in Section 2 mockup).
 
 ---
@@ -613,6 +631,7 @@ Shows full query block, chunk grid, summary preview (as in Section 2 mockup).
 ## 12. Implementation Considerations
 
 ### New store state
+
 ```typescript
 // Add to StudyState interface in studyStore.ts
 ledgerPhases: LedgerPhase[];
@@ -625,28 +644,29 @@ appendLedgerFeedback: (phase: number, feedback: LedgerFeedback) => void;
 ```
 
 ### Where to hook in (existing action flows)
-| Store action | Ledger update |
-|-------------|---------------|
-| `askQuery(query)` | `appendLedgerQuery(currentPhase, query)` |
-| `submitNodeSelection(...)` | `appendLedgerRetrieval(currentPhase, { chunks, selected, rejected })` |
-| `triggerGeneration(...)` resolves | `appendLedgerSummary(currentPhase, { text, wasEdited: false })` |
-| `submitEditedSummary(...)` | Update `ledgerSummary.text`, set `wasEdited: true` |
-| `submitCheckpoint("seed-questionnaire", data)` | `appendLedgerFeedback(currentPhase, data)` |
-| `advancePhase()` | Mark current ledger phase as completed |
+
+| Store action                                     | Ledger update                                                           |
+| ------------------------------------------------ | ----------------------------------------------------------------------- |
+| `askQuery(query)`                              | `appendLedgerQuery(currentPhase, query)`                              |
+| `submitNodeSelection(...)`                     | `appendLedgerRetrieval(currentPhase, { chunks, selected, rejected })` |
+| `triggerGeneration(...)` resolves              | `appendLedgerSummary(currentPhase, { text, wasEdited: false })`       |
+| `submitEditedSummary(...)`                     | Update `ledgerSummary.text`, set `wasEdited: true`                  |
+| `submitCheckpoint("seed-questionnaire", data)` | `appendLedgerFeedback(currentPhase, data)`                            |
+| `advancePhase()`                               | Mark current ledger phase as completed                                  |
 
 ### Priority
 
-| Priority | Item | Effort |
-|----------|------|--------|
-| **P0** | `LedgerPhase` store state + append actions | ~2 hours |
+| Priority     | Item                                                                       | Effort   |
+| ------------ | -------------------------------------------------------------------------- | -------- |
+| **P0** | `LedgerPhase` store state + append actions                               | ~2 hours |
 | **P0** | `SessionLedger` component with query + retrieval count + summary preview | ~3 hours |
-| **P0** | Integration into right pane (replaces default empty state) | ~30 min |
-| **P1** | Clickable chunk boxes + `ChunkDetailView` overlay | ~2 hours |
-| **P1** | Compact/expanded toggle for completed phases | ~1 hour |
-| **P1** | [View] summary + [Detail] feedback buttons (reuse existing overlays) | ~1 hour |
-| **P2** | Auto-scroll to active phase on advance | ~30 min |
-| **P2** | Progress bar in header | ~30 min |
-| **P3** | Edit diff display (additions/deletions count) | ~1 hour |
+| **P0** | Integration into right pane (replaces default empty state)                 | ~30 min  |
+| **P1** | Clickable chunk boxes +`ChunkDetailView` overlay                         | ~2 hours |
+| **P1** | Compact/expanded toggle for completed phases                               | ~1 hour  |
+| **P1** | [View] summary + [Detail] feedback buttons (reuse existing overlays)       | ~1 hour  |
+| **P2** | Auto-scroll to active phase on advance                                     | ~30 min  |
+| **P2** | Progress bar in header                                                     | ~30 min  |
+| **P3** | Edit diff display (additions/deletions count)                              | ~1 hour  |
 
 **Minimum viable (P0): ~5.5 hours**
 **Full feature (P0+P1): ~9.5 hours**
