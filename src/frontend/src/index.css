@@ -523,6 +523,33 @@ input {
   margin-top: 0;
 }
 
+.pi-formatted-markdown table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 10px 0;
+  font-size: 13px;
+}
+
+.pi-formatted-markdown th,
+.pi-formatted-markdown td {
+  border: 1px solid var(--border-primary, #2a3a4e);
+  padding: 6px 10px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.pi-formatted-markdown th {
+  background: rgba(31, 56, 88, 0.4);
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.pi-formatted-markdown tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.02);
+}
+
 .pi-citation-row {
   margin-top: 10px;
   display: flex;
@@ -1911,69 +1938,6 @@ input {
   white-space: nowrap;
 }
 
-/* ── Follow-up Input Bar ── */
-.scg-followup-bar {
-  padding: 8px 16px 12px;
-  border-top: 1px solid var(--border-soft);
-  background: var(--bg-toolbar);
-}
-.scg-followup-form {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  max-width: 920px;
-  margin: 0 auto;
-}
-.scg-followup-input {
-  flex: 1;
-  border: 1px solid var(--border-soft);
-  border-radius: 10px;
-  background: #161923;
-  color: var(--text-primary);
-  padding: 10px 14px;
-  font-size: 14px;
-  outline: none;
-  transition: border-color 0.15s ease;
-}
-.scg-followup-input:focus {
-  border-color: var(--accent);
-}
-.scg-followup-input::placeholder {
-  color: var(--text-muted);
-}
-.scg-followup-input:disabled {
-  opacity: 0.5;
-}
-.scg-followup-count {
-  margin-top: 4px;
-  text-align: center;
-  color: var(--text-muted);
-  font-size: 11px;
-}
-/* ── Follow-up Divider ── */
-.scg-followup-divider {
-  margin-top: 20px;
-  margin-bottom: 4px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.scg-followup-divider::before,
-.scg-followup-divider::after {
-  content: "";
-  flex: 1;
-  height: 1px;
-  background: var(--border-soft);
-}
-.scg-followup-divider-label {
-  color: var(--text-muted);
-  font-size: 11px;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  white-space: nowrap;
-}
-
 /* ── Tree traversal path ── */
 .traversal-path {
   font-size: 13px;
@@ -1993,4 +1957,443 @@ input {
   .scg-phases-row {
     grid-template-columns: 1fr;
   }
+}
+
+/* =========================================================================
+   Session Ledger — Right Panel Artifact Tracker
+   ========================================================================= */
+
+.ledger-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  background: #0b0f16;
+}
+
+/* ── Header ── */
+
+.ledger-header {
+  padding: 16px 16px 12px;
+  border-bottom: 1px solid var(--border-soft);
+}
+.ledger-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.ledger-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.ledger-pid-group {
+  font-size: 12px;
+  font-family: monospace;
+  color: var(--text-muted);
+}
+.ledger-progress {
+  height: 3px;
+  background: #1f2937;
+  border-radius: 2px;
+  margin-top: 8px;
+}
+.ledger-progress-fill {
+  height: 100%;
+  background: #60a5fa;
+  border-radius: 2px;
+  transition: width 0.5s ease;
+}
+.ledger-progress-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 4px;
+  text-align: right;
+}
+
+/* ── Phase list ── */
+
+.ledger-phase-list {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+.ledger-phase-divider {
+  height: 1px;
+  background: var(--border-strong);
+  margin: 0 16px;
+}
+
+/* ── Phase cards ── */
+
+.ledger-phase {
+  padding: 16px;
+}
+.ledger-phase.active {
+  background: rgba(96, 165, 250, 0.03);
+}
+.ledger-phase.upcoming {
+  opacity: 0.4;
+}
+
+/* ── Phase header ── */
+
+.ledger-phase-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.ledger-phase-check {
+  font-size: 14px;
+  width: 18px;
+  text-align: center;
+}
+.ledger-phase-check.done {
+  color: #22c55e;
+}
+.ledger-phase-check.active {
+  color: #60a5fa;
+  animation: ledger-pulse 2s infinite;
+}
+.ledger-phase-check.upcoming {
+  color: #4b5563;
+}
+.ledger-phase-label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--text-primary);
+}
+.ledger-phase-ticker {
+  margin-left: auto;
+  font-family: monospace;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+@keyframes ledger-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* ── Section layout ── */
+
+.ledger-section {
+  margin: 8px 0;
+}
+.ledger-section-label {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: #6b7280;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.ledger-section-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+/* ── Query block ── */
+
+.ledger-query-block {
+  background: #111827;
+  border-left: 3px solid #374151;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: #d1d5db;
+  font-style: italic;
+  border-radius: 4px;
+  line-height: 1.5;
+}
+
+/* ── Retrieval ── */
+
+.ledger-retrieval-summary {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+/* ── Chunk grid ── */
+
+.ledger-chunk-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 6px 0;
+}
+.ledger-chunk-box {
+  width: 32px;
+  height: 28px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+  border: none;
+  padding: 0;
+}
+.ledger-chunk-box:hover {
+  transform: scale(1.15);
+}
+.ledger-chunk-box.selected {
+  background: #065f46;
+  color: #6ee7b7;
+  border: 1px solid #059669;
+}
+.ledger-chunk-box.rejected {
+  background: #1f2937;
+  color: #6b7280;
+  border: 1px solid #374151;
+}
+
+/* ── Summary preview ── */
+
+.ledger-summary-preview {
+  background: #111827;
+  padding: 8px 12px;
+  font-size: 12px;
+  color: #9ca3af;
+  border-radius: 4px;
+  max-height: 80px;
+  overflow: hidden;
+  position: relative;
+  line-height: 1.5;
+}
+.ledger-summary-preview::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 30px;
+  background: linear-gradient(transparent, #111827);
+}
+
+/* ── Feedback row ── */
+
+.ledger-feedback-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 12px;
+  color: #9ca3af;
+}
+.ledger-feedback-item {
+  display: flex;
+  gap: 4px;
+}
+.ledger-feedback-label {
+  color: #6b7280;
+}
+.ledger-feedback-value {
+  color: #d1d5db;
+  font-weight: 500;
+}
+
+/* ── Pending / active indicators ── */
+
+.ledger-pending {
+  font-size: 12px;
+  color: #4b5563;
+}
+.ledger-active-indicator {
+  color: #60a5fa;
+  animation: ledger-pulse 2s infinite;
+}
+.ledger-current-marker {
+  color: #60a5fa;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* ── View / action buttons ── */
+
+.ledger-view-btn {
+  background: none;
+  border: 1px solid var(--border-soft);
+  color: #60a5fa;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.ledger-view-btn:hover {
+  background: rgba(96, 165, 250, 0.1);
+  border-color: #60a5fa;
+}
+
+/* ── Upcoming hint ── */
+
+.ledger-upcoming-hint {
+  font-size: 12px;
+  color: #4b5563;
+  margin-left: 26px;
+}
+
+/* ── Compact sections (completed phases) ── */
+
+.ledger-compact-sections {
+  margin-left: 26px;
+}
+.ledger-compact-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  padding: 2px 0;
+}
+.ledger-compact-label {
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  color: #6b7280;
+  text-transform: uppercase;
+  width: 70px;
+  flex-shrink: 0;
+}
+.ledger-compact-value {
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+/* ── Chunk detail view ── */
+
+.ledger-chunk-detail {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+.ledger-chunk-detail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-soft);
+}
+.ledger-back-btn {
+  background: none;
+  border: none;
+  color: #60a5fa;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 0;
+}
+.ledger-back-btn:hover {
+  text-decoration: underline;
+}
+.ledger-chunk-detail-pos {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.ledger-chunk-detail-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+}
+.ledger-chunk-detail-status {
+  margin-bottom: 16px;
+}
+.ledger-chunk-status-badge {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 4px;
+}
+.ledger-chunk-status-badge.selected {
+  background: #065f46;
+  color: #6ee7b7;
+}
+.ledger-chunk-status-badge.rejected {
+  background: #1f2937;
+  color: #6b7280;
+}
+.ledger-chunk-detail-title {
+  font-size: 14px;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+.ledger-chunk-detail-source {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-family: monospace;
+}
+.ledger-chunk-detail-content {
+  background: #111827;
+  padding: 12px;
+  font-size: 13px;
+  color: #d1d5db;
+  border-radius: 4px;
+  line-height: 1.6;
+}
+.ledger-chunk-detail-nav {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-top: 1px solid var(--border-soft);
+}
+.ledger-nav-btn {
+  background: none;
+  border: 1px solid var(--border-soft);
+  color: var(--text-secondary);
+  font-size: 12px;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.ledger-nav-btn:hover:not(:disabled) {
+  background: rgba(96, 165, 250, 0.1);
+  border-color: #60a5fa;
+  color: #60a5fa;
+}
+.ledger-nav-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* ── Footer ── */
+
+.ledger-footer {
+  padding: 12px 16px;
+  text-align: center;
+  font-size: 13px;
+  color: #22c55e;
+  border-top: 1px solid var(--border-soft);
+}
+
+/* ── Empty state ── */
+
+.ledger-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ledger-empty-text {
+  font-size: 13px;
+  color: var(--text-muted);
+  opacity: 0.5;
+}
+
+/* ── Overlay layer (summary / checkpoint detail over ledger) ── */
+
+.ledger-overlay {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  height: 100%;
+  overflow: hidden;
 }

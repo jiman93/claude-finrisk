@@ -1,4 +1,5 @@
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface FormattedMarkdownProps {
   text: string;
@@ -7,7 +8,7 @@ interface FormattedMarkdownProps {
 export default function FormattedMarkdown({ text }: FormattedMarkdownProps) {
   return (
     <div className="pi-formatted-markdown">
-      <ReactMarkdown>{text}</ReactMarkdown>
+      <ReactMarkdown remarkPlugins={[remarkGfm]}>{text}</ReactMarkdown>
     </div>
   );
 }

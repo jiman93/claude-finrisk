@@ -185,6 +185,68 @@ export interface ParticipantAssignment {
 }
 
 // ---------------------------------------------------------------------------
+// Session Ledger types
+// ---------------------------------------------------------------------------
+
+export interface LedgerQuery {
+  text: string;
+  submittedAt: string;
+}
+
+export interface LedgerChunk {
+  id: string;
+  index: number;
+  title: string;
+  pageRef: string;
+  contentPreview: string;
+  selected: boolean;
+}
+
+export interface LedgerRetrieval {
+  totalRetrieved: number;
+  totalSelected: number;
+  chunks: LedgerChunk[];
+  selectionEnabled: boolean;
+}
+
+export interface LedgerSummary {
+  text: string;
+  wasEdited: boolean;
+  editCount?: number;
+  additionCount?: number;
+  deletionCount?: number;
+}
+
+export interface LedgerFeedback {
+  completeness?: number;
+  accuracy?: number;
+  citationHelpfulness?: string;
+  perceivedControl?: number;
+  featureUsefulness?: number;
+  openFeedback?: string;
+}
+
+export type LedgerActiveStep =
+  | "query"
+  | "retrieval"
+  | "generation"
+  | "edit"
+  | "questionnaire"
+  | null;
+
+export interface LedgerPhase {
+  phase: number;
+  mode: Mode;
+  ticker: string;
+  status: "completed" | "active" | "upcoming";
+  query: LedgerQuery | null;
+  retrieval: LedgerRetrieval | null;
+  summary: LedgerSummary | null;
+  feedback: LedgerFeedback | null;
+  activeStep: LedgerActiveStep;
+}
+
+// ---------------------------------------------------------------------------
 // Chat history / sidebar types
 // ---------------------------------------------------------------------------
 
@@ -269,12 +331,6 @@ export type ChatMessage =
       label: string;
       state: "submitted" | "skipped";
       fields: Array<{ label: string; value: string }>;
-    }
-
-  // ── Visual ──
-  | {
-      id: string;
-      type: "follow_up_divider";
     };
 
 // ---------------------------------------------------------------------------

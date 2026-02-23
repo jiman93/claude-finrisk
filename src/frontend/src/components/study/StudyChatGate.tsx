@@ -11,11 +11,13 @@ import type {
   SessionState,
   TailAction,
 } from "../../types";
+import { cleanChunkPreview } from "../../utils/chunkText";
 import DynamicControlRenderer from "../controls/DynamicControlRenderer";
 import FormattedMarkdown from "../FormattedMarkdown";
+import SessionLedger from "./SessionLedger";
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
-const CHUNK_TRUNCATE_LEN = 200;
+const CHUNK_TRUNCATE_LEN = 250;
 
 interface StudyChatGateProps {
   onSaveChat: (chatId: string, title: string, assignment: ParticipantAssignment) => void;
@@ -53,14 +55,12 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
     error: studyError,
     activeChatId,
     chatSnapshots,
-    followUpCounts,
     tailAction,
     activeCheckpoints,
     setParticipantId,
     setAssignment,
     startAndRunCurrentPhase,
     advancePhase,
-    askFollowUp,
     triggerGeneration,
     submitNodeSelection,
     submitEditedSummary,
@@ -68,8 +68,6 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
     submitCheckpoint,
     skipCheckpoint,
   } = useStudyStore();
-
-  const [followUpInput, setFollowUpInput] = useState("");
 
   const [started, setStarted] = useState(false);
   const sessionStartedRef = useRef(false);
@@ -165,22 +163,16 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages, session]);
 
-  // Follow-up query handler
-  async function handleFollowUp(e: FormEvent) {
-    e.preventDefault();
-    const q = followUpInput.trim();
-    if (!q || isLoading) return;
-    setFollowUpInput("");
-    await askFollowUp(q);
-  }
-
-  const canAskFollowUp = started && session && !isLoading && !isRestoredView;
-
   // ── Right pane (shared between active and restored views) ──
+  // Layer 0: SessionLedger (always visible during active session)
+  // Layer 1: paneSummary | paneCheckpoint (overlay, one at a time)
+  const hasOverlay = !!(paneSummary || paneCheckpoint);
+
   const rightPane = (
-    <>
+    <div className="pi-right-pane">
+      {/* Layer 1: Overlay */}
       {paneSummary && (
-        <div className="pi-right-pane">
+        <div className="ledger-overlay">
           <div className="pi-right-header">
             <span className="pi-right-file">{paneSummary.label}</span>
             <button type="button" className="pi-close-pane-btn" onClick={closePane}>
@@ -193,7 +185,7 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
         </div>
       )}
       {paneCheckpoint && (
-        <div className="pi-right-pane">
+        <div className="ledger-overlay">
           <div className="pi-right-header">
             <span className="pi-right-file">{paneCheckpoint.label}</span>
             <button type="button" className="pi-close-pane-btn" onClick={closePane}>
@@ -212,14 +204,23 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
           </div>
         </div>
       )}
-    </>
+
+      {/* Layer 0: Session Ledger (hidden when overlay is open) */}
+      {!hasOverlay && effectiveAssignment && (
+        <SessionLedger
+          assignment={effectiveAssignment}
+          onViewSummary={openSummaryPane}
+          onViewCheckpoint={openCheckpointPane}
+        />
+      )}
+    </div>
   );
 
   // ── Restored view: show saved chat stream (read-only) ──
   if (isRestoredView && session && effectiveAssignment) {
     return (
       <section className="pi-chat-shell">
-        <div className={`pi-workspace${paneSummary || paneCheckpoint ? "" : " pane-collapsed"}`}>
+        <div className="pi-workspace">
           <div className="pi-left-pane scg-active-layout">
             <SessionBar assignment={effectiveAssignment} session={session} />
             <div className="pi-chat-stream">
@@ -352,7 +353,7 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
   // ── Screen 3: Active study session (chat stream) ──
   return (
     <section className="pi-chat-shell">
-      <div className={`pi-workspace${paneSummary || paneCheckpoint ? "" : " pane-collapsed"}`}>
+      <div className="pi-workspace">
         <div className="pi-left-pane scg-active-layout">
           <SessionBar assignment={assignment} session={session} />
 
@@ -386,34 +387,6 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
             onAdvancePhase={advancePhase}
           />
 
-          {/* Follow-up query input bar */}
-          {canAskFollowUp && (
-            <div className="scg-followup-bar">
-              <form className="scg-followup-form" onSubmit={handleFollowUp}>
-                <input
-                  className="scg-followup-input"
-                  type="text"
-                  value={followUpInput}
-                  onChange={(e) => setFollowUpInput(e.target.value)}
-                  placeholder="Ask a follow-up question…"
-                  disabled={isLoading}
-                />
-                <button
-                  type="submit"
-                  className="pi-send-btn"
-                  disabled={!followUpInput.trim() || isLoading}
-                  title="Send follow-up query"
-                >
-                  &#8593;
-                </button>
-              </form>
-              {session && followUpCounts[session.current_phase] ? (
-                <div className="scg-followup-count">
-                  {followUpCounts[session.current_phase]} follow-up{followUpCounts[session.current_phase] > 1 ? "s" : ""} this phase
-                </div>
-              ) : null}
-            </div>
-          )}
         </div>
         {rightPane}
       </div>
@@ -542,13 +515,6 @@ function StreamRenderer({
                 fields={msg.fields}
                 onViewCheckpoint={onViewCheckpoint}
               />
-            );
-
-          case "follow_up_divider":
-            return (
-              <div key={msg.id} className="scg-followup-divider">
-                <span className="scg-followup-divider-label">Follow-up</span>
-              </div>
             );
 
           default:
@@ -701,7 +667,7 @@ function RetrievedNodesCard({ nodes }: { nodes: RetrievalNode[] }) {
         <span>Retrieved {nodes.length} chunks</span>
       </div>
       <div className="pi-step-right">
-        {nodes.map((n) => n.title).slice(0, 3).join(", ")}
+        {nodes.map((n) => cleanChunkPreview(n.title)).slice(0, 3).join(", ")}
         {nodes.length > 3 ? ` +${nodes.length - 3} more` : ""}
       </div>
     </div>
@@ -736,11 +702,12 @@ function PhaseOverviewCard({ phase, isCurrent }: { phase: PhaseAssignment; isCur
 
 function TruncatedContent({ text }: { text: string }) {
   const [expanded, setExpanded] = useState(false);
-  const needsTruncation = text.length > CHUNK_TRUNCATE_LEN;
+  const cleaned = cleanChunkPreview(text);
+  const needsTruncation = cleaned.length > CHUNK_TRUNCATE_LEN;
 
   return (
     <div className="pi-selector-content">
-      {needsTruncation && !expanded ? text.slice(0, CHUNK_TRUNCATE_LEN) + "…" : text}
+      {needsTruncation && !expanded ? cleaned.slice(0, CHUNK_TRUNCATE_LEN) + "…" : cleaned}
       {needsTruncation && (
         <button
           type="button"
@@ -817,9 +784,9 @@ function SelectorCard({
               disabled={disabled}
             />
             <div>
-              <div className="pi-selector-title">{node.title}</div>
+              <div className="pi-selector-title">{cleanChunkPreview(node.title)}</div>
               <TruncatedContent text={node.relevant_content} />
-              <span className="pi-citation-chip">[{node.title}, Page {node.page_index}]</span>
+              <span className="pi-citation-chip">[{cleanChunkPreview(node.title)}, Page {node.page_index}]</span>
             </div>
           </label>
         ))}

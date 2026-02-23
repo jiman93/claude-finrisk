@@ -13,9 +13,14 @@ import type {
   ChatMessage,
   ChatSnapshot,
   CheckpointInstance,
+  LedgerFeedback,
+  LedgerPhase,
+  LedgerRetrieval,
+  LedgerSummary,
   Mode,
   ParticipantAssignment,
   PhaseAssignment,
+  RetrievalNode,
   SessionState,
   TailAction,
   TraversalStep,
@@ -34,24 +39,33 @@ interface StudyState {
   isLoading: boolean;
   error: string | null;
 
-  // Follow-up query tracking
-  followUpCounts: Record<number, number>;
-
   // Pinned tail action zone — lives outside the scrollable stream
   tailAction: TailAction | null;
   activeCheckpoints: CheckpointInstance[];
+
+  // Session Ledger
+  ledgerPhases: LedgerPhase[];
 
   // Chat history
   activeChatId: string | null;
   chatSnapshots: Record<string, ChatSnapshot>;
   chatOrder: string[];
 
+  // Ledger actions
+  initLedgerPhases: (assignment: ParticipantAssignment) => void;
+  appendLedgerQuery: (phase: number, query: string) => void;
+  appendLedgerRetrieval: (phase: number, retrieval: LedgerRetrieval) => void;
+  updateLedgerRetrievalSelection: (phase: number, selectedIds: string[], rejectedIds: string[]) => void;
+  appendLedgerSummary: (phase: number, summary: LedgerSummary) => void;
+  appendLedgerFeedback: (phase: number, feedback: LedgerFeedback) => void;
+  setLedgerActiveStep: (phase: number, step: LedgerPhase["activeStep"]) => void;
+  advanceLedgerPhase: (completedPhase: number) => void;
+
   // Active session actions
   setParticipantId: (participantId: string) => void;
   setAssignment: (assignment: ParticipantAssignment | null) => void;
   startAndRunCurrentPhase: () => Promise<void>;
   askQuery: (query: string) => Promise<void>;
-  askFollowUp: (query: string) => Promise<void>;
   triggerGeneration: (taskId: string) => Promise<void>;
   advancePhase: () => Promise<void>;
   submitNodeSelection: (
@@ -79,20 +93,6 @@ function makeId(prefix: string): string {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 }
 
-/** Find the index of the last `phase_start` message in the array. */
-function getCurrentPhaseStartIdx(msgs: ChatMessage[]): number {
-  for (let i = msgs.length - 1; i >= 0; i--) {
-    if (msgs[i].type === "phase_start") return i;
-  }
-  return 0;
-}
-
-/** Check whether the current phase already has a completed summary. */
-function currentPhaseHasSummary(msgs: ChatMessage[]): boolean {
-  const idx = getCurrentPhaseStartIdx(msgs);
-  return msgs.slice(idx).some((m) => m.type === "summary");
-}
-
 /** Get the current phase assignment from the store's assignment. */
 function getCurrentPhaseAssignment(
   assignment: ParticipantAssignment | null,
@@ -100,6 +100,18 @@ function getCurrentPhaseAssignment(
 ): PhaseAssignment | undefined {
   if (!assignment || !session) return undefined;
   return assignment.phases.find((p) => p.phase === session.current_phase);
+}
+
+/** Build LedgerChunk[] from RetrievalNode[] (all initially selected). */
+function buildLedgerChunks(nodes: RetrievalNode[]): import("../types").LedgerChunk[] {
+  return nodes.map((n, i) => ({
+    id: n.node_id,
+    index: i + 1,
+    title: n.title,
+    pageRef: `Page ${n.page_index}`,
+    contentPreview: n.relevant_content,
+    selected: true,
+  }));
 }
 
 /** Get post-generation checkpoint refs for a phase. */
@@ -136,14 +148,107 @@ export const useStudyStore = create<StudyState>((set, get) => ({
   isLoading: false,
   error: null,
 
-  followUpCounts: {},
-
   tailAction: null,
   activeCheckpoints: [],
+
+  ledgerPhases: [],
 
   activeChatId: null,
   chatSnapshots: {},
   chatOrder: [],
+
+  // ── Ledger actions ──
+
+  initLedgerPhases: (assignment) => {
+    const phases: LedgerPhase[] = assignment.phases.map((p, i) => ({
+      phase: p.phase,
+      mode: p.mode,
+      ticker: p.ticker,
+      status: i === 0 ? "active" : "upcoming",
+      query: null,
+      retrieval: null,
+      summary: null,
+      feedback: null,
+      activeStep: i === 0 ? "query" : null,
+    }));
+    set({ ledgerPhases: phases });
+  },
+
+  appendLedgerQuery: (phase, query) => {
+    set((state) => ({
+      ledgerPhases: state.ledgerPhases.map((lp) =>
+        lp.phase === phase
+          ? { ...lp, query: { text: query, submittedAt: new Date().toISOString() }, activeStep: "retrieval" }
+          : lp
+      ),
+    }));
+  },
+
+  appendLedgerRetrieval: (phase, retrieval) => {
+    set((state) => ({
+      ledgerPhases: state.ledgerPhases.map((lp) =>
+        lp.phase === phase
+          ? { ...lp, retrieval, activeStep: retrieval.selectionEnabled ? "retrieval" : "generation" }
+          : lp
+      ),
+    }));
+  },
+
+  updateLedgerRetrievalSelection: (phase, selectedIds, rejectedIds) => {
+    set((state) => ({
+      ledgerPhases: state.ledgerPhases.map((lp) => {
+        if (lp.phase !== phase || !lp.retrieval) return lp;
+        return {
+          ...lp,
+          retrieval: {
+            ...lp.retrieval,
+            totalSelected: selectedIds.length,
+            chunks: lp.retrieval.chunks.map((c) => ({
+              ...c,
+              selected: selectedIds.includes(c.id) ? true : rejectedIds.includes(c.id) ? false : c.selected,
+            })),
+          },
+          activeStep: "generation",
+        };
+      }),
+    }));
+  },
+
+  appendLedgerSummary: (phase, summary) => {
+    set((state) => ({
+      ledgerPhases: state.ledgerPhases.map((lp) =>
+        lp.phase === phase
+          ? { ...lp, summary, activeStep: summary.wasEdited ? "edit" : "questionnaire" }
+          : lp
+      ),
+    }));
+  },
+
+  appendLedgerFeedback: (phase, feedback) => {
+    set((state) => ({
+      ledgerPhases: state.ledgerPhases.map((lp) =>
+        lp.phase === phase ? { ...lp, feedback } : lp
+      ),
+    }));
+  },
+
+  setLedgerActiveStep: (phase, step) => {
+    set((state) => ({
+      ledgerPhases: state.ledgerPhases.map((lp) =>
+        lp.phase === phase ? { ...lp, activeStep: step } : lp
+      ),
+    }));
+  },
+
+  advanceLedgerPhase: (completedPhase) => {
+    set((state) => ({
+      ledgerPhases: state.ledgerPhases.map((lp) => {
+        if (lp.phase === completedPhase) return { ...lp, status: "completed", activeStep: null };
+        if (lp.phase === completedPhase + 1) return { ...lp, status: "active", activeStep: "query" };
+        return lp;
+      }),
+    }));
+  },
 
   setParticipantId: (participantId) => set({ participantId }),
 
@@ -152,7 +257,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
   // ── Start session and run phase 1 ──
 
   startAndRunCurrentPhase: async () => {
-    const { participantId } = get();
+    const { participantId, assignment } = get();
     set({ isLoading: true, error: null, messages: [], tailAction: null, activeCheckpoints: [] });
     try {
       const session = await startSession(participantId);
@@ -169,6 +274,11 @@ export const useStudyStore = create<StudyState>((set, get) => ({
           },
         ],
       });
+
+      // Initialize ledger phases from assignment
+      if (assignment) {
+        get().initLedgerPhases(assignment);
+      }
 
       await runTaskFlow({
         taskId: session.current_task_id,
@@ -195,88 +305,6 @@ export const useStudyStore = create<StudyState>((set, get) => ({
     });
   },
 
-  // ── Follow-up query (retrieval) ──
-
-  askFollowUp: async (query) => {
-    const session = get().session;
-    const normalizedQuery = query.trim();
-    if (!session || !normalizedQuery) return;
-
-    // Increment follow-up count
-    set((state) => ({
-      followUpCounts: {
-        ...state.followUpCounts,
-        [session.current_phase]: (state.followUpCounts[session.current_phase] ?? 0) + 1,
-      },
-    }));
-
-    const msgs = get().messages;
-    const hasSummary = currentPhaseHasSummary(msgs);
-
-    if (hasSummary) {
-      // Post-summary: retrieval follow-up
-      const retrievalLoadingId = makeId("loading-retrieval");
-
-      set((state) => ({
-        isLoading: true,
-        error: null,
-        messages: [
-          ...state.messages,
-          { id: makeId("div"), type: "follow_up_divider" as const },
-          { id: makeId("msg"), type: "text" as const, role: "user" as const, content: normalizedQuery },
-          { id: retrievalLoadingId, type: "loading" as const, content: "Searching document..." },
-        ],
-      }));
-
-      try {
-        const retrieval = await queryTask(session.current_task_id, normalizedQuery);
-
-        // Build follow-up messages with optional traversal path.
-        const followUpMessages: ChatMessage[] = [];
-        if (retrieval.traversal_path && retrieval.traversal_path.length > 0) {
-          followUpMessages.push({
-            id: makeId("traversal"),
-            type: "traversal_path" as const,
-            steps: retrieval.traversal_path as TraversalStep[],
-          });
-        }
-        followUpMessages.push({
-          id: makeId("nodes"),
-          type: "retrieved_nodes" as const,
-          nodes: retrieval.retrieved_nodes,
-        });
-
-        set((state) => ({
-          messages: [
-            ...state.messages.filter((m) => m.id !== retrievalLoadingId),
-            ...followUpMessages,
-          ],
-          isLoading: false,
-        }));
-      } catch (error) {
-        const message = error instanceof Error ? error.message : "Unexpected error";
-        set((state) => ({
-          error: message,
-          isLoading: false,
-          messages: state.messages.filter((m) => m.id !== retrievalLoadingId),
-        }));
-      }
-    } else {
-      // Pre-summary: remove old generate_prompt/selector, re-run full flow
-      set((state) => ({
-        messages: state.messages.filter(
-          (m) => m.type !== "generate_prompt" && m.type !== "selector"
-        ),
-      }));
-
-      await runTaskFlow({
-        taskId: session.current_task_id,
-        query: normalizedQuery,
-        mode: session.current_mode,
-      });
-    }
-  },
-
   // ── Trigger generation ──
 
   triggerGeneration: async (taskId) => {
@@ -301,6 +329,13 @@ export const useStudyStore = create<StudyState>((set, get) => ({
       }));
 
       if (session.current_mode === "hitl_g" || session.current_mode === "hitl_full") {
+        // Ledger: summary pending edit
+        useStudyStore.getState().appendLedgerSummary(session.current_phase, {
+          text: generation.summary,
+          wasEdited: false,
+        });
+        useStudyStore.getState().setLedgerActiveStep(session.current_phase, "edit");
+
         useStudyStore.setState((state) => ({
           messages: [
             ...state.messages,
@@ -317,6 +352,12 @@ export const useStudyStore = create<StudyState>((set, get) => ({
       }
 
       // Baseline / HITL-R: push summary then set tail action
+      useStudyStore.getState().appendLedgerSummary(session.current_phase, {
+        text: generation.summary,
+        wasEdited: false,
+      });
+      useStudyStore.getState().setLedgerActiveStep(session.current_phase, "questionnaire");
+
       useStudyStore.setState((state) => ({
         messages: [
           ...state.messages,
@@ -341,6 +382,9 @@ export const useStudyStore = create<StudyState>((set, get) => ({
   advancePhase: async () => {
     const { session } = get();
     if (!session) return;
+
+    // Mark current ledger phase as completed, activate next
+    get().advanceLedgerPhase(session.current_phase);
 
     set({ isLoading: true, error: null, tailAction: null, activeCheckpoints: [] });
 
@@ -390,6 +434,9 @@ export const useStudyStore = create<StudyState>((set, get) => ({
     try {
       await selectNodesTask(taskId, selectedIds, rejectedIds, order);
 
+      // Update ledger with selection
+      get().updateLedgerRetrievalSelection(session.current_phase, selectedIds, rejectedIds);
+
       set((state) => ({
         messages: [
           ...state.messages.map((m) =>
@@ -410,9 +457,21 @@ export const useStudyStore = create<StudyState>((set, get) => ({
   // ── Submit edited summary (HITL-G / HITL-Full) ──
 
   submitEditedSummary: async (taskId, editedText) => {
+    const session = get().session;
     set({ isLoading: true, error: null });
     try {
       const result = await editSummaryTask(taskId, editedText, []);
+
+      // Update ledger summary with edit info
+      if (session) {
+        get().appendLedgerSummary(session.current_phase, {
+          text: result.edited_summary,
+          wasEdited: true,
+          editCount: result.characters_edited > 0 ? 1 : 0,
+        });
+        get().setLedgerActiveStep(session.current_phase, "questionnaire");
+      }
+
       set((state) => ({
         messages: [
           ...state.messages,
@@ -474,6 +533,19 @@ export const useStudyStore = create<StudyState>((set, get) => ({
     const fields = buildFieldSummary(definitionId, data);
     const def = SEED_DEFINITIONS.find((d) => d.id === definitionId);
     const label = def?.label ?? definitionId;
+    const session = get().session;
+
+    // Append feedback to ledger
+    if (session) {
+      get().appendLedgerFeedback(session.current_phase, {
+        completeness: data.completeness as number | undefined,
+        accuracy: data.accuracy as number | undefined,
+        citationHelpfulness: data.citation_helpfulness as string | undefined,
+        perceivedControl: data.perceived_control as number | undefined,
+        featureUsefulness: data.feature_usefulness as number | undefined,
+        openFeedback: data.open_feedback as string | undefined,
+      });
+    }
 
     set((state) => ({
       activeCheckpoints: state.activeCheckpoints.filter(
@@ -566,9 +638,9 @@ export const useStudyStore = create<StudyState>((set, get) => ({
       isLoading: false,
       error: null,
       participantId: "P01",
-      followUpCounts: {},
       tailAction: null,
       activeCheckpoints: [],
+      ledgerPhases: [],
     });
   },
 }));
@@ -626,6 +698,10 @@ function checkAllCheckpointsDone() {
       tailAction: { type: "phase_advance", nextPhase: session.current_phase + 1 },
     });
   } else {
+    // Mark final phase as completed in ledger
+    if (session) {
+      useStudyStore.getState().advanceLedgerPhase(session.current_phase);
+    }
     useStudyStore.setState({ tailAction: { type: "session_complete" } });
   }
 }
@@ -642,6 +718,8 @@ interface RunTaskFlowParams {
 
 async function runTaskFlow({ taskId, query, mode }: RunTaskFlowParams) {
   const retrievalLoadingId = makeId("loading-retrieval");
+  const session = useStudyStore.getState().session;
+  const currentPhase = session?.current_phase ?? 1;
 
   useStudyStore.setState((state) => ({
     isLoading: true,
@@ -653,8 +731,20 @@ async function runTaskFlow({ taskId, query, mode }: RunTaskFlowParams) {
     ],
   }));
 
+  // Ledger: record query
+  useStudyStore.getState().appendLedgerQuery(currentPhase, query);
+
   try {
     const retrieval = await queryTask(taskId, query);
+
+    // Ledger: record retrieval
+    const selectionEnabled = mode === "hitl_r" || mode === "hitl_full";
+    useStudyStore.getState().appendLedgerRetrieval(currentPhase, {
+      totalRetrieved: retrieval.retrieved_nodes.length,
+      totalSelected: retrieval.retrieved_nodes.length,
+      chunks: buildLedgerChunks(retrieval.retrieved_nodes),
+      selectionEnabled,
+    });
 
     // Build messages: optionally include traversal path for tree mode.
     const newMessages: ChatMessage[] = [];
@@ -678,7 +768,7 @@ async function runTaskFlow({ taskId, query, mode }: RunTaskFlowParams) {
       ],
     }));
 
-    if (mode === "hitl_r" || mode === "hitl_full") {
+    if (selectionEnabled) {
       useStudyStore.setState((state) => ({
         messages: [
           ...state.messages,
