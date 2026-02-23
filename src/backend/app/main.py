@@ -7,6 +7,7 @@ from sqlalchemy import inspect, text
 import app.models  # noqa: F401
 from app.config import settings
 from app.db.database import Base, engine
+from app.routers.documents import router as documents_router
 from app.routers.sessions import router as sessions_router
 from app.routers.study_assignments import router as study_assignments_router
 from app.routers.tasks import router as tasks_router
@@ -46,6 +47,7 @@ def health():
 app.include_router(sessions_router)
 app.include_router(tasks_router)
 app.include_router(study_assignments_router)
+app.include_router(documents_router)
 
 
 def _apply_sqlite_compat_migrations() -> None:

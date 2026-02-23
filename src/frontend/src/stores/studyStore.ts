@@ -8,6 +8,7 @@ import {
   selectNodesTask,
   startSession,
 } from "../api/client";
+import { fetchDocumentsMap } from "../components/DocumentsPanel";
 import { SEED_DEFINITIONS } from "../data/checkpointDefinitions";
 import type {
   ChatMessage,
@@ -46,6 +47,12 @@ interface StudyState {
   // Session Ledger
   ledgerPhases: LedgerPhase[];
 
+  // Documents: ticker → full PDF URL
+  pdfUrlMap: Record<string, string>;
+
+  // In-app PDF viewer
+  pdfViewer: { url: string; page: number; ticker: string } | null;
+
   // Chat history
   activeChatId: string | null;
   chatSnapshots: Record<string, ChatSnapshot>;
@@ -78,6 +85,11 @@ interface StudyState {
   startQuestionnaire: () => void;
   submitCheckpoint: (definitionId: string, data: Record<string, unknown>) => void;
   skipCheckpoint: (definitionId: string) => void;
+
+  // Documents actions
+  loadPdfUrlMap: () => Promise<void>;
+  openPdfViewer: (params: { url: string; page: number; ticker: string }) => void;
+  closePdfViewer: () => void;
 
   // Chat history actions
   saveChat: (chatId: string, title: string, assignment: ParticipantAssignment) => void;
@@ -152,6 +164,9 @@ export const useStudyStore = create<StudyState>((set, get) => ({
   activeCheckpoints: [],
 
   ledgerPhases: [],
+
+  pdfUrlMap: {},
+  pdfViewer: null,
 
   activeChatId: null,
   chatSnapshots: {},
@@ -250,6 +265,15 @@ export const useStudyStore = create<StudyState>((set, get) => ({
     }));
   },
 
+  loadPdfUrlMap: async () => {
+    if (Object.keys(get().pdfUrlMap).length > 0) return;
+    const map = await fetchDocumentsMap();
+    set({ pdfUrlMap: map });
+  },
+
+  openPdfViewer: (params) => set({ pdfViewer: params }),
+  closePdfViewer: () => set({ pdfViewer: null }),
+
   setParticipantId: (participantId) => set({ participantId }),
 
   setAssignment: (assignment) => set({ assignment }),
@@ -279,6 +303,9 @@ export const useStudyStore = create<StudyState>((set, get) => ({
       if (assignment) {
         get().initLedgerPhases(assignment);
       }
+
+      // Load PDF URL map for citations (fire and forget)
+      get().loadPdfUrlMap();
 
       await runTaskFlow({
         taskId: session.current_task_id,

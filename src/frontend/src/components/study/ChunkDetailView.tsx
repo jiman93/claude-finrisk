@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import { useStudyStore } from "../../stores/studyStore";
 import type { LedgerChunk } from "../../types";
 import { cleanChunkMarkdown, cleanChunkPreview } from "../../utils/chunkText";
 import FormattedMarkdown from "../FormattedMarkdown";
@@ -12,8 +13,14 @@ interface ChunkDetailViewProps {
 
 export default function ChunkDetailView({ chunks, initialIndex, onBack }: ChunkDetailViewProps) {
   const [currentIdx, setCurrentIdx] = useState(initialIndex);
+  const pdfUrlMap = useStudyStore((s) => s.pdfUrlMap);
+  const openPdfViewer = useStudyStore((s) => s.openPdfViewer);
+  const ticker = useStudyStore((s) => s.session?.current_ticker);
   const chunk = chunks[currentIdx];
   if (!chunk) return null;
+
+  const pageNum = parseInt(chunk.pageRef.replace(/\D/g, ""), 10) || 1;
+  const pdfUrl = ticker ? pdfUrlMap[ticker] : null;
 
   return (
     <div className="ledger-chunk-detail">
@@ -40,7 +47,20 @@ export default function ChunkDetailView({ chunks, initialIndex, onBack }: ChunkD
 
         <div className="ledger-section">
           <div className="ledger-section-label">Source</div>
-          <div className="ledger-chunk-detail-source">{chunk.pageRef}</div>
+          <div className="ledger-chunk-detail-source">
+            {pdfUrl ? (
+              <button
+                type="button"
+                className="pi-citation-chip pi-citation-chip-btn"
+                onClick={() => ticker && openPdfViewer({ url: pdfUrl!, page: pageNum, ticker })}
+                title={`Open PDF at page ${pageNum}`}
+              >
+                {chunk.pageRef} — View in PDF
+              </button>
+            ) : (
+              chunk.pageRef
+            )}
+          </div>
         </div>
 
         <div className="ledger-section">

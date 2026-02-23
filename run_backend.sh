@@ -12,7 +12,12 @@ if [[ ! -d "$VENV_PATH" ]]; then
   exit 1
 fi
 
-source "$VENV_PATH/bin/activate"
+# Support both Linux (bin/) and Windows/MinGW (Scripts/)
+if [[ -f "$VENV_PATH/Scripts/activate" ]]; then
+  source "$VENV_PATH/Scripts/activate"
+else
+  source "$VENV_PATH/bin/activate"
+fi
 cd "$BACKEND_DIR"
 
 echo "Starting backend on http://127.0.0.1:8000"

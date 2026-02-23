@@ -82,12 +82,21 @@ DEFAULT_BASE_URL = "https://api.pageindex.ai"
 # Max characters of plain text to store as a node's content summary.
 SUMMARY_MAX_CHARS = 800
 
-# Minimum content length to keep a leaf node.
-MIN_CONTENT_CHARS = 30
+# Minimum content length to keep a leaf node.  Nodes below this threshold
+# are pruned — they are typically heading-only structural waypoints with no
+# substantive content (e.g. "## Operating Risks" wrapped in physical_index
+# markers).  Raised from 30 → 150 to eliminate ~82 empty heading chunks
+# identified in the chunk quality audit.
+MIN_CONTENT_CHARS = 150
 
 # Leaf nodes larger than this threshold are candidates for embedded-heading
 # splitting (post-processing step that creates synthetic child nodes).
-LARGE_LEAF_THRESHOLD = 8000
+# Lowered from 8000 → 5000 so more monolithic sections get split.
+LARGE_LEAF_THRESHOLD = 5000
+
+# Target segment size for paragraph-boundary fallback splitting (chars).
+# Used when a large leaf has no embedded headings to split on.
+PARAGRAPH_SPLIT_TARGET = 3000
 
 # ---------------------------------------------------------------------------
 # Canonical 10-K structure
@@ -488,6 +497,9 @@ def build_tree_from_pageindex(ticker: str, pi_nodes: list[dict]) -> TreeNode:
     _finalize_tree(root)
     _prune_empty(root)
 
+    # --- Disambiguate duplicate leaf headings. ---
+    _disambiguate_headings(root)
+
     return root
 
 
@@ -548,10 +560,26 @@ def _split_large_leaves(node: TreeNode, ticker: str) -> None:
 
     # Find all embedded heading positions.
     matches = list(_EMBEDDED_HEADING_RE.finditer(content))
-    if len(matches) < 2:
-        # Not enough structure to warrant splitting.
-        return
 
+    if len(matches) >= 2:
+        # --- Heading-based splitting ---
+        synthetic_children = _split_by_headings(node, content, matches)
+    else:
+        # --- Fallback: paragraph-boundary splitting ---
+        synthetic_children = _split_by_paragraphs(node, content)
+
+    if len(synthetic_children) >= 2:
+        # Replace the leaf with its split children.
+        node.children = synthetic_children
+        node.content_full = ""  # _finalize_tree will set summary from children
+
+
+def _split_by_headings(
+    node: TreeNode,
+    content: str,
+    matches: list[re.Match],
+) -> list[TreeNode]:
+    """Split content at embedded heading positions."""
     # Build segment boundaries: (start, end, heading_text)
     segments: list[tuple[int, int, str]] = []
     for i, m in enumerate(matches):
@@ -597,10 +625,64 @@ def _split_large_leaves(node: TreeNode, ticker: str) -> None:
             )
         )
 
-    if len(synthetic_children) >= 2:
-        # Replace the leaf with its split children.
-        node.children = synthetic_children
-        node.content_full = ""  # _finalize_tree will set summary from children
+    return synthetic_children
+
+
+def _split_by_paragraphs(
+    node: TreeNode,
+    content: str,
+) -> list[TreeNode]:
+    """Fallback: split content at paragraph boundaries into ~PARAGRAPH_SPLIT_TARGET-char segments."""
+    paragraphs = content.split("\n\n")
+    if len(paragraphs) < 2:
+        return []
+
+    # Merge consecutive paragraphs into segments of roughly PARAGRAPH_SPLIT_TARGET chars.
+    segments: list[str] = []
+    current_segment: list[str] = []
+    current_len = 0
+
+    for para in paragraphs:
+        para = para.strip()
+        if not para:
+            continue
+        current_segment.append(para)
+        current_len += len(para)
+        if current_len >= PARAGRAPH_SPLIT_TARGET:
+            segments.append("\n\n".join(current_segment))
+            current_segment = []
+            current_len = 0
+
+    # Flush remainder — merge into last segment if too small.
+    if current_segment:
+        remainder = "\n\n".join(current_segment)
+        if segments and len(remainder) < MIN_CONTENT_CHARS:
+            segments[-1] += "\n\n" + remainder
+        else:
+            segments.append(remainder)
+
+    # Only split if we got ≥ 2 meaningful segments.
+    segments = [s for s in segments if len(s) >= MIN_CONTENT_CHARS]
+    if len(segments) < 2:
+        return []
+
+    synthetic_children: list[TreeNode] = []
+    for i, seg_text in enumerate(segments):
+        seg_indices = _extract_physical_indices(seg_text)
+        seg_page = seg_indices[0] if seg_indices else node.page_index
+        synthetic_children.append(
+            TreeNode(
+                node_id=f"{node.node_id}-psplit-{i:02d}",
+                heading=f"{node.heading} (Part {i + 1})",
+                level=node.level + 1,
+                page_index=seg_page,
+                content_full=seg_text,
+                char_count=len(seg_text),
+                content_summary=seg_text[:SUMMARY_MAX_CHARS],
+            )
+        )
+
+    return synthetic_children
 
 
 def _prune_empty(node: TreeNode) -> None:
@@ -611,6 +693,37 @@ def _prune_empty(node: TreeNode) -> None:
     ]
     for child in node.children:
         _prune_empty(child)
+
+
+def _disambiguate_headings(root: TreeNode) -> None:
+    """Prepend parent context to duplicate leaf headings.
+
+    If two or more leaf nodes share the same heading (e.g. "Revenues"),
+    prepend the parent node's heading to disambiguate:
+        "Revenues" → "Commercial Airplanes — Revenues"
+
+    Only modifies headings that actually collide.
+    """
+    # Pass 1: collect (leaf, parent_heading) pairs and count heading occurrences.
+    leaf_records: list[tuple[TreeNode, str]] = []
+    heading_counts: dict[str, int] = {}
+
+    def _walk(node: TreeNode, parent_heading: str) -> None:
+        if not node.children:
+            leaf_records.append((node, parent_heading))
+            heading_counts[node.heading] = heading_counts.get(node.heading, 0) + 1
+        else:
+            for child in node.children:
+                _walk(child, node.heading)
+
+    _walk(root, "")
+
+    # Pass 2: disambiguate leaves whose heading appears more than once.
+    for leaf, parent_heading in leaf_records:
+        if heading_counts.get(leaf.heading, 0) > 1 and parent_heading:
+            # Avoid redundancy if parent heading is already a prefix.
+            if not leaf.heading.startswith(parent_heading):
+                leaf.heading = f"{parent_heading} — {leaf.heading}"
 
 
 # ---------------------------------------------------------------------------

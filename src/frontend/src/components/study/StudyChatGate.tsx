@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { FormEvent, lazy, Suspense, useEffect, useRef, useState } from "react";
 
 import { useStudyStore } from "../../stores/studyStore";
 import type {
@@ -11,10 +11,12 @@ import type {
   SessionState,
   TailAction,
 } from "../../types";
-import { cleanChunkPreview } from "../../utils/chunkText";
+import { cleanChunkMarkdown, cleanChunkPreview } from "../../utils/chunkText";
 import DynamicControlRenderer from "../controls/DynamicControlRenderer";
 import FormattedMarkdown from "../FormattedMarkdown";
 import SessionLedger from "./SessionLedger";
+
+const PdfViewerOverlay = lazy(() => import("../PdfViewerOverlay"));
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
 const CHUNK_TRUNCATE_LEN = 250;
@@ -164,14 +166,24 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
   }, [messages, session]);
 
   // ── Right pane (shared between active and restored views) ──
-  // Layer 0: SessionLedger (always visible during active session)
+  // Layer 2: PDF viewer (highest priority — covers entire right pane)
   // Layer 1: paneSummary | paneCheckpoint (overlay, one at a time)
+  // Layer 0: SessionLedger (always visible during active session)
+  const pdfViewer = useStudyStore((s) => s.pdfViewer);
+  const closePdfViewer = useStudyStore((s) => s.closePdfViewer);
   const hasOverlay = !!(paneSummary || paneCheckpoint);
 
   const rightPane = (
     <div className="pi-right-pane">
-      {/* Layer 1: Overlay */}
-      {paneSummary && (
+      {/* Layer 2: PDF Viewer */}
+      {pdfViewer && (
+        <Suspense fallback={null}>
+          <PdfViewerOverlay />
+        </Suspense>
+      )}
+
+      {/* Layer 1: Overlay (hidden when PDF viewer is open) */}
+      {!pdfViewer && paneSummary && (
         <div className="ledger-overlay">
           <div className="pi-right-header">
             <span className="pi-right-file">{paneSummary.label}</span>
@@ -184,7 +196,7 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
           </div>
         </div>
       )}
-      {paneCheckpoint && (
+      {!pdfViewer && paneCheckpoint && (
         <div className="ledger-overlay">
           <div className="pi-right-header">
             <span className="pi-right-file">{paneCheckpoint.label}</span>
@@ -205,8 +217,8 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
         </div>
       )}
 
-      {/* Layer 0: Session Ledger (hidden when overlay is open) */}
-      {!hasOverlay && effectiveAssignment && (
+      {/* Layer 0: Session Ledger (hidden when overlay or PDF viewer is open) */}
+      {!pdfViewer && !hasOverlay && effectiveAssignment && (
         <SessionLedger
           assignment={effectiveAssignment}
           onViewSummary={openSummaryPane}
@@ -702,12 +714,16 @@ function PhaseOverviewCard({ phase, isCurrent }: { phase: PhaseAssignment; isCur
 
 function TruncatedContent({ text }: { text: string }) {
   const [expanded, setExpanded] = useState(false);
-  const cleaned = cleanChunkPreview(text);
-  const needsTruncation = cleaned.length > CHUNK_TRUNCATE_LEN;
+  const preview = cleanChunkPreview(text);
+  const needsTruncation = preview.length > CHUNK_TRUNCATE_LEN;
 
   return (
     <div className="pi-selector-content">
-      {needsTruncation && !expanded ? cleaned.slice(0, CHUNK_TRUNCATE_LEN) + "…" : cleaned}
+      {expanded ? (
+        <FormattedMarkdown text={cleanChunkMarkdown(text)} />
+      ) : (
+        needsTruncation ? preview.slice(0, CHUNK_TRUNCATE_LEN) + "…" : preview
+      )}
       {needsTruncation && (
         <button
           type="button"
@@ -786,7 +802,7 @@ function SelectorCard({
             <div>
               <div className="pi-selector-title">{cleanChunkPreview(node.title)}</div>
               <TruncatedContent text={node.relevant_content} />
-              <span className="pi-citation-chip">[{cleanChunkPreview(node.title)}, Page {node.page_index}]</span>
+              <CitationChip title={node.title} pageIndex={node.page_index} />
             </div>
           </label>
         ))}
@@ -1053,5 +1069,36 @@ function SubmittedCheckpointCard({
         View responses
       </button>
     </div>
+  );
+}
+
+function CitationChip({ title, pageIndex }: { title: string; pageIndex: number }) {
+  const pdfUrlMap = useStudyStore((s) => s.pdfUrlMap);
+  const openPdfViewer = useStudyStore((s) => s.openPdfViewer);
+  const ticker = useStudyStore((s) => s.session?.current_ticker);
+
+  const pdfUrl = ticker ? pdfUrlMap[ticker] : null;
+
+  if (pdfUrl && ticker) {
+    return (
+      <button
+        type="button"
+        className="pi-citation-chip pi-citation-chip-btn"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          openPdfViewer({ url: pdfUrl, page: pageIndex, ticker });
+        }}
+        title={`Open PDF at page ${pageIndex}`}
+      >
+        [{cleanChunkPreview(title)}, Page {pageIndex}]
+      </button>
+    );
+  }
+
+  return (
+    <span className="pi-citation-chip">
+      [{cleanChunkPreview(title)}, Page {pageIndex}]
+    </span>
   );
 }

@@ -546,6 +546,11 @@ class TreeRetrievalService:
             # Strip physical_index tags from content for cleaner output.
             content = re.sub(r"<physical_index_\d+>", "", content).strip()
 
+            # Skip heading-only stubs with insufficient content.
+            clean_for_len = re.sub(r"^#{1,6}\s+.*$", "", content, flags=re.MULTILINE).strip()
+            if len(clean_for_len) < 150:
+                continue
+
             nodes.append(
                 RetrievalNode(
                     node_id=leaf.get("node_id", f"{ticker}-{len(nodes):03d}"),
