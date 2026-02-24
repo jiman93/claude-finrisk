@@ -50,6 +50,13 @@ const MODE_ROLE_DESCRIPTIONS: Record<string, string> = {
     "Select chunks AND edit the generated summary. Full control over both retrieval and generation.",
 };
 
+// Video source config — change when the actual video is ready
+const VIDEO_CONFIG = {
+  type: "placeholder" as "placeholder" | "youtube" | "local",
+  youtubeUrl: "",
+  localSrc: "",
+};
+
 // ---------------------------------------------------------------------------
 // Main component
 // ---------------------------------------------------------------------------
@@ -279,41 +286,89 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
     );
   }
 
-  // ── Screen 1: Participant ID prompt ──
+  // ── Screen 1: Study onboarding ──
   if (!assignment) {
     return (
       <section className="pi-chat-shell">
         <div className="pi-workspace pane-collapsed">
           <div className="pi-left-pane">
             <div className="pi-chat-stream">
-              <div className="scg-entry-center">
-                <div className="scg-entry-icon">&#9881;</div>
-                <h2 className="scg-entry-title">Study Session</h2>
-                <p className="scg-entry-subtitle">
-                  Enter a participant ID to load their configured pipeline and begin the study.
-                </p>
-                <form className="scg-entry-form" onSubmit={handleLoadParticipant}>
-                  <input
-                    className="pi-form-control scg-pid-input"
-                    type="text"
-                    value={participantInput}
-                    onChange={(e) => setParticipantInput(e.target.value.toUpperCase())}
-                    placeholder="e.g. P01"
-                    maxLength={4}
-                    disabled={isFetching}
-                  />
-                  <button
-                    type="submit"
-                    className="pi-primary-btn"
-                    disabled={!participantInput.trim() || isFetching}
-                  >
-                    {isFetching ? "Loading..." : "Load Participant"}
-                  </button>
-                </form>
-                {fetchError && <div className="scg-error">{fetchError}</div>}
-                <div className="scg-hint">
-                  Participants P01–P16 are auto-generated. Configure custom assignments in{" "}
-                  <strong>Study Setup</strong>.
+              <div className="scg-onboard">
+                {/* Header */}
+                <div className="scg-onboard-header">
+                  <h1 className="scg-onboard-title">FinRisk AI Study</h1>
+                  <p className="scg-onboard-tagline">
+                    Use an AI-powered tool to create financial risk summaries from company 10-K filings
+                  </p>
+                </div>
+
+                {/* Video */}
+                <VideoPlaceholder />
+
+                {/* At-a-glance */}
+                <div className="scg-glance-row">
+                  <div className="scg-glance-card">
+                    <span className="scg-glance-icon">&#9201;</span>
+                    <span className="scg-glance-value">~15 min</span>
+                    <span className="scg-glance-label">Duration</span>
+                  </div>
+                  <div className="scg-glance-card">
+                    <span className="scg-glance-icon">&#9635;</span>
+                    <span className="scg-glance-value">3 Phases</span>
+                    <span className="scg-glance-label">3 Company 10-Ks</span>
+                  </div>
+                  <div className="scg-glance-card">
+                    <span className="scg-glance-icon">&#9881;</span>
+                    <span className="scg-glance-value">Risk Summary</span>
+                    <span className="scg-glance-label">Your deliverable</span>
+                  </div>
+                </div>
+
+                {/* Pipeline */}
+                <div className="scg-onboard-pipeline">
+                  <div className="scg-onboard-pipeline-label">How it works</div>
+                  <div className="scg-onboard-pipeline-row">
+                    {["Retrieve", "Select", "Generate", "Edit"].map((step, i) => (
+                      <Fragment key={step}>
+                        {i > 0 && <span className="scg-onboard-pipe-arrow">&rsaquo;</span>}
+                        <span className="scg-onboard-pipe-chip">{step}</span>
+                      </Fragment>
+                    ))}
+                  </div>
+                  <p className="scg-onboard-pipeline-desc">
+                    Each phase produces one risk summary. The AI retrieves and drafts — you guide the result.
+                  </p>
+                </div>
+
+                {/* Divider */}
+                <div className="scg-onboard-divider" />
+
+                {/* Form */}
+                <div className="scg-onboard-form-section">
+                  <div className="scg-onboard-form-label">Enter your participant ID to begin</div>
+                  <form className="scg-entry-form" onSubmit={handleLoadParticipant}>
+                    <input
+                      className="pi-form-control scg-pid-input"
+                      type="text"
+                      value={participantInput}
+                      onChange={(e) => setParticipantInput(e.target.value.toUpperCase())}
+                      placeholder="e.g. P01"
+                      maxLength={4}
+                      disabled={isFetching}
+                    />
+                    <button
+                      type="submit"
+                      className="pi-primary-btn"
+                      disabled={!participantInput.trim() || isFetching}
+                    >
+                      {isFetching ? "Loading\u2026" : "Load Participant"}
+                    </button>
+                  </form>
+                  {fetchError && <div className="scg-error">{fetchError}</div>}
+                  <div className="scg-hint">
+                    Participants P01–P16 are auto-generated. Configure custom assignments in{" "}
+                    <strong>Study Setup</strong>.
+                  </div>
                 </div>
               </div>
             </div>
@@ -753,6 +808,38 @@ function WelcomeBlock() {
           </Fragment>
         ))}
       </div>
+    </div>
+  );
+}
+
+function VideoPlaceholder() {
+  if (VIDEO_CONFIG.type === "youtube" && VIDEO_CONFIG.youtubeUrl) {
+    return (
+      <div className="scg-video-wrapper">
+        <iframe
+          className="scg-video-iframe"
+          src={VIDEO_CONFIG.youtubeUrl}
+          title="Study introduction video"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+        />
+      </div>
+    );
+  }
+  if (VIDEO_CONFIG.type === "local" && VIDEO_CONFIG.localSrc) {
+    return (
+      <div className="scg-video-wrapper">
+        <video className="scg-video-element" src={VIDEO_CONFIG.localSrc} controls preload="metadata">
+          Your browser does not support the video element.
+        </video>
+      </div>
+    );
+  }
+  return (
+    <div className="scg-video-wrapper scg-video-placeholder">
+      <div className="scg-video-play">&#9654;</div>
+      <div className="scg-video-cta">Watch a 2-min intro</div>
+      <div className="scg-video-note">Video coming soon</div>
     </div>
   );
 }
