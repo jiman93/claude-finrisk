@@ -541,7 +541,7 @@ function StreamRenderer({
               <div key={msg.id} className="pi-selector-card">
                 <div className="pi-selector-header">
                   <span>Chunk selection submitted</span>
-                  <span className="pi-selector-meta">{msg.nodes.length} chunks</span>
+                  <span className="pi-selector-meta">{msg.selectedCount ?? msg.nodes.length} selected</span>
                 </div>
               </div>
             ) : (

@@ -313,6 +313,7 @@ export type ChatMessage =
       taskId: string;
       nodes: RetrievalNode[];
       submitted?: boolean;
+      selectedCount?: number;
     }
   | {
       id: string;

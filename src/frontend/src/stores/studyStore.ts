@@ -477,7 +477,7 @@ export const useStudyStore = create<StudyState>()(
         messages: [
           ...state.messages.map((m) =>
             m.type === "selector" && m.taskId === taskId
-              ? { ...m, submitted: true }
+              ? { ...m, submitted: true, selectedCount: selectedIds.length }
               : m
           ),
           { id: makeId("gen-prompt"), type: "generate_prompt" as const, taskId },
