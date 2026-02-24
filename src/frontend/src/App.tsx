@@ -51,7 +51,6 @@ export default function App() {
           >
             Documents
           </button>
-          <button className="pi-nav-item">Library</button>
           <button
             className={`pi-nav-item ${page === "dashboard" ? "active" : ""}`}
             onClick={() => setPage("dashboard")}
