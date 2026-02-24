@@ -1688,7 +1688,7 @@ input {
 /* ── Screen 2: Assignment Overview ── */
 .scg-overview-center {
   padding: 32px 24px;
-  max-width: 800px;
+  max-width: 860px;
   margin: 0 auto;
 }
 .scg-overview-header {
@@ -1782,6 +1782,139 @@ input {
   color: var(--text-muted);
   font-size: 12px;
   margin-top: 8px;
+}
+
+/* ── Welcome Block ── */
+.scg-welcome-block {
+  margin-bottom: 28px;
+}
+.scg-welcome-title {
+  color: var(--text-primary);
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0 0 8px;
+}
+.scg-welcome-body {
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 0 0 20px;
+  max-width: 620px;
+}
+
+/* ── Pipeline Steps Diagram ── */
+.scg-pipeline-steps {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 0;
+}
+.scg-pipe-step {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-soft);
+  border-radius: 8px;
+  min-width: 130px;
+  flex: 1;
+}
+.scg-pipe-num {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+.scg-pipe-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.scg-pipe-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+.scg-pipe-note {
+  font-size: 10px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+.scg-pipe-arrow {
+  align-self: center;
+  color: var(--text-muted);
+  font-size: 20px;
+  padding: 0 8px;
+  line-height: 1;
+}
+
+/* ── Section Label ── */
+.scg-section-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
+/* ── Phases: vertical stack ── */
+.scg-phases-col {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+/* ── Phase card: top row (thumb + info) ── */
+.scg-phase-top {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+.scg-phase-thumb {
+  width: 56px;
+  height: 72px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--bg-card-2);
+  border: 1px solid var(--border-soft);
+  flex-shrink: 0;
+}
+.scg-phase-thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top;
+}
+.scg-phase-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* ── Phase card: role description ── */
+.scg-phase-role {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.scg-role-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+.scg-role-text {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
 }
 
 /* Study left-pane: session-bar | stream | tail-zone | follow-up bar */

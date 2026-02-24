@@ -1,4 +1,4 @@
-import { FormEvent, lazy, Suspense, useEffect, useRef, useState } from "react";
+import { FormEvent, Fragment, lazy, Suspense, useEffect, useRef, useState } from "react";
 
 import { useStudyStore } from "../../stores/studyStore";
 import type {
@@ -37,6 +37,17 @@ const MODE_COLORS: Record<string, string> = {
   hitl_r: "scp-mode-hitlr",
   hitl_g: "scp-mode-hitlg",
   hitl_full: "scp-mode-hitlfull",
+};
+
+const MODE_ROLE_DESCRIPTIONS: Record<string, string> = {
+  baseline:
+    "Read only — the system retrieves and summarises automatically. You just review the output.",
+  hitl_r:
+    "Select which retrieved document chunks the AI should use before it generates the summary.",
+  hitl_g:
+    "Review and edit the AI-generated summary to improve accuracy, completeness, or clarity.",
+  hitl_full:
+    "Select chunks AND edit the generated summary. Full control over both retrieval and generation.",
 };
 
 // ---------------------------------------------------------------------------
@@ -335,7 +346,11 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
                   </button>
                 </div>
 
-                <div className="scg-phases-row">
+                <WelcomeBlock />
+
+                <div className="scg-section-label">Your 3 phases</div>
+
+                <div className="scg-phases-col">
                   {assignment.phases.map((phase) => (
                     <PhaseOverviewCard key={phase.phase} phase={phase} isCurrent={phase.phase === 1} />
                   ))}
@@ -350,8 +365,8 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
                     Start Study Session
                   </button>
                   <p className="scg-start-hint">
-                    This will begin Phase 1 ({MODE_LABELS[assignment.phases[0].mode]}) with{" "}
-                    {assignment.phases[0].ticker}.
+                    Begins Phase 1 ({MODE_LABELS[assignment.phases[0].mode]}) with{" "}
+                    {assignment.phases[0].ticker}. Estimated ~15 minutes total.
                   </p>
                 </div>
               </div>
@@ -694,26 +709,81 @@ function RetrievedNodesCard({ nodes }: { nodes: RetrievalNode[] }) {
   );
 }
 
+function WelcomeBlock() {
+  const steps = [
+    { num: "1", label: "Retrieve", desc: "AI fetches relevant chunks from the 10-K filing" },
+    { num: "2", label: "Select", desc: "You choose which chunks to keep", note: "HITL-R & Full" },
+    { num: "3", label: "Generate", desc: "AI produces a risk summary from selected chunks" },
+    { num: "4", label: "Edit", desc: "You refine the AI summary", note: "HITL-G & Full" },
+  ];
+
+  return (
+    <div className="scg-welcome-block">
+      <h2 className="scg-welcome-title">Welcome to your study session</h2>
+      <p className="scg-welcome-body">
+        You will analyse 3 companies by querying an AI-powered financial risk
+        tool. Each phase uses a different interaction mode, which determines how
+        much control you have over the AI pipeline.
+      </p>
+      <div className="scg-pipeline-steps">
+        {steps.map((step, i) => (
+          <Fragment key={step.num}>
+            {i > 0 && <span className="scg-pipe-arrow">&rsaquo;</span>}
+            <div className="scg-pipe-step">
+              <span className="scg-pipe-num">{step.num}</span>
+              <span className="scg-pipe-label">{step.label}</span>
+              <span className="scg-pipe-desc">{step.desc}</span>
+              {step.note && <span className="scg-pipe-note">{step.note}</span>}
+            </div>
+          </Fragment>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function PhaseOverviewCard({ phase, isCurrent }: { phase: PhaseAssignment; isCurrent: boolean }) {
+  const thumbSrc = `${BASE_URL}/api/documents/thumb/${phase.ticker}`;
+
   return (
     <div className={`scg-phase-card ${isCurrent ? "scg-current" : ""}`}>
-      <div className="scg-phase-header">
-        <span className="scg-phase-num">Phase {phase.phase}</span>
-        <span className={`scp-mode-badge ${MODE_COLORS[phase.mode] ?? ""}`}>
-          {MODE_LABELS[phase.mode] ?? phase.mode}
+      <div className="scg-phase-top">
+        <div className="scg-phase-thumb">
+          <img
+            src={thumbSrc}
+            alt={`${phase.ticker} 10-K page 1`}
+            className="scg-phase-thumb-img"
+            onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+          />
+        </div>
+        <div className="scg-phase-info">
+          <div className="scg-phase-header">
+            <span className="scg-phase-num">Phase {phase.phase}</span>
+            <span className={`scp-mode-badge ${MODE_COLORS[phase.mode] ?? ""}`}>
+              {MODE_LABELS[phase.mode] ?? phase.mode}
+            </span>
+          </div>
+          <div className="scg-phase-ticker">{phase.ticker}</div>
+          <div className="scg-phase-query">{phase.query}</div>
+        </div>
+      </div>
+
+      <div className="scg-phase-role">
+        <span className="scg-role-label">Your role</span>
+        <span className="scg-role-text">
+          {MODE_ROLE_DESCRIPTIONS[phase.mode] ?? "Complete the phase as directed."}
         </span>
       </div>
-      <div className="scg-phase-ticker">{phase.ticker}</div>
-      <div className="scg-phase-query">{phase.query}</div>
-      <div className="scg-phase-cps">
-        {phase.checkpoints.length === 0
-          ? "No checkpoints"
-          : phase.checkpoints.map((cp) => (
-              <span key={cp.definition_id} className="scg-cp-tag">
-                {cp.control_type}
-              </span>
-            ))}
-      </div>
+
+      {phase.checkpoints.length > 0 && (
+        <div className="scg-phase-cps">
+          {phase.checkpoints.map((cp) => (
+            <span key={cp.definition_id} className="scg-cp-tag">
+              {cp.label || cp.control_type}
+            </span>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
