@@ -56,6 +56,7 @@ export default function LedgerPhaseCard({
         <PhaseHeader phase={phase} />
         <CompactSections
           phase={phase}
+          onViewChunk={onViewChunk}
           onViewSummary={onViewSummary}
           onViewCheckpoint={onViewCheckpoint}
         />
@@ -91,7 +92,7 @@ export default function LedgerPhaseCard({
       <div className="ledger-section">
         <div className="ledger-section-row">
           <span className="ledger-section-label">Retrieval</span>
-          {phase.retrieval && phase.retrieval.selectionEnabled && phase.status === "completed" && (
+          {phase.retrieval && phase.retrieval.chunks.length > 0 && phase.status === "completed" && (
             <button
               type="button"
               className="ledger-view-btn"
@@ -106,22 +107,28 @@ export default function LedgerPhaseCard({
             <div className="ledger-retrieval-summary">
               {phase.retrieval.selectionEnabled
                 ? `${phase.retrieval.totalRetrieved} retrieved → ${phase.retrieval.totalSelected} selected`
-                : `${phase.retrieval.totalRetrieved} chunks retrieved (auto-selected)`}
+                : `${phase.retrieval.totalRetrieved} chunks (auto)`}
               {phase.activeStep === "retrieval" && phase.retrieval.selectionEnabled && (
                 <span className="ledger-current-marker"> ← CURRENT</span>
               )}
             </div>
-            {phase.retrieval.selectionEnabled && phase.retrieval.chunks.length > 0 && (
+            {phase.retrieval.chunks.length > 0 && (
               <div className="ledger-chunk-grid">
                 {phase.retrieval.chunks.map((chunk) => (
                   <button
                     key={chunk.id}
                     type="button"
-                    className={`ledger-chunk-box ${chunk.selected ? "selected" : "rejected"}`}
+                    className={`ledger-chunk-box ${
+                      phase.retrieval!.selectionEnabled
+                        ? chunk.selected ? "selected" : "rejected"
+                        : "auto"
+                    }`}
                     onClick={() => onViewChunk(phase.phase, chunk.index - 1)}
                     title={`Chunk ${chunk.index}: ${cleanChunkPreview(chunk.title)}`}
                   >
-                    {chunk.selected ? "✓" : "✗"}{chunk.index}
+                    {phase.retrieval!.selectionEnabled
+                      ? `${chunk.selected ? "✓" : "✗"}${chunk.index}`
+                      : chunk.index}
                   </button>
                 ))}
               </div>
@@ -175,48 +182,50 @@ export default function LedgerPhaseCard({
         )}
       </div>
 
-      {/* FEEDBACK section */}
-      <div className="ledger-section">
-        <div className="ledger-section-row">
-          <span className="ledger-section-label">Feedback</span>
-          {phase.feedback && (
-            <button
-              type="button"
-              className="ledger-view-btn"
-              onClick={() => {
-                const fields = buildFeedbackFields(phase.feedback!);
-                onViewCheckpoint(`Phase ${phase.phase} Feedback`, fields);
-              }}
-            >
-              View responses
-            </button>
+      {/* FEEDBACK section — not shown for baseline phases */}
+      {phase.mode !== "baseline" && (
+        <div className="ledger-section">
+          <div className="ledger-section-row">
+            <span className="ledger-section-label">Feedback</span>
+            {phase.feedback && (
+              <button
+                type="button"
+                className="ledger-view-btn"
+                onClick={() => {
+                  const fields = buildFeedbackFields(phase.feedback!);
+                  onViewCheckpoint(`Phase ${phase.phase} Feedback`, fields);
+                }}
+              >
+                View responses
+              </button>
+            )}
+          </div>
+          {phase.feedback ? (
+            <div className="ledger-feedback-row">
+              {phase.feedback.completeness != null && (
+                <FeedbackItem label="C" value={phase.feedback.completeness} />
+              )}
+              {phase.feedback.accuracy != null && (
+                <FeedbackItem label="A" value={phase.feedback.accuracy} />
+              )}
+              {phase.feedback.perceivedControl != null && (
+                <FeedbackItem label="Ctrl" value={phase.feedback.perceivedControl} />
+              )}
+              {phase.feedback.citationHelpfulness != null && (
+                <FeedbackItem label="Cite" value={phase.feedback.citationHelpfulness} />
+              )}
+            </div>
+          ) : (
+            <div className="ledger-pending">
+              {phase.activeStep === "questionnaire" ? (
+                <span className="ledger-active-indicator">● Questionnaire... ← CURRENT</span>
+              ) : (
+                "○ Pending"
+              )}
+            </div>
           )}
         </div>
-        {phase.feedback ? (
-          <div className="ledger-feedback-row">
-            {phase.feedback.completeness != null && (
-              <FeedbackItem label="C" value={phase.feedback.completeness} />
-            )}
-            {phase.feedback.accuracy != null && (
-              <FeedbackItem label="A" value={phase.feedback.accuracy} />
-            )}
-            {phase.feedback.perceivedControl != null && (
-              <FeedbackItem label="Ctrl" value={phase.feedback.perceivedControl} />
-            )}
-            {phase.feedback.citationHelpfulness != null && (
-              <FeedbackItem label="Cite" value={phase.feedback.citationHelpfulness} />
-            )}
-          </div>
-        ) : (
-          <div className="ledger-pending">
-            {phase.activeStep === "questionnaire" ? (
-              <span className="ledger-active-indicator">● Questionnaire... ← CURRENT</span>
-            ) : (
-              "○ Pending"
-            )}
-          </div>
-        )}
-      </div>
+      )}
     </div>
   );
 }
@@ -251,10 +260,12 @@ function PhaseHeader({
 
 function CompactSections({
   phase,
+  onViewChunk,
   onViewSummary,
   onViewCheckpoint,
 }: {
   phase: LedgerPhase;
+  onViewChunk: (phaseNum: number, chunkIndex: number) => void;
   onViewSummary: (label: string, text: string) => void;
   onViewCheckpoint: (label: string, fields: Array<{ label: string; value: string }>) => void;
 }) {
@@ -278,6 +289,18 @@ function CompactSections({
               ? `${phase.retrieval.totalRetrieved} → ${phase.retrieval.totalSelected} selected`
               : `${phase.retrieval.totalRetrieved} chunks (auto)`}
           </span>
+          {phase.retrieval.chunks.length > 0 && (
+            <button
+              type="button"
+              className="ledger-view-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                onViewChunk(phase.phase, 0);
+              }}
+            >
+              View
+            </button>
+          )}
         </div>
       )}
       {phase.summary && (

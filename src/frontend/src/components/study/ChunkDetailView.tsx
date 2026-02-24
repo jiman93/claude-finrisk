@@ -26,7 +26,7 @@ export default function ChunkDetailView({ chunks, initialIndex, onBack }: ChunkD
     <div className="ledger-chunk-detail">
       <div className="ledger-chunk-detail-header">
         <button type="button" className="ledger-back-btn" onClick={onBack}>
-          ← Back to Ledger
+          ← Back to Session Map
         </button>
         <span className="ledger-chunk-detail-pos">
           Chunk {chunk.index} of {chunks.length}

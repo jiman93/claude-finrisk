@@ -1857,6 +1857,14 @@ input {
   background: var(--bg-card-2);
   border: 1px solid var(--border-soft);
   margin-bottom: 6px;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+.scg-doc-card:hover {
+  border-color: #3a6ea5;
+  background: rgba(31, 56, 88, 0.25);
 }
 
 .scg-doc-thumb {
@@ -1871,6 +1879,13 @@ input {
   flex-shrink: 0;
   color: #475569;
   font-size: 18px;
+  overflow: hidden;
+}
+.scg-doc-thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top;
 }
 
 .scg-doc-info {
@@ -2167,6 +2182,11 @@ input {
   background: #1f2937;
   color: #6b7280;
   border: 1px solid #374151;
+}
+.ledger-chunk-box.auto {
+  background: #1e293b;
+  color: #94a3b8;
+  border: 1px solid #334155;
 }
 
 /* ── Summary preview ── */

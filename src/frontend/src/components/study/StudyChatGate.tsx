@@ -217,7 +217,7 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
         </div>
       )}
 
-      {/* Layer 0: Session Ledger (hidden when overlay or PDF viewer is open) */}
+      {/* Layer 0: Session Map (hidden when overlay or PDF viewer is open) */}
       {!pdfViewer && !hasOverlay && effectiveAssignment && (
         <SessionLedger
           assignment={effectiveAssignment}
@@ -625,21 +625,29 @@ function SessionBar({ assignment, session }: { assignment: ParticipantAssignment
 }
 
 function DocumentCard({ ticker }: { ticker: string }) {
+  const pdfUrl = useStudyStore((s) => s.pdfUrlMap[ticker]);
+  const openPdfViewer = useStudyStore((s) => s.openPdfViewer);
+  const thumbSrc = `${BASE_URL}/api/documents/thumb/${ticker}`;
+
   return (
-    <div className="scg-doc-card">
+    <button
+      type="button"
+      className="scg-doc-card"
+      onClick={() => pdfUrl && openPdfViewer({ url: pdfUrl, page: 1, ticker })}
+    >
       <div className="scg-doc-thumb">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-          <polyline points="14 2 14 8 20 8" />
-          <line x1="16" y1="13" x2="8" y2="13" />
-          <line x1="16" y1="17" x2="8" y2="17" />
-        </svg>
+        <img
+          src={thumbSrc}
+          alt={`${ticker} 10-K page 1`}
+          className="scg-doc-thumb-img"
+          onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+        />
       </div>
       <div className="scg-doc-info">
-        <span className="scg-doc-name">{ticker}_10-K_Annual_Report.html</span>
+        <span className="scg-doc-name">{ticker}_10-K_Annual_Report.pdf</span>
         <span className="scg-doc-meta">10-K Annual Filing</span>
       </div>
-    </div>
+    </button>
   );
 }
 

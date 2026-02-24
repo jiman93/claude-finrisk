@@ -12,6 +12,7 @@ router = APIRouter(prefix="/api/documents", tags=["documents"])
 
 _MANIFEST_PATH = PROJECT_ROOT / "data" / "metadata" / "edgar_10k_manifest.json"
 _PDF_DIR = PROJECT_ROOT / "data" / "10k_pdfs"
+_THUMB_DIR = PROJECT_ROOT / "data" / "10k_thumbs"
 
 
 @router.get("")
@@ -36,6 +37,7 @@ def list_documents():
         if not pdf_filename:
             continue
 
+        thumb_file = _THUMB_DIR / f"{ticker}_thumb.png"
         docs.append(
             {
                 "ticker": ticker,
@@ -44,6 +46,7 @@ def list_documents():
                 "form": record.get("form", "10-K"),
                 "pdf_url": f"/api/documents/pdf/{pdf_filename}",
                 "pdf_filename": pdf_filename,
+                "thumb_url": f"/api/documents/thumb/{ticker}" if thumb_file.exists() else None,
             }
         )
 
@@ -61,3 +64,18 @@ def serve_pdf(filename: str):
     if pdf_path.resolve().parent != _PDF_DIR.resolve():
         raise HTTPException(status_code=403, detail="Forbidden")
     return FileResponse(pdf_path, media_type="application/pdf")
+
+
+@router.get("/thumb/{ticker}")
+def serve_thumb(ticker: str):
+    """Serve a pre-rendered first-page thumbnail PNG for a given ticker."""
+    thumb_path = _THUMB_DIR / f"{ticker}_thumb.png"
+    if not thumb_path.exists():
+        raise HTTPException(status_code=404, detail="Thumbnail not found")
+    if thumb_path.resolve().parent != _THUMB_DIR.resolve():
+        raise HTTPException(status_code=403, detail="Forbidden")
+    return FileResponse(
+        thumb_path,
+        media_type="image/png",
+        headers={"Cache-Control": "public, max-age=86400"},
+    )

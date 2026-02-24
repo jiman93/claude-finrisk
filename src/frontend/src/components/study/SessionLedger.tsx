@@ -64,7 +64,7 @@ export default function SessionLedger({
       <div className="ledger-container">
         <div className="ledger-header">
           <div className="ledger-title-row">
-            <span className="ledger-title">Session Ledger</span>
+            <span className="ledger-title">Session Map</span>
             <span className="ledger-pid-group">
               {assignment.participant_id} · {assignment.group}
             </span>
@@ -82,7 +82,7 @@ export default function SessionLedger({
       {/* Header */}
       <div className="ledger-header">
         <div className="ledger-title-row">
-          <span className="ledger-title">Session Ledger</span>
+          <span className="ledger-title">Session Map</span>
           <span className="ledger-pid-group">
             {assignment.participant_id} · {assignment.group}
           </span>
@@ -90,7 +90,7 @@ export default function SessionLedger({
         <div className="ledger-progress">
           <div
             className="ledger-progress-fill"
-            style={{ width: `${progress}%` }}
+            style={{ width: `${allComplete ? 100 : progress}%` }}
           />
         </div>
         <div className="ledger-progress-label">
