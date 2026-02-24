@@ -144,7 +144,6 @@ export default function App() {
                 Back to Chat
               </button>
             )}
-            <div className="pi-user-chip">Zul Hafiz</div>
           </div>
         </header>
 

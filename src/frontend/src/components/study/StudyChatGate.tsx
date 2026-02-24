@@ -838,7 +838,7 @@ function VideoPlaceholder() {
   return (
     <div className="scg-video-wrapper scg-video-placeholder">
       <div className="scg-video-play">&#9654;</div>
-      <div className="scg-video-cta">Watch a 2-min intro</div>
+      <div className="scg-video-cta">Watch a 30-sec intro</div>
       <div className="scg-video-note">Video coming soon</div>
     </div>
   );
