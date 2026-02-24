@@ -6,6 +6,7 @@ import type {
   QueryResponse,
   SelectNodesResponse,
   SessionState,
+  SubmitFeedbackResponse,
 } from "../types";
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
@@ -83,5 +84,16 @@ export function editSummaryTask(
       edited_text: editedText,
       flagged_spans: flaggedSpans,
     }),
+  });
+}
+
+export function submitFeedbackTask(
+  taskId: string,
+  definitionId: string,
+  responses: Record<string, unknown>
+): Promise<SubmitFeedbackResponse> {
+  return request<SubmitFeedbackResponse>(`/api/tasks/${taskId}/submit-feedback`, {
+    method: "POST",
+    body: JSON.stringify({ definition_id: definitionId, responses }),
   });
 }

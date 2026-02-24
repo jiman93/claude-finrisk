@@ -583,6 +583,24 @@ input {
   cursor: pointer;
 }
 
+.pi-summary-sources {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-strong);
+}
+.pi-summary-sources-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+}
+.pi-summary-sources-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
 .pi-error-inline {
   margin-top: 10px;
   color: #ffb5be;

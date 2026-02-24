@@ -99,15 +99,20 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
   const effectiveAssignment = isRestoredView ? restoredAssignment : assignment;
 
   // Right pane: view a summary or checkpoint detail
-  const [paneSummary, setPaneSummary] = useState<{ label: string; text: string } | null>(null);
+  const [paneSummary, setPaneSummary] = useState<{
+    label: string;
+    text: string;
+    sourceNodes?: RetrievalNode[];
+    ticker?: string;
+  } | null>(null);
   const [paneCheckpoint, setPaneCheckpoint] = useState<{
     label: string;
     fields: Array<{ label: string; value: string }>;
   } | null>(null);
 
-  function openSummaryPane(label: string, text: string) {
+  function openSummaryPane(label: string, text: string, sourceNodes?: RetrievalNode[], ticker?: string) {
     setPaneCheckpoint(null);
-    setPaneSummary({ label, text });
+    setPaneSummary({ label, text, sourceNodes, ticker });
   }
   function openCheckpointPane(label: string, fields: Array<{ label: string; value: string }>) {
     setPaneSummary(null);
@@ -204,6 +209,9 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
           </div>
           <div className="pi-right-body">
             <FormattedMarkdown text={paneSummary.text} />
+            {paneSummary.sourceNodes && paneSummary.sourceNodes.length > 0 && (
+              <SummarySources nodes={paneSummary.sourceNodes} tickerOverride={paneSummary.ticker} />
+            )}
           </div>
         </div>
       )}
@@ -432,7 +440,7 @@ interface StreamRendererProps {
   onSubmitNodeSelection: (taskId: string, selected: string[], rejected: string[], order: string[]) => Promise<void>;
   onSubmitEditedSummary: (taskId: string, editedText: string) => Promise<void>;
   onTriggerGeneration: (taskId: string) => Promise<void>;
-  onViewSummary: (label: string, text: string) => void;
+  onViewSummary: (label: string, text: string, sourceNodes?: RetrievalNode[], ticker?: string) => void;
   onViewCheckpoint: (label: string, fields: Array<{ label: string; value: string }>) => void;
 }
 
@@ -513,6 +521,9 @@ function StreamRenderer({
               <div key={msg.id} className="pi-answer-card">
                 <div className="pi-answer-label">Generated Summary</div>
                 <FormattedMarkdown text={msg.summary} />
+                {msg.sourceNodes && msg.sourceNodes.length > 0 && (
+                  <SummarySources nodes={msg.sourceNodes} />
+                )}
               </div>
             );
 
@@ -521,12 +532,16 @@ function StreamRenderer({
               <div key={msg.id} className="pi-answer-card">
                 <div className="pi-answer-label">Generated Summary</div>
                 <FormattedMarkdown text={msg.summary} />
+                {msg.sourceNodes && msg.sourceNodes.length > 0 && (
+                  <SummarySources nodes={msg.sourceNodes} />
+                )}
               </div>
             ) : (
               <EditableSummaryCard
                 key={msg.id}
                 taskId={msg.taskId}
                 summary={msg.summary}
+                sourceNodes={msg.sourceNodes}
                 onSubmit={onSubmitEditedSummary}
                 onViewSummary={onViewSummary}
                 disabled={isLoading}
@@ -899,14 +914,16 @@ function SelectorCard({
 function EditableSummaryCard({
   taskId,
   summary,
+  sourceNodes,
   onSubmit,
   onViewSummary,
   disabled,
 }: {
   taskId: string;
   summary: string;
+  sourceNodes?: RetrievalNode[];
   onSubmit: (taskId: string, editedText: string) => Promise<void>;
-  onViewSummary: (label: string, text: string) => void;
+  onViewSummary: (label: string, text: string, sourceNodes?: RetrievalNode[]) => void;
   disabled: boolean;
 }) {
   const [phase, setPhase] = useState<"reviewing" | "editing" | "submitted">("reviewing");
@@ -935,7 +952,7 @@ function EditableSummaryCard({
             <button
               type="button"
               className="pi-show-more-btn"
-              onClick={() => onViewSummary("Edited Summary", text)}
+              onClick={() => onViewSummary("Edited Summary", text, sourceNodes)}
             >
               View edited version
             </button>
@@ -946,6 +963,9 @@ function EditableSummaryCard({
             {wasEdited ? "Original Summary" : "Generated Summary (accepted)"}
           </div>
           <FormattedMarkdown text={summary} />
+          {sourceNodes && sourceNodes.length > 0 && (
+            <SummarySources nodes={sourceNodes} />
+          )}
         </div>
       </>
     );
@@ -988,6 +1008,9 @@ function EditableSummaryCard({
     <div className="pi-inline-control-card">
       <div className="pi-answer-label">Generated Summary</div>
       <FormattedMarkdown text={summary} />
+      {sourceNodes && sourceNodes.length > 0 && (
+        <SummarySources nodes={sourceNodes} />
+      )}
       <div className="pi-postgen-actions">
         <button
           type="button"
@@ -1150,10 +1173,11 @@ function SubmittedCheckpointCard({
   );
 }
 
-function CitationChip({ title, pageIndex }: { title: string; pageIndex: number }) {
+function CitationChip({ title, pageIndex, tickerOverride }: { title: string; pageIndex: number; tickerOverride?: string }) {
   const pdfUrlMap = useStudyStore((s) => s.pdfUrlMap);
   const openPdfViewer = useStudyStore((s) => s.openPdfViewer);
-  const ticker = useStudyStore((s) => s.session?.current_ticker);
+  const sessionTicker = useStudyStore((s) => s.session?.current_ticker);
+  const ticker = tickerOverride ?? sessionTicker;
 
   const pdfUrl = ticker ? pdfUrlMap[ticker] : null;
 
@@ -1178,5 +1202,25 @@ function CitationChip({ title, pageIndex }: { title: string; pageIndex: number }
     <span className="pi-citation-chip">
       [{cleanChunkPreview(title)}, Page {pageIndex}]
     </span>
+  );
+}
+
+function SummarySources({ nodes, tickerOverride }: { nodes: RetrievalNode[]; tickerOverride?: string }) {
+  // Deduplicate by page_index (multiple chunks can share a page)
+  const uniquePages = new Map<number, RetrievalNode>();
+  for (const n of nodes) {
+    if (!uniquePages.has(n.page_index)) uniquePages.set(n.page_index, n);
+  }
+  const sorted = [...uniquePages.values()].sort((a, b) => a.page_index - b.page_index);
+
+  return (
+    <div className="pi-summary-sources">
+      <span className="pi-summary-sources-label">Sources:</span>
+      <div className="pi-summary-sources-chips">
+        {sorted.map((n) => (
+          <CitationChip key={n.node_id} title={n.title} pageIndex={n.page_index} tickerOverride={tickerOverride} />
+        ))}
+      </div>
+    </div>
   );
 }

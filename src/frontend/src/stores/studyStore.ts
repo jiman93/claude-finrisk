@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 import {
   editSummaryTask,
@@ -7,6 +8,7 @@ import {
   queryTask,
   selectNodesTask,
   startSession,
+  submitFeedbackTask,
 } from "../api/client";
 import { fetchDocumentsMap } from "../components/DocumentsPanel";
 import { SEED_DEFINITIONS } from "../data/checkpointDefinitions";
@@ -152,7 +154,9 @@ function buildFieldSummary(definitionId: string, data: Record<string, unknown>) 
 // Store
 // ---------------------------------------------------------------------------
 
-export const useStudyStore = create<StudyState>((set, get) => ({
+export const useStudyStore = create<StudyState>()(
+  persist(
+    (set, get) => ({
   participantId: "P01",
   session: null,
   assignment: null,
@@ -355,11 +359,14 @@ export const useStudyStore = create<StudyState>((set, get) => ({
         messages: state.messages.filter((m) => m.id !== generationLoadingId),
       }));
 
+      const sourceNodes = generation.used_nodes;
+
       if (session.current_mode === "hitl_g" || session.current_mode === "hitl_full") {
         // Ledger: summary pending edit
         useStudyStore.getState().appendLedgerSummary(session.current_phase, {
           text: generation.summary,
           wasEdited: false,
+          sourceNodes,
         });
         useStudyStore.getState().setLedgerActiveStep(session.current_phase, "edit");
 
@@ -371,6 +378,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
               type: "editable_summary",
               taskId,
               summary: generation.summary,
+              sourceNodes,
             },
           ],
           isLoading: false,
@@ -382,13 +390,14 @@ export const useStudyStore = create<StudyState>((set, get) => ({
       useStudyStore.getState().appendLedgerSummary(session.current_phase, {
         text: generation.summary,
         wasEdited: false,
+        sourceNodes,
       });
       useStudyStore.getState().setLedgerActiveStep(session.current_phase, "questionnaire");
 
       useStudyStore.setState((state) => ({
         messages: [
           ...state.messages,
-          { id: makeId("summary"), type: "summary", summary: generation.summary },
+          { id: makeId("summary"), type: "summary", summary: generation.summary, sourceNodes },
         ],
         isLoading: false,
       }));
@@ -489,12 +498,19 @@ export const useStudyStore = create<StudyState>((set, get) => ({
     try {
       const result = await editSummaryTask(taskId, editedText, []);
 
+      // Carry forward source nodes from the pre-edit summary
+      const existingPhase = session
+        ? get().ledgerPhases.find((lp) => lp.phase === session.current_phase)
+        : undefined;
+      const sourceNodes = existingPhase?.summary?.sourceNodes;
+
       // Update ledger summary with edit info
       if (session) {
         get().appendLedgerSummary(session.current_phase, {
           text: result.edited_summary,
           wasEdited: true,
           editCount: result.characters_edited > 0 ? 1 : 0,
+          sourceNodes,
         });
         get().setLedgerActiveStep(session.current_phase, "questionnaire");
       }
@@ -506,6 +522,7 @@ export const useStudyStore = create<StudyState>((set, get) => ({
             id: makeId("summary"),
             type: "summary",
             summary: result.edited_summary,
+            sourceNodes,
           },
         ],
         isLoading: false,
@@ -591,6 +608,12 @@ export const useStudyStore = create<StudyState>((set, get) => ({
       ],
     }));
 
+    // Persist feedback to backend
+    const taskId = session?.current_task_id;
+    if (taskId) {
+      submitFeedbackTask(taskId, definitionId, data).catch(console.error);
+    }
+
     checkAllCheckpointsDone();
   },
 
@@ -670,7 +693,21 @@ export const useStudyStore = create<StudyState>((set, get) => ({
       ledgerPhases: [],
     });
   },
-}));
+    }),
+    {
+      name: "finrisk-chat-history",
+      partialize: (state) => ({
+        chatSnapshots: state.chatSnapshots,
+        chatOrder: state.chatOrder,
+        activeChatId: state.activeChatId,
+      }),
+      merge: (persisted, current) => ({
+        ...current,
+        ...(persisted as Partial<StudyState>),
+      }),
+    }
+  )
+);
 
 // ---------------------------------------------------------------------------
 // Private helpers

@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Any
 
 from pydantic import BaseModel
 
@@ -39,6 +40,7 @@ class GenerateResponse(BaseModel):
     task_id: str
     summary: str
     used_node_ids: list[str]
+    used_nodes: list[RetrievalNode]
     generation_completed_at: datetime
 
 
@@ -72,6 +74,17 @@ class EditSummaryResponse(BaseModel):
     characters_edited: int
     hallucinations_flagged: int
     edit_completed_at: datetime
+
+
+class SubmitFeedbackRequest(BaseModel):
+    definition_id: str
+    responses: dict[str, Any]
+
+
+class SubmitFeedbackResponse(BaseModel):
+    task_id: str
+    definition_id: str
+    feedback_submitted_at: datetime
 
 
 class CompleteTaskResponse(BaseModel):

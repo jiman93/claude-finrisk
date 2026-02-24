@@ -40,6 +40,7 @@ export interface GenerateResponse {
   task_id: string;
   summary: string;
   used_node_ids: string[];
+  used_nodes?: RetrievalNode[];
   generation_completed_at: string;
 }
 
@@ -71,6 +72,12 @@ export interface EditSummaryResponse {
   characters_edited: number;
   hallucinations_flagged: number;
   edit_completed_at: string;
+}
+
+export interface SubmitFeedbackResponse {
+  task_id: string;
+  definition_id: string;
+  feedback_submitted_at: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -215,6 +222,7 @@ export interface LedgerSummary {
   editCount?: number;
   additionCount?: number;
   deletionCount?: number;
+  sourceNodes?: RetrievalNode[];
 }
 
 export interface LedgerFeedback {
@@ -315,12 +323,14 @@ export type ChatMessage =
       id: string;
       type: "summary";
       summary: string;
+      sourceNodes?: RetrievalNode[];
     }
   | {
       id: string;
       type: "editable_summary";
       taskId: string;
       summary: string;
+      sourceNodes?: RetrievalNode[];
     }
 
   // ── Checkpoints (history — submitted/skipped cards stay in stream) ──

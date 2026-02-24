@@ -16,6 +16,8 @@ from app.schemas.task import (
     RetrievalNode,
     SelectNodesRequest,
     SelectNodesResponse,
+    SubmitFeedbackRequest,
+    SubmitFeedbackResponse,
     TraversalStep,
 )
 from app.services.llm_service import LLMService, LLMServiceError
@@ -101,6 +103,7 @@ def generate_summary(task_id: str, payload: GenerateRequest, db: Session = Depen
         task_id=task.id,
         summary=summary,
         used_node_ids=selected_ids,
+        used_nodes=nodes,
         generation_completed_at=task.generation_completed_at,
     )
 
@@ -150,6 +153,24 @@ def edit_summary(task_id: str, payload: EditSummaryRequest, db: Session = Depend
         characters_edited=task.characters_edited or 0,
         hallucinations_flagged=len(task.flagged_spans or []),
         edit_completed_at=task.edit_completed_at,
+    )
+
+
+@router.post("/{task_id}/submit-feedback", response_model=SubmitFeedbackResponse)
+def submit_feedback(task_id: str, payload: SubmitFeedbackRequest, db: Session = Depends(get_db)):
+    task = db.get(Task, task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    task.feedback_responses = payload.responses
+    task.feedback_submitted_at = datetime.utcnow()
+    db.commit()
+    db.refresh(task)
+
+    return SubmitFeedbackResponse(
+        task_id=task.id,
+        definition_id=payload.definition_id,
+        feedback_submitted_at=task.feedback_submitted_at,
     )
 
 

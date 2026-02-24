@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 
 import { useStudyStore } from "../../stores/studyStore";
-import type { LedgerPhase, ParticipantAssignment } from "../../types";
+import type { LedgerPhase, ParticipantAssignment, RetrievalNode } from "../../types";
 import ChunkDetailView from "./ChunkDetailView";
 import LedgerPhaseCard from "./LedgerPhaseCard";
 
 interface SessionLedgerProps {
   assignment: ParticipantAssignment;
-  onViewSummary: (label: string, text: string) => void;
+  onViewSummary: (label: string, text: string, sourceNodes?: RetrievalNode[], ticker?: string) => void;
   onViewCheckpoint: (label: string, fields: Array<{ label: string; value: string }>) => void;
 }
 

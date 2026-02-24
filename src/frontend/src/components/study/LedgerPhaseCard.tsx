@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import type { LedgerPhase } from "../../types";
+import type { LedgerPhase, RetrievalNode } from "../../types";
 import { cleanChunkPreview } from "../../utils/chunkText";
 
 const MODE_LABELS: Record<string, string> = {
@@ -21,7 +21,7 @@ interface LedgerPhaseCardProps {
   phase: LedgerPhase;
   isCompact: boolean;
   onViewChunk: (phaseNum: number, chunkIndex: number) => void;
-  onViewSummary: (label: string, text: string) => void;
+  onViewSummary: (label: string, text: string, sourceNodes?: RetrievalNode[], ticker?: string) => void;
   onViewCheckpoint: (label: string, fields: Array<{ label: string; value: string }>) => void;
 }
 
@@ -157,7 +157,9 @@ export default function LedgerPhaseCard({
               className="ledger-view-btn"
               onClick={() => onViewSummary(
                 `Phase ${phase.phase} Summary${phase.summary!.wasEdited ? " (edited)" : ""}`,
-                phase.summary!.text
+                phase.summary!.text,
+                phase.summary!.sourceNodes,
+                phase.ticker
               )}
             >
               View
@@ -266,7 +268,7 @@ function CompactSections({
 }: {
   phase: LedgerPhase;
   onViewChunk: (phaseNum: number, chunkIndex: number) => void;
-  onViewSummary: (label: string, text: string) => void;
+  onViewSummary: (label: string, text: string, sourceNodes?: RetrievalNode[], ticker?: string) => void;
   onViewCheckpoint: (label: string, fields: Array<{ label: string; value: string }>) => void;
 }) {
   return (
@@ -317,7 +319,9 @@ function CompactSections({
               e.stopPropagation();
               onViewSummary(
                 `Phase ${phase.phase} Summary`,
-                phase.summary!.text
+                phase.summary!.text,
+                phase.summary!.sourceNodes,
+                phase.ticker
               );
             }}
           >
