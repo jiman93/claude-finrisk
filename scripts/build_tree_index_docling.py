@@ -255,7 +255,7 @@ def _docling_doc_to_pi_nodes(doc) -> list[dict]:
         # --- Tables (exported as markdown) --------------------------
         elif label == DocItemLabel.TABLE:
             try:
-                md = item.export_to_markdown()
+                md = item.export_to_markdown(doc=doc)
                 _append_text(md)
             except Exception:
                 pass
@@ -300,7 +300,7 @@ def _compare_trees(
     pi_s = _fmt_stats(pi.get("stats", {}))
     dl_s = _fmt_stats(dl.get("stats", {}))
 
-    print(f"\n    {'Metric':<22}  {'PageIndex':>12}  {'Docling':>12}  {'Δ':>8}")
+    print(f"\n    {'Metric':<22}  {'PageIndex':>12}  {'Docling':>12}  {'Delta':>8}")
     print(f"    {'-'*60}")
     for key in ("total_nodes", "leaf_nodes", "max_depth", "total_chars", "avg_leaf_chars"):
         pv = pi_s[key]
