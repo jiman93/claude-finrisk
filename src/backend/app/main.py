@@ -7,6 +7,7 @@ from sqlalchemy import inspect, text
 import app.models  # noqa: F401
 from app.config import settings
 from app.db.database import Base, engine
+from app.routers.admin import router as admin_router
 from app.routers.documents import router as documents_router
 from app.routers.sessions import router as sessions_router
 from app.routers.study_assignments import router as study_assignments_router
@@ -44,6 +45,7 @@ def health():
     return {"status": "ok"}
 
 
+app.include_router(admin_router)
 app.include_router(sessions_router)
 app.include_router(tasks_router)
 app.include_router(study_assignments_router)
