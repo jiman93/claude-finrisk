@@ -352,3 +352,96 @@ export type TailAction =
   | { type: "questionnaire_prompt" }
   | { type: "phase_advance"; nextPhase: number }
   | { type: "session_complete" };
+
+// ---------------------------------------------------------------------------
+// Admin Dashboard types
+// ---------------------------------------------------------------------------
+
+export interface StudyOverview {
+  total_participants: number;
+  not_started: number;
+  in_progress: number;
+  completed: number;
+  completion_pct: number;
+  total_sessions: number;
+  total_tasks: number;
+  tasks_with_feedback: number;
+  avg_time_on_task_seconds: number | null;
+}
+
+export interface AdminParticipantRow {
+  participant_id: string;
+  group: "A" | "B";
+  assignment_status: string;
+  session_id: string | null;
+  current_phase: number | null;
+  current_mode: Mode | null;
+  session_started_at: string | null;
+  session_ended_at: string | null;
+  phases_completed: number;
+  total_time_seconds: number | null;
+}
+
+export interface AdminOverviewResponse {
+  overview: StudyOverview;
+  participants: AdminParticipantRow[];
+}
+
+export interface AdminTaskDetail {
+  task_id: string;
+  phase: number;
+  mode: Mode;
+  ticker: string;
+  query_text: string;
+  started_at: string;
+  completed_at: string | null;
+  time_on_task_seconds: number | null;
+  retrieved_count: number;
+  selected_count: number;
+  rejected_count: number;
+  retrieval_completed_at: string | null;
+  generated_summary_preview: string | null;
+  generation_completed_at: string | null;
+  edited_summary_preview: string | null;
+  characters_edited: number | null;
+  flagged_spans_count: number;
+  edit_completed_at: string | null;
+  feedback_responses: Record<string, unknown> | null;
+  feedback_submitted_at: string | null;
+}
+
+export interface AdminSessionDetail {
+  session_id: string;
+  participant_id: string;
+  group: "A" | "B";
+  current_phase: number;
+  current_mode: Mode;
+  started_at: string;
+  ended_at: string | null;
+  tasks: AdminTaskDetail[];
+}
+
+export interface AdminActivityEvent {
+  timestamp: string;
+  participant_id: string;
+  event_type: string;
+  phase: number | null;
+  mode: Mode | null;
+  ticker: string | null;
+  detail: string;
+}
+
+export interface AdminActivityResponse {
+  events: AdminActivityEvent[];
+  total_count: number;
+}
+
+export interface AdminTaskFullDetail extends AdminTaskDetail {
+  generated_summary: string | null;
+  edited_summary: string | null;
+  retrieved_nodes: Record<string, unknown>[] | null;
+  selected_node_ids: string[] | null;
+  rejected_node_ids: string[] | null;
+  traversal_path: Record<string, unknown>[] | null;
+  flagged_spans: Record<string, unknown>[] | null;
+}

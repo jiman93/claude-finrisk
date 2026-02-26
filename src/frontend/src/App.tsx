@@ -1,12 +1,13 @@
 import { useState } from "react";
 
 import CheckpointDashboard from "./components/admin/CheckpointDashboard";
+import StudyMonitor from "./components/admin/StudyMonitor";
 import DocumentsPanel from "./components/DocumentsPanel";
 import StudyChatGate from "./components/study/StudyChatGate";
 import StudyControlPanel from "./components/study/StudyControlPanel";
 import { useStudyStore } from "./stores/studyStore";
 
-type AppPage = "chat" | "dashboard" | "study" | "documents";
+type AppPage = "chat" | "dashboard" | "study" | "documents" | "admin";
 
 export default function App() {
   const [page, setPage] = useState<AppPage>("chat");
@@ -63,6 +64,12 @@ export default function App() {
           >
             Study Setup
           </button>
+          <button
+            className={`pi-nav-item ${page === "admin" ? "active" : ""}`}
+            onClick={() => setPage("admin")}
+          >
+            Study Monitor
+          </button>
         </nav>
 
         <div className="pi-sidebar-section">
@@ -100,7 +107,9 @@ export default function App() {
                   ? "Study Control Panel"
                   : page === "documents"
                     ? "10-K Documents"
-                    : activeTitle}
+                    : page === "admin"
+                      ? "Study Monitor"
+                      : activeTitle}
             </span>
           </div>
           <div className="pi-topbar-right">
@@ -144,6 +153,14 @@ export default function App() {
                 Back to Chat
               </button>
             )}
+            {page === "admin" && (
+              <button
+                className="pi-pill-btn"
+                onClick={() => setPage("chat")}
+              >
+                Back to Chat
+              </button>
+            )}
           </div>
         </header>
 
@@ -160,6 +177,7 @@ export default function App() {
             <StudyControlPanel onBack={() => setPage("chat")} />
           )}
           {page === "documents" && <DocumentsPanel />}
+          {page === "admin" && <StudyMonitor />}
         </div>
       </section>
     </main>
