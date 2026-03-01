@@ -222,6 +222,8 @@ def submit_feedback(task_id: str, payload: SubmitFeedbackRequest, db: Session = 
 
     task.feedback_responses = payload.responses
     task.feedback_submitted_at = datetime.utcnow()
+    if payload.pdf_view_duration_ms is not None:
+        task.pdf_view_duration_ms = payload.pdf_view_duration_ms
     db.commit()
     db.refresh(task)
 

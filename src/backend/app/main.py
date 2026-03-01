@@ -71,6 +71,7 @@ def _apply_sqlite_compat_migrations() -> None:
             "edit_distance": "INTEGER",
             "edit_similarity": "FLOAT",
             "first_edit_at": "TIMESTAMP",
+            "pdf_view_duration_ms": "INTEGER",
         }
     }
 

@@ -92,10 +92,15 @@ export function editSummaryTask(
 export function submitFeedbackTask(
   taskId: string,
   definitionId: string,
-  responses: Record<string, unknown>
+  responses: Record<string, unknown>,
+  pdfViewDurationMs?: number
 ): Promise<SubmitFeedbackResponse> {
   return request<SubmitFeedbackResponse>(`/api/tasks/${taskId}/submit-feedback`, {
     method: "POST",
-    body: JSON.stringify({ definition_id: definitionId, responses }),
+    body: JSON.stringify({
+      definition_id: definitionId,
+      responses,
+      pdf_view_duration_ms: pdfViewDurationMs || null,
+    }),
   });
 }

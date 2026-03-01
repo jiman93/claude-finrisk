@@ -197,6 +197,38 @@ The matching is fuzzy — it extracts the first 5 significant words (>2 chars) f
 
 ---
 
+## 5. PDF Viewer Dwell Time
+
+**Purpose:** Measure source verification behaviour — how long participants spend viewing the original PDF when checking citations.
+
+### How it works
+
+1. `openPdfViewer` records `pdfViewOpenedAt = Date.now()` in the store
+2. `closePdfViewer` computes the elapsed time and adds it to a running `pdfViewDurationMs` accumulator
+3. Multiple open/close cycles within a single phase are summed (a participant may check several citations)
+4. When the questionnaire is submitted (`submitFeedbackTask`), the accumulated duration is sent as `pdf_view_duration_ms` and stored on the task record
+5. The accumulator resets to 0 after submission, ready for the next phase
+
+### What this enables
+
+| Metric | Analysis |
+|---|---|
+| Total PDF view time per task | Do participants verify sources more in HITL-R (where they chose the chunks) vs Baseline? |
+| PDF view time vs trust rating | Does source verification correlate with higher trust scores? |
+| PDF view time by quality tier | Do participants spend more time verifying when retrieval quality is lower? |
+| View count (open/close cycles) | How many distinct citations do participants check? |
+
+### Files changed
+
+- `src/frontend/src/stores/studyStore.ts` — `pdfViewOpenedAt`, `pdfViewDurationMs` state + open/close tracking
+- `src/frontend/src/api/client.ts` — `pdfViewDurationMs` parameter on `submitFeedbackTask`
+- `src/backend/app/schemas/task.py` — `pdf_view_duration_ms` on `SubmitFeedbackRequest`
+- `src/backend/app/models/task.py` — `pdf_view_duration_ms` Integer column
+- `src/backend/app/routers/tasks.py` — store value in `submit_feedback` endpoint
+- `src/backend/app/main.py` — SQLite migration for new column
+
+---
+
 ## Database Schema Changes
 
 All new columns are nullable and added via the existing SQLite compatibility migration in `main.py`:
@@ -206,6 +238,7 @@ ALTER TABLE tasks ADD COLUMN llm_metrics JSON;
 ALTER TABLE tasks ADD COLUMN edit_distance INTEGER;
 ALTER TABLE tasks ADD COLUMN edit_similarity FLOAT;
 ALTER TABLE tasks ADD COLUMN first_edit_at TIMESTAMP;
+ALTER TABLE tasks ADD COLUMN pdf_view_duration_ms INTEGER;
 ```
 
 Existing data is unaffected — new fields default to `NULL` for historical records.

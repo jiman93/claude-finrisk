@@ -82,6 +82,7 @@ class EditSummaryResponse(BaseModel):
 class SubmitFeedbackRequest(BaseModel):
     definition_id: str
     responses: dict[str, Any]
+    pdf_view_duration_ms: int | None = None
 
 
 class SubmitFeedbackResponse(BaseModel):

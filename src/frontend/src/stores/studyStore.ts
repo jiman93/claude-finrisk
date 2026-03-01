@@ -54,6 +54,8 @@ interface StudyState {
 
   // In-app PDF viewer
   pdfViewer: { url: string; page: number; ticker: string; highlightText?: string } | null;
+  pdfViewOpenedAt: number | null;
+  pdfViewDurationMs: number;
 
   // Chat history
   activeChatId: string | null;
@@ -171,6 +173,8 @@ export const useStudyStore = create<StudyState>()(
 
   pdfUrlMap: {},
   pdfViewer: null,
+  pdfViewOpenedAt: null as number | null,
+  pdfViewDurationMs: 0,
 
   activeChatId: null,
   chatSnapshots: {},
@@ -275,8 +279,12 @@ export const useStudyStore = create<StudyState>()(
     set({ pdfUrlMap: map });
   },
 
-  openPdfViewer: (params) => set({ pdfViewer: params }),
-  closePdfViewer: () => set({ pdfViewer: null }),
+  openPdfViewer: (params) => set({ pdfViewer: params, pdfViewOpenedAt: Date.now() }),
+  closePdfViewer: () => {
+    const { pdfViewOpenedAt, pdfViewDurationMs } = get();
+    const elapsed = pdfViewOpenedAt ? Date.now() - pdfViewOpenedAt : 0;
+    set({ pdfViewer: null, pdfViewOpenedAt: null, pdfViewDurationMs: pdfViewDurationMs + elapsed });
+  },
 
   setParticipantId: (participantId) => set({ participantId }),
 
@@ -608,10 +616,12 @@ export const useStudyStore = create<StudyState>()(
       ],
     }));
 
-    // Persist feedback to backend
+    // Persist feedback to backend (include accumulated PDF view duration)
     const taskId = session?.current_task_id;
     if (taskId) {
-      submitFeedbackTask(taskId, definitionId, data).catch(console.error);
+      const pdfDuration = get().pdfViewDurationMs;
+      submitFeedbackTask(taskId, definitionId, data, pdfDuration > 0 ? pdfDuration : undefined).catch(console.error);
+      set({ pdfViewDurationMs: 0, pdfViewOpenedAt: null });
     }
 
     checkAllCheckpointsDone();

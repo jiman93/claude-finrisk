@@ -46,5 +46,6 @@ class Task(Base):
     edit_distance: Mapped[int | None] = mapped_column(Integer)
     edit_similarity: Mapped[float | None] = mapped_column(Float)
     first_edit_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=False))
+    pdf_view_duration_ms: Mapped[int | None] = mapped_column(Integer)
 
     session = relationship("Session", back_populates="tasks")
