@@ -1113,7 +1113,7 @@ function EditableSummaryCard({
           onClick={() => void handleAccept()}
           disabled={disabled}
         >
-          Looks Good
+          Accept
         </button>
         <button
           type="button"

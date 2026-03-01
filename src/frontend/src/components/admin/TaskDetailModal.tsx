@@ -16,7 +16,8 @@ function formatMs(ms: number | null | undefined): string {
 
 function formatTs(iso: string | null): string {
   if (!iso) return "--";
-  return new Date(iso).toLocaleString();
+  const utcIso = iso.endsWith("Z") || iso.includes("+") ? iso : iso + "Z";
+  return new Date(utcIso).toLocaleString();
 }
 
 const MODE_LABELS: Record<string, string> = {
