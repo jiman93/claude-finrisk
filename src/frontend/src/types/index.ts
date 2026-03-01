@@ -404,10 +404,18 @@ export interface AdminTaskDetail {
   generation_completed_at: string | null;
   edited_summary_preview: string | null;
   characters_edited: number | null;
+  edit_distance: number | null;
+  edit_similarity: number | null;
   flagged_spans_count: number;
   edit_completed_at: string | null;
+  first_edit_at: string | null;
   feedback_responses: Record<string, unknown> | null;
   feedback_submitted_at: string | null;
+  llm_metrics: {
+    generation?: { prompt_tokens: number; completion_tokens: number; duration_ms: number; model: string };
+    navigation?: { prompt_tokens: number; completion_tokens: number; duration_ms: number; model: string; depth: number }[];
+  } | null;
+  pdf_view_duration_ms: number | null;
 }
 
 export interface AdminSessionDetail {

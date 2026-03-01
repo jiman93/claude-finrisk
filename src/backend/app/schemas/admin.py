@@ -63,10 +63,15 @@ class TaskDetail(BaseModel):
     generation_completed_at: datetime | None
     edited_summary_preview: str | None
     characters_edited: int | None
+    edit_distance: int | None
+    edit_similarity: float | None
     flagged_spans_count: int
     edit_completed_at: datetime | None
+    first_edit_at: datetime | None
     feedback_responses: dict | None
     feedback_submitted_at: datetime | None
+    llm_metrics: dict | None
+    pdf_view_duration_ms: int | None
 
 
 # ── Session detail ──

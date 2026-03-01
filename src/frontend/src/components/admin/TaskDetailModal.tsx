@@ -8,6 +8,12 @@ function formatTime(seconds: number | null): string {
   return `${m}m ${s}s`;
 }
 
+function formatMs(ms: number | null | undefined): string {
+  if (ms == null) return "--";
+  if (ms < 1000) return `${ms}ms`;
+  return `${(ms / 1000).toFixed(1)}s`;
+}
+
 function formatTs(iso: string | null): string {
   if (!iso) return "--";
   return new Date(iso).toLocaleString();
@@ -27,6 +33,8 @@ interface Props {
 
 export default function TaskDetailModal({ task, onClose }: Props) {
   const modeClass = task.mode.replace("_", "");
+  const gen = task.llm_metrics?.generation;
+  const nav = task.llm_metrics?.navigation;
 
   return (
     <div className="adm-modal-overlay" onClick={onClose}>
@@ -50,6 +58,9 @@ export default function TaskDetailModal({ task, onClose }: Props) {
           <span>Started: {formatTs(task.started_at)}</span>
           <span>Completed: {formatTs(task.completed_at)}</span>
           <span>Duration: {formatTime(task.time_on_task_seconds)}</span>
+          {task.pdf_view_duration_ms != null && task.pdf_view_duration_ms > 0 && (
+            <span>PDF viewed: {formatMs(task.pdf_view_duration_ms)}</span>
+          )}
         </div>
 
         {/* Query */}
@@ -125,6 +136,58 @@ export default function TaskDetailModal({ task, onClose }: Props) {
           </section>
         )}
 
+        {/* LLM Metrics */}
+        {(gen || nav) && (
+          <section className="adm-modal-section">
+            <h4>LLM Metrics</h4>
+            <div className="adm-feedback-grid">
+              {gen && (
+                <>
+                  <div className="adm-feedback-item">
+                    <span className="adm-feedback-key">Generation model</span>
+                    <span className="adm-feedback-val">{gen.model}</span>
+                  </div>
+                  <div className="adm-feedback-item">
+                    <span className="adm-feedback-key">Generation tokens</span>
+                    <span className="adm-feedback-val">
+                      {gen.prompt_tokens} in / {gen.completion_tokens} out
+                    </span>
+                  </div>
+                  <div className="adm-feedback-item">
+                    <span className="adm-feedback-key">Generation latency</span>
+                    <span className="adm-feedback-val">{formatMs(gen.duration_ms)}</span>
+                  </div>
+                </>
+              )}
+              {nav && nav.length > 0 && (
+                <>
+                  <div className="adm-feedback-item">
+                    <span className="adm-feedback-key">Navigation model</span>
+                    <span className="adm-feedback-val">{nav[0].model}</span>
+                  </div>
+                  <div className="adm-feedback-item">
+                    <span className="adm-feedback-key">Navigation calls</span>
+                    <span className="adm-feedback-val">{nav.length}</span>
+                  </div>
+                  <div className="adm-feedback-item">
+                    <span className="adm-feedback-key">Nav total tokens</span>
+                    <span className="adm-feedback-val">
+                      {nav.reduce((s, n) => s + n.prompt_tokens, 0)} in /{" "}
+                      {nav.reduce((s, n) => s + n.completion_tokens, 0)} out
+                    </span>
+                  </div>
+                  <div className="adm-feedback-item">
+                    <span className="adm-feedback-key">Nav total latency</span>
+                    <span className="adm-feedback-val">
+                      {formatMs(nav.reduce((s, n) => s + n.duration_ms, 0))}
+                    </span>
+                  </div>
+                </>
+              )}
+            </div>
+          </section>
+        )}
+
         {/* Generated Summary */}
         {task.generated_summary && (
           <section className="adm-modal-section">
@@ -146,12 +209,37 @@ export default function TaskDetailModal({ task, onClose }: Props) {
             <h4>
               Edited Summary
               <span className="adm-stat-chip" style={{ marginLeft: 8 }}>
-                {task.characters_edited ?? 0} chars edited
+                {task.characters_edited ?? 0} chars
               </span>
+              {task.edit_distance != null && (
+                <span className="adm-stat-chip" style={{ marginLeft: 4 }}>
+                  {task.edit_distance} words Levenshtein
+                </span>
+              )}
+              {task.edit_similarity != null && (
+                <span className="adm-stat-chip" style={{ marginLeft: 4 }}>
+                  {Math.round(task.edit_similarity * 100)}% similar
+                </span>
+              )}
               <span className="adm-modal-ts">
                 {formatTs(task.edit_completed_at)}
               </span>
             </h4>
+            {task.first_edit_at && task.generation_completed_at && (
+              <div className="adm-modal-meta" style={{ marginBottom: 8 }}>
+                <span>
+                  Deliberation:{" "}
+                  {formatTime(
+                    Math.round(
+                      (new Date(task.first_edit_at).getTime() -
+                        new Date(task.generation_completed_at).getTime()) /
+                        1000
+                    )
+                  )}
+                </span>
+                <span>First edit: {formatTs(task.first_edit_at)}</span>
+              </div>
+            )}
             <div className="adm-modal-block adm-summary-block">
               {task.edited_summary}
             </div>

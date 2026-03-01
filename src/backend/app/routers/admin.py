@@ -44,10 +44,15 @@ def _task_to_detail(t: Task) -> TaskDetail:
         generation_completed_at=t.generation_completed_at,
         edited_summary_preview=(t.edited_summary or "")[:200] or None,
         characters_edited=t.characters_edited,
+        edit_distance=t.edit_distance,
+        edit_similarity=t.edit_similarity,
         flagged_spans_count=len(t.flagged_spans or []),
         edit_completed_at=t.edit_completed_at,
+        first_edit_at=t.first_edit_at,
         feedback_responses=t.feedback_responses,
         feedback_submitted_at=t.feedback_submitted_at,
+        llm_metrics=t.llm_metrics,
+        pdf_view_duration_ms=t.pdf_view_duration_ms,
     )
 
 
