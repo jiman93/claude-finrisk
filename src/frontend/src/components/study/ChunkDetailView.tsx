@@ -52,7 +52,7 @@ export default function ChunkDetailView({ chunks, initialIndex, onBack }: ChunkD
               <button
                 type="button"
                 className="pi-citation-chip pi-citation-chip-btn"
-                onClick={() => ticker && openPdfViewer({ url: pdfUrl!, page: pageNum, ticker })}
+                onClick={() => ticker && openPdfViewer({ url: pdfUrl!, page: pageNum, ticker, highlightText: chunk.title })}
                 title={`Open PDF at page ${pageNum}`}
               >
                 {chunk.pageRef} — View in PDF

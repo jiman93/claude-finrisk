@@ -17,6 +17,7 @@ class RetrievalResult:
     nodes: list[RetrievalNode]
     retrieval_mode: str = "pageindex"
     traversal_path: list[dict] | None = None
+    nav_metrics: list[dict] | None = None
 
 
 def normalize_pageindex_nodes(ticker: str, raw_nodes: list[dict]) -> list[RetrievalNode]:

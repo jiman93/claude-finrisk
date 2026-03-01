@@ -3139,6 +3139,11 @@ input {
   font-size: 14px;
 }
 
+.pdf-highlight-match {
+  background: rgba(255, 200, 0, 0.35) !important;
+  border-radius: 2px;
+}
+
 /* ==========================================================================
    Admin Dashboard — Study Monitor (adm-)
    ========================================================================== */

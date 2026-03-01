@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, Enum, ForeignKey, Integer, JSON, String, Text
+from sqlalchemy import DateTime, Enum, Float, ForeignKey, Integer, JSON, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.database import Base
@@ -40,5 +40,11 @@ class Task(Base):
     edit_completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=False))
     feedback_responses: Mapped[dict | None] = mapped_column(JSON)
     feedback_submitted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=False))
+
+    # --- Feedback enhancement fields ---
+    llm_metrics: Mapped[dict | None] = mapped_column(JSON)
+    edit_distance: Mapped[int | None] = mapped_column(Integer)
+    edit_similarity: Mapped[float | None] = mapped_column(Float)
+    first_edit_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=False))
 
     session = relationship("Session", back_populates="tasks")

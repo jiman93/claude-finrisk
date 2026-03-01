@@ -52,6 +52,47 @@ export default function PdfViewerOverlay() {
     setNumPages(n);
   }, []);
 
+  // Highlight matching text in the text layer after it renders
+  const onRenderTextLayerSuccess = useCallback(() => {
+    const highlightText = pdfViewer?.highlightText;
+    if (!highlightText || !bodyRef.current) return;
+
+    // Extract first meaningful words from the section title for matching
+    const searchTerms = highlightText
+      .replace(/\(Part \d+\)/gi, "")
+      .replace(/[—–\-]/g, " ")
+      .trim()
+      .split(/\s+/)
+      .filter((w) => w.length > 2)
+      .slice(0, 5);
+
+    if (searchTerms.length === 0) return;
+
+    const spans = bodyRef.current.querySelectorAll(
+      ".react-pdf__Page__textContent span"
+    );
+
+    // Build a search phrase from first few words
+    const searchPhrase = searchTerms.join(" ").toLowerCase();
+
+    let matched = false;
+    spans.forEach((span) => {
+      span.classList.remove("pdf-highlight-match");
+      const text = (span.textContent || "").toLowerCase();
+      // Check if span contains enough of the search terms
+      const matchCount = searchTerms.filter((t) =>
+        text.includes(t.toLowerCase())
+      ).length;
+      if (matchCount >= Math.min(2, searchTerms.length) || text.includes(searchPhrase)) {
+        span.classList.add("pdf-highlight-match");
+        if (!matched) {
+          span.scrollIntoView({ behavior: "smooth", block: "center" });
+          matched = true;
+        }
+      }
+    });
+  }, [pdfViewer?.highlightText]);
+
   function goToPage(p: number) {
     const clamped = Math.max(1, Math.min(p, numPages || 1));
     setPageNumber(clamped);
@@ -128,6 +169,7 @@ export default function PdfViewerOverlay() {
             pageNumber={pageNumber}
             scale={scale}
             loading={<div className="pdf-viewer-loading">Rendering page...</div>}
+            onRenderTextLayerSuccess={onRenderTextLayerSuccess}
           />
         </Document>
       </div>

@@ -66,12 +66,15 @@ class FlaggedSpan(BaseModel):
 class EditSummaryRequest(BaseModel):
     edited_text: str
     flagged_spans: list[FlaggedSpan] = []
+    first_edit_at_ms: int | None = None
 
 
 class EditSummaryResponse(BaseModel):
     task_id: str
     edited_summary: str
     characters_edited: int
+    edit_distance: int | None = None
+    edit_similarity: float | None = None
     hallucinations_flagged: int
     edit_completed_at: datetime
 

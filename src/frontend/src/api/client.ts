@@ -76,13 +76,15 @@ export function selectNodesTask(
 export function editSummaryTask(
   taskId: string,
   editedText: string,
-  flaggedSpans: FlaggedSpan[]
+  flaggedSpans: FlaggedSpan[],
+  firstEditAtMs?: number | null
 ): Promise<EditSummaryResponse> {
   return request<EditSummaryResponse>(`/api/tasks/${taskId}/edit-summary`, {
     method: "POST",
     body: JSON.stringify({
       edited_text: editedText,
       flagged_spans: flaggedSpans,
+      first_edit_at_ms: firstEditAtMs ?? null,
     }),
   });
 }

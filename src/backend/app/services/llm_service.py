@@ -1,3 +1,6 @@
+import time
+from dataclasses import dataclass
+
 import httpx
 
 from app.config import settings
@@ -6,6 +9,15 @@ from app.schemas.task import RetrievalNode
 
 class LLMServiceError(RuntimeError):
     pass
+
+
+@dataclass
+class LLMResult:
+    content: str
+    prompt_tokens: int
+    completion_tokens: int
+    duration_ms: int
+    model: str
 
 
 class LLMService:
@@ -17,7 +29,7 @@ class LLMService:
     def has_credentials(self) -> bool:
         return bool(self.api_key)
 
-    def generate_summary(self, ticker: str, query: str, nodes: list[RetrievalNode]) -> str:
+    def generate_summary(self, ticker: str, query: str, nodes: list[RetrievalNode]) -> LLMResult:
         if not self.api_key:
             raise LLMServiceError("OPENAI_API_KEY is not configured")
         if not nodes:
@@ -63,6 +75,7 @@ class LLMService:
             "Content-Type": "application/json",
         }
 
+        t0 = time.time()
         try:
             with httpx.Client(timeout=60) as client:
                 response = client.post(f"{self.base_url}/chat/completions", json=payload, headers=headers)
@@ -70,6 +83,7 @@ class LLMService:
                 data = response.json()
         except httpx.HTTPError as exc:
             raise LLMServiceError(f"OpenAI HTTP error: {exc}") from exc
+        duration_ms = int((time.time() - t0) * 1000)
 
         choices = data.get("choices", [])
         if not choices:
@@ -77,4 +91,12 @@ class LLMService:
         content = choices[0].get("message", {}).get("content", "")
         if not content:
             raise LLMServiceError("OpenAI response contained empty content")
-        return str(content)
+
+        usage = data.get("usage", {})
+        return LLMResult(
+            content=str(content),
+            prompt_tokens=usage.get("prompt_tokens", 0),
+            completion_tokens=usage.get("completion_tokens", 0),
+            duration_ms=duration_ms,
+            model=self.model,
+        )

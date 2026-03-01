@@ -159,13 +159,13 @@ def _call_nav_llm(
     children: list[dict],
     api_key: str,
     base_url: str,
-) -> list[str]:
+) -> tuple[list[str], dict]:
     """Call the navigation LLM to select branches.
 
-    Returns a list of selected node_ids.
+    Returns a tuple of (selected_node_ids, metrics_dict).
     """
     if not children:
-        return []
+        return [], {}
 
     system_prompt, user_prompt = _build_nav_prompt(query, children)
 
@@ -189,6 +189,8 @@ def _call_nav_llm(
         "Content-Type": "application/json",
     }
 
+    import time as _time
+    t0 = _time.time()
     try:
         with httpx.Client(timeout=30) as client:
             resp = client.post(
@@ -200,6 +202,15 @@ def _call_nav_llm(
             data = resp.json()
     except httpx.HTTPError as exc:
         raise TreeServiceError(f"Navigation LLM call failed: {exc}") from exc
+    duration_ms = int((_time.time() - t0) * 1000)
+
+    usage = data.get("usage", {})
+    metrics = {
+        "prompt_tokens": usage.get("prompt_tokens", 0),
+        "completion_tokens": usage.get("completion_tokens", 0),
+        "duration_ms": duration_ms,
+        "model": NAV_MODEL,
+    }
 
     # Parse the response.
     choices = data.get("choices", [])
@@ -223,7 +234,7 @@ def _call_nav_llm(
     selected = [nid for nid in selected if nid in valid_ids]
 
     # Enforce max branches.
-    return selected[:MAX_BRANCHES_PER_LEVEL]
+    return selected[:MAX_BRANCHES_PER_LEVEL], metrics
 
 
 def _extract_node_ids_fallback(text: str, children: list[dict]) -> list[str]:
@@ -396,15 +407,17 @@ def traverse_tree(
     api_key: str,
     base_url: str,
     max_depth: int = MAX_TRAVERSAL_DEPTH,
-) -> tuple[list[dict], list[dict]]:
+) -> tuple[list[dict], list[dict], list[dict]]:
     """Navigate the tree using LLM reasoning.
 
     Returns:
-        (leaf_nodes, traversal_path) where:
+        (leaf_nodes, traversal_path, nav_metrics) where:
         - leaf_nodes: list of leaf node dicts with content
         - traversal_path: list of dicts recording each navigation step
+        - nav_metrics: list of per-call LLM usage dicts
     """
     traversal_path: list[dict] = []
+    nav_metrics: list[dict] = []
     current_nodes = [tree]
     depth = 0
 
@@ -428,10 +441,13 @@ def traverse_tree(
                     "action": "return_all_leaves",
                     "count": len(all_children),
                 })
-                return all_children, traversal_path
+                return all_children, traversal_path, nav_metrics
 
         # Ask LLM to select branches.
-        selected_ids = _call_nav_llm(query, all_children, api_key, base_url)
+        selected_ids, call_metrics = _call_nav_llm(query, all_children, api_key, base_url)
+        if call_metrics:
+            call_metrics["depth"] = depth
+            nav_metrics.append(call_metrics)
 
         if not selected_ids:
             # LLM didn't select anything — fall back to first child.
@@ -466,7 +482,7 @@ def traverse_tree(
         leaves.sort(key=lambda n: n.get("char_count", 0), reverse=True)
         leaves = leaves[:MAX_LEAF_NODES]
 
-    return leaves, traversal_path
+    return leaves, traversal_path, nav_metrics
 
 
 # ---------------------------------------------------------------------------
@@ -502,13 +518,15 @@ class TreeRetrievalService:
             raise TreeServiceError("OPENAI_API_KEY is not configured")
 
         tree = load_tree(ticker, self.tree_dir)
+        all_nav_metrics: list[dict] = []
         try:
-            leaves, path = traverse_tree(
+            leaves, path, nav_metrics = traverse_tree(
                 tree=tree,
                 query=query,
                 api_key=self.api_key,
                 base_url=self.base_url,
             )
+            all_nav_metrics = nav_metrics
         except TreeServiceError as exc:
             # Degrade gracefully: still return best-effort lexical ranking.
             log.warning("Tree traversal failed for %s, using lexical fallback: %s", ticker, exc)
@@ -578,4 +596,5 @@ class TreeRetrievalService:
             nodes=nodes,
             retrieval_mode="tree",
             traversal_path=path,
+            nav_metrics=all_nav_metrics or None,
         )

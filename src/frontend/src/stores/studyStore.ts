@@ -53,7 +53,7 @@ interface StudyState {
   pdfUrlMap: Record<string, string>;
 
   // In-app PDF viewer
-  pdfViewer: { url: string; page: number; ticker: string } | null;
+  pdfViewer: { url: string; page: number; ticker: string; highlightText?: string } | null;
 
   // Chat history
   activeChatId: string | null;
@@ -83,14 +83,14 @@ interface StudyState {
     rejectedIds: string[],
     order: string[]
   ) => Promise<void>;
-  submitEditedSummary: (taskId: string, editedText: string) => Promise<void>;
+  submitEditedSummary: (taskId: string, editedText: string, firstEditAtMs?: number | null) => Promise<void>;
   startQuestionnaire: () => void;
   submitCheckpoint: (definitionId: string, data: Record<string, unknown>) => void;
   skipCheckpoint: (definitionId: string) => void;
 
   // Documents actions
   loadPdfUrlMap: () => Promise<void>;
-  openPdfViewer: (params: { url: string; page: number; ticker: string }) => void;
+  openPdfViewer: (params: { url: string; page: number; ticker: string; highlightText?: string }) => void;
   closePdfViewer: () => void;
 
   // Chat history actions
@@ -492,11 +492,11 @@ export const useStudyStore = create<StudyState>()(
 
   // ── Submit edited summary (HITL-G / HITL-Full) ──
 
-  submitEditedSummary: async (taskId, editedText) => {
+  submitEditedSummary: async (taskId, editedText, firstEditAtMs) => {
     const session = get().session;
     set({ isLoading: true, error: null });
     try {
-      const result = await editSummaryTask(taskId, editedText, []);
+      const result = await editSummaryTask(taskId, editedText, [], firstEditAtMs);
 
       // Carry forward source nodes from the pre-edit summary
       const existingPhase = session

@@ -67,6 +67,10 @@ def _apply_sqlite_compat_migrations() -> None:
             "edit_completed_at": "TIMESTAMP",
             "feedback_responses": "JSON",
             "feedback_submitted_at": "TIMESTAMP",
+            "llm_metrics": "JSON",
+            "edit_distance": "INTEGER",
+            "edit_similarity": "FLOAT",
+            "first_edit_at": "TIMESTAMP",
         }
     }
 

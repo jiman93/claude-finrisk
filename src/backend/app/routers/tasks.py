@@ -1,4 +1,5 @@
 from datetime import datetime
+from difflib import SequenceMatcher
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -53,6 +54,13 @@ def query_task(task_id: str, payload: QueryRequest, db: Session = Depends(get_db
     if result.traversal_path:
         task.traversal_path = result.traversal_path
     task.retrieval_completed_at = datetime.utcnow()
+
+    # Store navigation LLM metrics if available.
+    if result.nav_metrics:
+        existing = task.llm_metrics or {}
+        existing["navigation"] = result.nav_metrics
+        task.llm_metrics = existing
+
     db.commit()
     db.refresh(task)
 
@@ -89,7 +97,18 @@ def generate_summary(task_id: str, payload: GenerateRequest, db: Session = Depen
 
     nodes = [RetrievalNode(**node) for node in selected_nodes]
     try:
-        summary = llm_service.generate_summary(task.ticker, task.query_text, nodes)
+        llm_result = llm_service.generate_summary(task.ticker, task.query_text, nodes)
+        summary = llm_result.content
+
+        # Store generation LLM metrics.
+        existing = task.llm_metrics or {}
+        existing["generation"] = {
+            "prompt_tokens": llm_result.prompt_tokens,
+            "completion_tokens": llm_result.completion_tokens,
+            "duration_ms": llm_result.duration_ms,
+            "model": llm_result.model,
+        }
+        task.llm_metrics = existing
     except LLMServiceError:
         summary = template_summary(task.ticker, task.query_text, nodes)
 
@@ -140,10 +159,21 @@ def edit_summary(task_id: str, payload: EditSummaryRequest, db: Session = Depend
     edited = payload.edited_text
     characters_edited = abs(len(edited) - len(original))
 
+    # Compute edit distance metrics.
+    similarity = SequenceMatcher(None, original, edited).ratio()
+    edit_dist = _word_level_edit_distance(original, edited)
+
     task.edited_summary = edited
     task.characters_edited = characters_edited
+    task.edit_distance = edit_dist
+    task.edit_similarity = round(similarity, 4)
     task.flagged_spans = [span.model_dump() for span in payload.flagged_spans]
     task.edit_completed_at = datetime.utcnow()
+
+    # Store first edit timestamp if provided.
+    if payload.first_edit_at_ms:
+        task.first_edit_at = datetime.utcfromtimestamp(payload.first_edit_at_ms / 1000)
+
     db.commit()
     db.refresh(task)
 
@@ -151,9 +181,37 @@ def edit_summary(task_id: str, payload: EditSummaryRequest, db: Session = Depend
         task_id=task.id,
         edited_summary=task.edited_summary,
         characters_edited=task.characters_edited or 0,
+        edit_distance=task.edit_distance,
+        edit_similarity=task.edit_similarity,
         hallucinations_flagged=len(task.flagged_spans or []),
         edit_completed_at=task.edit_completed_at,
     )
+
+
+def _word_level_edit_distance(a: str, b: str) -> int:
+    """Compute Levenshtein edit distance at the word level.
+
+    Word-level is more meaningful for summary edits than character-level
+    (avoids inflated counts from whitespace/punctuation changes).
+    """
+    words_a = a.split()
+    words_b = b.split()
+    m, n = len(words_a), len(words_b)
+
+    # Optimize memory: only keep two rows.
+    prev = list(range(n + 1))
+    curr = [0] * (n + 1)
+
+    for i in range(1, m + 1):
+        curr[0] = i
+        for j in range(1, n + 1):
+            if words_a[i - 1] == words_b[j - 1]:
+                curr[j] = prev[j - 1]
+            else:
+                curr[j] = 1 + min(prev[j], curr[j - 1], prev[j - 1])
+        prev, curr = curr, prev
+
+    return prev[n]
 
 
 @router.post("/{task_id}/submit-feedback", response_model=SubmitFeedbackResponse)

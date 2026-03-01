@@ -493,7 +493,7 @@ interface StreamRendererProps {
   readOnly: boolean;
   isLoading: boolean;
   onSubmitNodeSelection: (taskId: string, selected: string[], rejected: string[], order: string[]) => Promise<void>;
-  onSubmitEditedSummary: (taskId: string, editedText: string) => Promise<void>;
+  onSubmitEditedSummary: (taskId: string, editedText: string, firstEditAtMs?: number | null) => Promise<void>;
   onTriggerGeneration: (taskId: string) => Promise<void>;
   onViewSummary: (label: string, text: string, sourceNodes?: RetrievalNode[], ticker?: string) => void;
   onViewCheckpoint: (label: string, fields: Array<{ label: string; value: string }>) => void;
@@ -1009,21 +1009,29 @@ function EditableSummaryCard({
   taskId: string;
   summary: string;
   sourceNodes?: RetrievalNode[];
-  onSubmit: (taskId: string, editedText: string) => Promise<void>;
+  onSubmit: (taskId: string, editedText: string, firstEditAtMs?: number | null) => Promise<void>;
   onViewSummary: (label: string, text: string, sourceNodes?: RetrievalNode[]) => void;
   disabled: boolean;
 }) {
   const [phase, setPhase] = useState<"reviewing" | "editing" | "submitted">("reviewing");
   const [text, setText] = useState(summary);
+  const firstEditRef = useRef<number | null>(null);
+
+  function handleTextChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
+    if (firstEditRef.current === null) {
+      firstEditRef.current = Date.now();
+    }
+    setText(e.target.value);
+  }
 
   async function handleAccept() {
     setPhase("submitted");
-    await onSubmit(taskId, summary);
+    await onSubmit(taskId, summary, null);
   }
 
   async function handleSubmitEdit() {
     setPhase("submitted");
-    await onSubmit(taskId, text);
+    await onSubmit(taskId, text, firstEditRef.current);
   }
 
   if (phase === "submitted") {
@@ -1065,7 +1073,7 @@ function EditableSummaryCard({
         <textarea
           className="pi-edit-textarea"
           value={text}
-          onChange={(e) => setText(e.target.value)}
+          onChange={handleTextChange}
           rows={12}
           disabled={disabled}
         />
@@ -1276,7 +1284,7 @@ function CitationChip({ title, pageIndex, tickerOverride }: { title: string; pag
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
-          openPdfViewer({ url: pdfUrl, page: pageIndex, ticker });
+          openPdfViewer({ url: pdfUrl, page: pageIndex, ticker, highlightText: title });
         }}
         title={`Open PDF at page ${pageIndex}`}
       >
