@@ -264,6 +264,7 @@ export interface ChatSnapshot {
   session: SessionState | null;
   messages: ChatMessage[];
   assignment: ParticipantAssignment;
+  ledgerPhases: LedgerPhase[];
 }
 
 // ---------------------------------------------------------------------------

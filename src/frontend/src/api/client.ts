@@ -96,6 +96,14 @@ export function patchPdfDuration(taskId: string, pdfViewDurationMs: number): Pro
   });
 }
 
+export function completeTask(taskId: string): Promise<void> {
+  return request<void>(`/api/tasks/${taskId}/complete`, { method: "POST", body: JSON.stringify({}) });
+}
+
+export function completeSession(sessionId: string): Promise<void> {
+  return request<void>(`/api/sessions/${sessionId}/complete`, { method: "POST", body: JSON.stringify({}) });
+}
+
 export function submitFeedbackTask(
   taskId: string,
   definitionId: string,

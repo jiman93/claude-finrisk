@@ -2,6 +2,8 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 import {
+  completeSession,
+  completeTask,
   editSummaryTask,
   generateTask,
   nextPhase,
@@ -428,7 +430,8 @@ export const useStudyStore = create<StudyState>()(
     const { session } = get();
     if (!session) return;
 
-    // Flush any accumulated PDF view duration to the outgoing task
+    // Complete the outgoing task and flush PDF view duration
+    completeTask(session.current_task_id).catch(console.error);
     flushPdfDuration(session.current_task_id);
 
     // Mark current ledger phase as completed, activate next
@@ -660,13 +663,14 @@ export const useStudyStore = create<StudyState>()(
   // ── Chat history actions ──
 
   saveChat: (chatId, title, assignment) => {
-    const { session, messages } = get();
+    const { session, messages, ledgerPhases } = get();
     const snapshot: ChatSnapshot = {
       chatId,
       title,
       session,
       messages: [...messages],
       assignment,
+      ledgerPhases: [...ledgerPhases],
     };
     set((state) => {
       const newOrder = [chatId, ...state.chatOrder.filter((id) => id !== chatId)].slice(0, 20);
@@ -686,6 +690,7 @@ export const useStudyStore = create<StudyState>()(
       session: snapshot.session,
       messages: [...snapshot.messages],
       assignment: snapshot.assignment,
+      ledgerPhases: snapshot.ledgerPhases ?? [],
       isLoading: false,
       error: null,
       tailAction: null,
@@ -756,9 +761,11 @@ function setTailActionForPostSummary() {
       tailAction: { type: "phase_advance", nextPhase: session.current_phase + 1 },
     });
   } else {
-    // Final phase with no checkpoints — flush PDF duration before completing
+    // Final phase with no checkpoints — complete task/session and flush PDF duration
     if (session) {
+      completeTask(session.current_task_id).catch(console.error);
       flushPdfDuration(session.current_task_id);
+      completeSession(session.session_id).catch(console.error);
     }
     useStudyStore.setState({ tailAction: { type: "session_complete" } });
   }
@@ -791,9 +798,11 @@ function checkAllCheckpointsDone() {
       tailAction: { type: "phase_advance", nextPhase: session.current_phase + 1 },
     });
   } else {
-    // Mark final phase as completed in ledger
+    // Mark final phase as completed in ledger, complete task and session
     if (session) {
       useStudyStore.getState().advanceLedgerPhase(session.current_phase);
+      completeTask(session.current_task_id).catch(console.error);
+      completeSession(session.session_id).catch(console.error);
     }
     useStudyStore.setState({ tailAction: { type: "session_complete" } });
   }

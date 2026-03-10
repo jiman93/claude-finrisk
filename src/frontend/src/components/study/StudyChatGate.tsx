@@ -173,17 +173,23 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
   useEffect(() => {
     if (started && !sessionStartedRef.current) {
       sessionStartedRef.current = true;
-      chatIdRef.current = `chat-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
       startAndRunCurrentPhase();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [started]);
 
+  // Use session_id as chatId once the session is available
+  useEffect(() => {
+    if (session && sessionStartedRef.current && !chatIdRef.current) {
+      chatIdRef.current = session.session_id;
+    }
+  }, [session]);
+
   // Auto-save to chat history whenever messages change
   useEffect(() => {
-    if (!started || !sessionStartedRef.current || !assignment || !chatIdRef.current) return;
+    if (!started || !sessionStartedRef.current || !assignment || !chatIdRef.current || !session) return;
     if (messages.length === 0) return;
-    const title = `${assignment.participant_id} - Study Session`;
+    const title = `${assignment.participant_id} - Phase ${session.current_phase}/3`;
     onSaveChat(chatIdRef.current, title, assignment);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages, session]);
