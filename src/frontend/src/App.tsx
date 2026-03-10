@@ -38,7 +38,7 @@ export default function App() {
   return (
     <main className={`pi-layout ${sidebarOpen ? "" : "sidebar-collapsed"}`}>
       <aside className="pi-sidebar">
-        <div className="pi-logo">Y</div>
+        <div className="pi-logo"><img src="/logo.svg" alt="FinRisk" width="28" height="28" /></div>
         <nav className="pi-nav">
           <button
             className={`pi-nav-item ${page === "chat" && !activeChatId ? "active" : ""}`}

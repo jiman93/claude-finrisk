@@ -295,6 +295,7 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
             <div className="pi-chat-stream">
               <div className="scg-onboard">
                 <div className="scg-onboard-header">
+                  <img src="/logo.svg" alt="" width="48" height="48" className="scg-onboard-logo" />
                   <h1 className="scg-onboard-title">FinRisk AI Study</h1>
                   <p className="scg-onboard-tagline">
                     Use an AI-powered tool to create financial risk summaries from company 10-K filings

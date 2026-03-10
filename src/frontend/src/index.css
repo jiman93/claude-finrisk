@@ -64,14 +64,15 @@ input {
 }
 
 .pi-logo {
-  width: 24px;
-  height: 24px;
-  border-radius: 6px;
-  background: var(--accent);
+  width: 28px;
+  height: 28px;
   display: grid;
   place-items: center;
-  font-size: 12px;
-  font-weight: 700;
+}
+
+.pi-logo img {
+  width: 100%;
+  height: 100%;
 }
 
 .pi-nav {
@@ -1659,6 +1660,12 @@ input {
 
 /* Header */
 .scg-onboard-header { text-align: center; }
+.scg-onboard-logo {
+  margin-bottom: 12px;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
 .scg-onboard-title {
   color: var(--text-primary);
   font-size: 28px;
