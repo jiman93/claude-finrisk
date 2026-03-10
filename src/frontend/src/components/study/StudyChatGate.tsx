@@ -50,12 +50,6 @@ const MODE_ROLE_DESCRIPTIONS: Record<string, string> = {
     "Select chunks AND edit the generated summary. Full control over both retrieval and generation.",
 };
 
-// Video source config — change when the actual video is ready
-const VIDEO_CONFIG = {
-  type: "placeholder" as "placeholder" | "youtube" | "local",
-  youtubeUrl: "",
-  localSrc: "",
-};
 
 // ---------------------------------------------------------------------------
 // Main component
@@ -300,7 +294,6 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
           <div className="pi-left-pane">
             <div className="pi-chat-stream">
               <div className="scg-onboard">
-                {/* Header */}
                 <div className="scg-onboard-header">
                   <h1 className="scg-onboard-title">FinRisk AI Study</h1>
                   <p className="scg-onboard-tagline">
@@ -308,48 +301,6 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
                   </p>
                 </div>
 
-                {/* Video */}
-                <VideoPlaceholder />
-
-                {/* At-a-glance */}
-                <div className="scg-glance-row">
-                  <div className="scg-glance-card">
-                    <span className="scg-glance-icon">&#9201;</span>
-                    <span className="scg-glance-value">~15 min</span>
-                    <span className="scg-glance-label">Duration</span>
-                  </div>
-                  <div className="scg-glance-card">
-                    <span className="scg-glance-icon">&#9635;</span>
-                    <span className="scg-glance-value">3 Phases</span>
-                    <span className="scg-glance-label">3 Company 10-Ks</span>
-                  </div>
-                  <div className="scg-glance-card">
-                    <span className="scg-glance-icon">&#9881;</span>
-                    <span className="scg-glance-value">Risk Summary</span>
-                    <span className="scg-glance-label">Your deliverable</span>
-                  </div>
-                </div>
-
-                {/* Pipeline */}
-                <div className="scg-onboard-pipeline">
-                  <div className="scg-onboard-pipeline-label">How it works</div>
-                  <div className="scg-onboard-pipeline-row">
-                    {["Retrieve", "Select", "Generate", "Edit"].map((step, i) => (
-                      <Fragment key={step}>
-                        {i > 0 && <span className="scg-onboard-pipe-arrow">&rsaquo;</span>}
-                        <span className="scg-onboard-pipe-chip">{step}</span>
-                      </Fragment>
-                    ))}
-                  </div>
-                  <p className="scg-onboard-pipeline-desc">
-                    Each phase produces one risk summary. The AI retrieves and drafts — you guide the result.
-                  </p>
-                </div>
-
-                {/* Divider */}
-                <div className="scg-onboard-divider" />
-
-                {/* Form */}
                 <div className="scg-onboard-form-section">
                   <div className="scg-onboard-form-label">Enter your participant ID to begin</div>
                   <form className="scg-entry-form" onSubmit={handleLoadParticipant}>
@@ -789,66 +740,40 @@ function RetrievedNodesCard({ nodes }: { nodes: RetrievalNode[] }) {
 }
 
 function WelcomeBlock() {
-  const steps = [
-    { num: "1", label: "Retrieve", desc: "AI fetches relevant chunks from the 10-K filing" },
-    { num: "2", label: "Select", desc: "You choose which chunks to keep", note: "HITL-R & Full" },
-    { num: "3", label: "Generate", desc: "AI produces a risk summary from selected chunks" },
-    { num: "4", label: "Edit", desc: "You refine the AI summary", note: "HITL-G & Full" },
+  const steps: Array<{ num: string; label: string; desc: string; actor: "you" | "ai" | "preset"; mode?: string }> = [
+    { num: "1", label: "Prompt", desc: "A risk question is predetermined for each phase", actor: "preset" },
+    { num: "2", label: "Retrieve", desc: "AI fetches relevant chunks from the 10-K filing", actor: "ai" },
+    { num: "3", label: "Select", desc: "You choose which chunks to keep", actor: "you", mode: "HITL-R & Full" },
+    { num: "4", label: "Generate", desc: "AI produces a risk summary from selected chunks", actor: "ai" },
+    { num: "5", label: "Edit", desc: "You refine the AI-generated summary", actor: "you", mode: "HITL-G & Full" },
   ];
 
   return (
     <div className="scg-welcome-block">
       <h2 className="scg-welcome-title">Welcome to your study session</h2>
       <p className="scg-welcome-body">
-        You will analyse 3 companies by querying an AI-powered financial risk
-        tool. Each phase uses a different interaction mode, which determines how
-        much control you have over the AI pipeline.
+        You will analyse 3 companies using an AI-powered financial risk tool.
+        Each phase uses a different interaction mode, which determines how much
+        control you have over the AI pipeline.
       </p>
       <div className="scg-pipeline-steps">
         {steps.map((step, i) => (
           <Fragment key={step.num}>
             {i > 0 && <span className="scg-pipe-arrow">&rsaquo;</span>}
-            <div className="scg-pipe-step">
-              <span className="scg-pipe-num">{step.num}</span>
+            <div className={`scg-pipe-step scg-actor-${step.actor}`}>
+              <div className="scg-pipe-header">
+                <span className="scg-pipe-num">{step.num}</span>
+                <span className={`scg-pipe-actor ${step.actor}`}>
+                  {step.actor === "ai" ? "AI" : step.actor === "you" ? "You" : "Pre-set"}
+                </span>
+              </div>
               <span className="scg-pipe-label">{step.label}</span>
               <span className="scg-pipe-desc">{step.desc}</span>
-              {step.note && <span className="scg-pipe-note">{step.note}</span>}
+              {step.mode && <span className="scg-pipe-note">{step.mode}</span>}
             </div>
           </Fragment>
         ))}
       </div>
-    </div>
-  );
-}
-
-function VideoPlaceholder() {
-  if (VIDEO_CONFIG.type === "youtube" && VIDEO_CONFIG.youtubeUrl) {
-    return (
-      <div className="scg-video-wrapper">
-        <iframe
-          className="scg-video-iframe"
-          src={VIDEO_CONFIG.youtubeUrl}
-          title="Study introduction video"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-        />
-      </div>
-    );
-  }
-  if (VIDEO_CONFIG.type === "local" && VIDEO_CONFIG.localSrc) {
-    return (
-      <div className="scg-video-wrapper">
-        <video className="scg-video-element" src={VIDEO_CONFIG.localSrc} controls preload="metadata">
-          Your browser does not support the video element.
-        </video>
-      </div>
-    );
-  }
-  return (
-    <div className="scg-video-wrapper scg-video-placeholder">
-      <div className="scg-video-play">&#9654;</div>
-      <div className="scg-video-cta">Watch a 30-sec intro</div>
-      <div className="scg-video-note">Video coming soon</div>
     </div>
   );
 }
