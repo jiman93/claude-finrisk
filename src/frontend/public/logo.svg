@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- Connecting lines -->
+  <line x1="32" y1="12" x2="12" y2="50" stroke="#5b9cf0" stroke-width="2.5" opacity="0.5"/>
+  <line x1="32" y1="12" x2="52" y2="38" stroke="#d4a8ff" stroke-width="2.5" opacity="0.5"/>
+  <line x1="12" y1="50" x2="52" y2="38" stroke="#7ec8e3" stroke-width="2.5" opacity="0.5"/>
+
+  <!-- Document node (top) — rounded rectangle -->
+  <rect x="22" y="3" width="20" height="18" rx="3" fill="#5b9cf0"/>
+
+  <!-- Human node (bottom-left) — circle -->
+  <circle cx="12" cy="50" r="10" fill="#5b9cf0"/>
+
+  <!-- AI node (right) — diamond -->
+  <polygon points="52,26 63,38 52,50 41,38" fill="#d4a8ff"/>
+</svg>
