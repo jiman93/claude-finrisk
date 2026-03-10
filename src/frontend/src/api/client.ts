@@ -89,6 +89,13 @@ export function editSummaryTask(
   });
 }
 
+export function patchPdfDuration(taskId: string, pdfViewDurationMs: number): Promise<void> {
+  return request<void>(`/api/tasks/${taskId}/pdf-duration`, {
+    method: "PATCH",
+    body: JSON.stringify({ pdf_view_duration_ms: pdfViewDurationMs }),
+  });
+}
+
 export function submitFeedbackTask(
   taskId: string,
   definitionId: string,

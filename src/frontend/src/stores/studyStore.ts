@@ -5,6 +5,7 @@ import {
   editSummaryTask,
   generateTask,
   nextPhase,
+  patchPdfDuration,
   queryTask,
   selectNodesTask,
   startSession,
@@ -427,6 +428,9 @@ export const useStudyStore = create<StudyState>()(
     const { session } = get();
     if (!session) return;
 
+    // Flush any accumulated PDF view duration to the outgoing task
+    flushPdfDuration(session.current_task_id);
+
     // Mark current ledger phase as completed, activate next
     get().advanceLedgerPhase(session.current_phase);
 
@@ -723,6 +727,17 @@ export const useStudyStore = create<StudyState>()(
 // Private helpers
 // ---------------------------------------------------------------------------
 
+/** Flush accumulated PDF view duration to the backend (fire-and-forget). */
+function flushPdfDuration(taskId: string) {
+  const { pdfViewOpenedAt, pdfViewDurationMs } = useStudyStore.getState();
+  const elapsed = pdfViewOpenedAt ? Date.now() - pdfViewOpenedAt : 0;
+  const total = pdfViewDurationMs + elapsed;
+  useStudyStore.setState({ pdfViewDurationMs: 0, pdfViewOpenedAt: null });
+  if (total > 0) {
+    patchPdfDuration(taskId, total).catch(console.error);
+  }
+}
+
 /**
  * After a summary is finalized, set the appropriate tail action.
  * - If post-gen checkpoints exist → questionnaire_prompt
@@ -741,6 +756,10 @@ function setTailActionForPostSummary() {
       tailAction: { type: "phase_advance", nextPhase: session.current_phase + 1 },
     });
   } else {
+    // Final phase with no checkpoints — flush PDF duration before completing
+    if (session) {
+      flushPdfDuration(session.current_task_id);
+    }
     useStudyStore.setState({ tailAction: { type: "session_complete" } });
   }
 }

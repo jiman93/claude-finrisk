@@ -91,6 +91,10 @@ class SubmitFeedbackResponse(BaseModel):
     feedback_submitted_at: datetime
 
 
+class PatchPdfDurationRequest(BaseModel):
+    pdf_view_duration_ms: int
+
+
 class CompleteTaskResponse(BaseModel):
     task_id: str
     completed_at: datetime

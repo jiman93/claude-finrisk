@@ -12,6 +12,7 @@ from app.schemas.task import (
     EditSummaryResponse,
     GenerateRequest,
     GenerateResponse,
+    PatchPdfDurationRequest,
     QueryRequest,
     QueryResponse,
     RetrievalNode,
@@ -232,6 +233,16 @@ def submit_feedback(task_id: str, payload: SubmitFeedbackRequest, db: Session = 
         definition_id=payload.definition_id,
         feedback_submitted_at=task.feedback_submitted_at,
     )
+
+
+@router.patch("/{task_id}/pdf-duration")
+def patch_pdf_duration(task_id: str, payload: PatchPdfDurationRequest, db: Session = Depends(get_db)):
+    task = db.get(Task, task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    task.pdf_view_duration_ms = payload.pdf_view_duration_ms
+    db.commit()
+    return {"task_id": task_id, "pdf_view_duration_ms": task.pdf_view_duration_ms}
 
 
 @router.post("/{task_id}/complete", response_model=CompleteTaskResponse)

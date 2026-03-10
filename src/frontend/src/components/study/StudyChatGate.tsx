@@ -449,8 +449,6 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
 
           <div className="pi-chat-stream">
             <div className="pi-transcript">
-              {session && <DocumentCard ticker={session.current_ticker} />}
-
               <StreamRenderer
                 messages={messages}
                 readOnly={false}
@@ -514,7 +512,12 @@ function StreamRenderer({
       {messages.map((msg) => {
         switch (msg.type) {
           case "phase_start":
-            return <PhaseStartCard key={msg.id} msg={msg} />;
+            return (
+              <Fragment key={msg.id}>
+                <PhaseStartCard msg={msg} />
+                <DocumentCard ticker={msg.ticker} />
+              </Fragment>
+            );
 
           case "text":
             return <TextBubble key={msg.id} role={msg.role} content={msg.content} />;
