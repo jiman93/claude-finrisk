@@ -113,22 +113,6 @@ export default function App() {
             </span>
           </div>
           <div className="pi-topbar-right">
-            {page === "chat" && (
-              <>
-                <button
-                  className="pi-pill-btn accent"
-                  onClick={() => setPage("dashboard")}
-                >
-                  Checkpoint Dashboard
-                </button>
-                <button
-                  className="pi-pill-btn"
-                  onClick={() => setPage("study")}
-                >
-                  Study Setup
-                </button>
-              </>
-            )}
             {page === "dashboard" && (
               <button
                 className="pi-pill-btn"
