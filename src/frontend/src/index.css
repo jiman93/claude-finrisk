@@ -381,6 +381,7 @@ input {
   color: var(--text-primary);
   line-height: 1.55;
   font-size: 16px;
+  animation: pi-stream-in 0.35s ease-out both;
 }
 
 .pi-user-bubble {
@@ -393,6 +394,7 @@ input {
   background: linear-gradient(180deg, #428feb 0%, #2f79d9 100%);
   color: white;
   font-size: 16px;
+  animation: pi-stream-in 0.35s ease-out both;
 }
 
 .pi-step-card {
@@ -405,6 +407,7 @@ input {
   justify-content: space-between;
   padding: 11px 14px;
   color: var(--text-primary);
+  animation: pi-stream-in 0.35s ease-out both;
 }
 
 .pi-step-card.running {
@@ -463,6 +466,18 @@ input {
   }
 }
 
+/* Slide-up + fade-in for all stream items */
+@keyframes pi-stream-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .pi-step-right {
   color: var(--text-muted);
 }
@@ -470,6 +485,7 @@ input {
 .pi-answer-card {
   margin-top: 14px;
   color: var(--text-primary);
+  animation: pi-stream-in 0.4s ease-out both;
 }
 
 .pi-answer-label {
@@ -609,6 +625,7 @@ input {
   border-radius: 8px;
   padding: 10px 12px;
   background: rgba(92, 26, 38, 0.3);
+  animation: pi-stream-in 0.35s ease-out both;
 }
 
 .pi-selector-card {
@@ -617,6 +634,7 @@ input {
   background: var(--bg-card-2);
   border-radius: 10px;
   padding: 12px;
+  animation: pi-stream-in 0.4s ease-out both;
 }
 
 .pi-selector-header {
@@ -948,6 +966,7 @@ input {
   background: var(--bg-card-2);
   border-radius: 10px;
   padding: 14px;
+  animation: pi-tail-in 0.35s ease-out both;
 }
 
 .cp-control-card.cp-active {
@@ -1982,11 +2001,23 @@ input {
 }
 
 /* ── Pinned tail action zone ── */
+@keyframes pi-tail-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .scg-tail-zone {
   border-top: 1px solid var(--border-soft);
   padding: 12px 16px;
   max-height: 40vh;
   overflow-y: auto;
+  animation: pi-tail-in 0.35s ease-out both;
 }
 
 /* ── Screen 3: Active Session Bar ── */
@@ -2024,6 +2055,7 @@ input {
   background: var(--bg-card-2);
   border: 1px solid var(--border-soft);
   border-left: 3px solid var(--accent);
+  animation: pi-stream-in 0.4s ease-out both;
 }
 .scg-phase-start-header {
   display: flex;
@@ -2034,6 +2066,7 @@ input {
 .scg-advance-section {
   padding: 20px 0;
   text-align: center;
+  animation: pi-tail-in 0.35s ease-out both;
 }
 
 /* ── Document attachment card (study chat) ── */
@@ -2053,6 +2086,7 @@ input {
   color: inherit;
   font: inherit;
   text-align: left;
+  animation: pi-stream-in 0.35s ease-out both;
 }
 .scg-doc-card:hover {
   border-color: #3a6ea5;
@@ -2143,6 +2177,7 @@ input {
   justify-content: space-between;
   gap: 16px;
   flex-wrap: wrap;
+  animation: pi-tail-in 0.35s ease-out both;
 }
 .scg-action-prompt-text {
   color: var(--text-secondary);
@@ -2166,10 +2201,30 @@ input {
   border-left: 2px solid var(--accent);
   margin-bottom: 8px;
   line-height: 1.5;
+  animation: pi-stream-in 0.3s ease-out both;
 }
 .traversal-label {
   font-weight: 600;
   color: var(--accent-strong);
+}
+
+/* ── Reduce motion for accessibility ── */
+@media (prefers-reduced-motion: reduce) {
+  .pi-assistant-text,
+  .pi-user-bubble,
+  .pi-step-card,
+  .pi-answer-card,
+  .pi-selector-card,
+  .pi-error-inline,
+  .scg-phase-start-card,
+  .scg-doc-card,
+  .scg-tail-zone,
+  .scg-advance-section,
+  .scg-action-prompt,
+  .cp-control-card,
+  .traversal-path {
+    animation: none;
+  }
 }
 
 /* ── Responsive ── */

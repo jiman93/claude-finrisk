@@ -106,15 +106,17 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
     if (!el) return;
     // Use requestAnimationFrame so the DOM has rendered the new content
     requestAnimationFrame(() => {
-      el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+      const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      el.scrollTo({ top: el.scrollHeight, behavior: prefersReduced ? "auto" : "smooth" });
     });
   }, []);
 
+  // Scroll on new messages, tail action changes, and checkpoint updates
   useEffect(() => {
     scrollToBottom();
-  }, [messages.length, scrollToBottom]);
+  }, [messages.length, tailAction, activeCheckpoints.length, scrollToBottom]);
 
-  // Also scroll when large blocks finish rendering (e.g. chunk cards)
+  // Also scroll when large blocks finish rendering (e.g. chunk cards, summaries)
   useEffect(() => {
     const el = streamRef.current;
     if (!el) return;
@@ -122,7 +124,8 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
       // Only auto-scroll if user is already near the bottom
       const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
       if (distanceFromBottom < 150) {
-        el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+        const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        el.scrollTo({ top: el.scrollHeight, behavior: prefersReduced ? "auto" : "smooth" });
       }
     });
     // Observe the transcript container inside the stream
