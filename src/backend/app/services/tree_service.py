@@ -569,12 +569,14 @@ class TreeRetrievalService:
             if len(clean_for_len) < 150:
                 continue
 
+            leaf_node_id = leaf.get("node_id", f"{ticker}-{len(nodes):03d}")
             nodes.append(
                 RetrievalNode(
-                    node_id=leaf.get("node_id", f"{ticker}-{len(nodes):03d}"),
+                    node_id=leaf_node_id,
                     title=leaf.get("heading", "Untitled"),
                     page_index=int(leaf.get("page_index", 0)),
                     relevant_content=content,
+                    from_traversal=leaf_node_id in traversed_leaf_ids,
                 )
             )
 

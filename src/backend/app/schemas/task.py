@@ -13,6 +13,7 @@ class RetrievalNode(BaseModel):
     title: str
     page_index: int
     relevant_content: str
+    from_traversal: bool = True
 
 
 class TraversalStep(BaseModel):

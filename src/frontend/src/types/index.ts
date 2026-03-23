@@ -17,6 +17,7 @@ export interface RetrievalNode {
   title: string;
   page_index: number;
   relevant_content: string;
+  from_traversal?: boolean;
 }
 
 export interface TraversalStep {
