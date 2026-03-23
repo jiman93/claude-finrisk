@@ -3591,6 +3591,10 @@ input {
   background: rgba(107, 114, 128, 0.15);
   color: #6b7280;
 }
+.adm-node-tag.reranked {
+  background: rgba(251, 191, 36, 0.15);
+  color: #d97706;
+}
 
 /* ── Traversal list ── */
 

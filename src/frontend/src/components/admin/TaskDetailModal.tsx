@@ -108,6 +108,9 @@ export default function TaskDetailModal({ task, onClose }: Props) {
                     </span>
                     {isSelected && <span className="adm-node-tag selected">Selected</span>}
                     {isRejected && <span className="adm-node-tag rejected">Rejected</span>}
+                    {node.from_traversal === false && (
+                      <span className="adm-node-tag reranked">Re-ranked</span>
+                    )}
                   </div>
                 );
               })}
