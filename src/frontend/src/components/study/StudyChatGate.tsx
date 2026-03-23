@@ -1,4 +1,4 @@
-import { FormEvent, Fragment, lazy, Suspense, useEffect, useRef, useState } from "react";
+import { FormEvent, Fragment, lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 
 import { useStudyStore } from "../../stores/studyStore";
 import type {
@@ -86,6 +86,7 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
   const [started, setStarted] = useState(false);
   const sessionStartedRef = useRef(false);
   const chatIdRef = useRef<string | null>(null);
+  const streamRef = useRef<HTMLDivElement>(null);
 
   // Determine if we're viewing a restored (read-only) past chat
   const isRestoredView = !!(
@@ -98,6 +99,37 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
   // When viewing a restored snapshot, use its assignment
   const restoredAssignment = activeChatId ? chatSnapshots[activeChatId]?.assignment ?? null : null;
   const effectiveAssignment = isRestoredView ? restoredAssignment : assignment;
+
+  // Auto-scroll chat stream to bottom when new messages arrive
+  const scrollToBottom = useCallback(() => {
+    const el = streamRef.current;
+    if (!el) return;
+    // Use requestAnimationFrame so the DOM has rendered the new content
+    requestAnimationFrame(() => {
+      el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+    });
+  }, []);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages.length, scrollToBottom]);
+
+  // Also scroll when large blocks finish rendering (e.g. chunk cards)
+  useEffect(() => {
+    const el = streamRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver(() => {
+      // Only auto-scroll if user is already near the bottom
+      const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+      if (distanceFromBottom < 150) {
+        el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+      }
+    });
+    // Observe the transcript container inside the stream
+    const transcript = el.querySelector(".pi-transcript");
+    if (transcript) observer.observe(transcript);
+    return () => observer.disconnect();
+  }, [messages.length]);
 
   // Right pane: view a summary or checkpoint detail
   const [paneSummary, setPaneSummary] = useState<{
@@ -405,7 +437,7 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
         <div className="pi-left-pane scg-active-layout">
           <SessionBar assignment={assignment} session={session} />
 
-          <div className="pi-chat-stream">
+          <div className="pi-chat-stream" ref={streamRef}>
             <div className="pi-transcript">
               <StreamRenderer
                 messages={messages}
