@@ -75,6 +75,7 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
     setAssignment,
     startAndRunCurrentPhase,
     advancePhase,
+    triggerRetrieval,
     triggerGeneration,
     submitNodeSelection,
     submitEditedSummary,
@@ -305,6 +306,7 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
                   isLoading={false}
                   onSubmitNodeSelection={submitNodeSelection}
                   onSubmitEditedSummary={submitEditedSummary}
+                  onTriggerRetrieval={triggerRetrieval}
                   onTriggerGeneration={triggerGeneration}
                   onViewSummary={openSummaryPane}
                   onViewCheckpoint={openCheckpointPane}
@@ -448,6 +450,7 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
                 isLoading={isLoading}
                 onSubmitNodeSelection={submitNodeSelection}
                 onSubmitEditedSummary={submitEditedSummary}
+                onTriggerRetrieval={triggerRetrieval}
                 onTriggerGeneration={triggerGeneration}
                 onViewSummary={openSummaryPane}
                 onViewCheckpoint={openCheckpointPane}
@@ -485,6 +488,7 @@ interface StreamRendererProps {
   isLoading: boolean;
   onSubmitNodeSelection: (taskId: string, selected: string[], rejected: string[], order: string[]) => Promise<void>;
   onSubmitEditedSummary: (taskId: string, editedText: string, firstEditAtMs?: number | null) => Promise<void>;
+  onTriggerRetrieval: (taskId: string) => Promise<void>;
   onTriggerGeneration: (taskId: string) => Promise<void>;
   onViewSummary: (label: string, text: string, sourceNodes?: RetrievalNode[], ticker?: string) => void;
   onViewCheckpoint: (label: string, fields: Array<{ label: string; value: string }>) => void;
@@ -496,6 +500,7 @@ function StreamRenderer({
   isLoading,
   onSubmitNodeSelection,
   onSubmitEditedSummary,
+  onTriggerRetrieval,
   onTriggerGeneration,
   onViewSummary,
   onViewCheckpoint,
@@ -546,6 +551,17 @@ function StreamRenderer({
                 taskId={msg.taskId}
                 nodes={msg.nodes}
                 onSubmit={onSubmitNodeSelection}
+                disabled={isLoading}
+              />
+            );
+
+          case "retrieve_prompt":
+            return readOnly ? null : (
+              <RetrievePromptCard
+                key={msg.id}
+                taskId={msg.taskId}
+                query={msg.query}
+                onRetrieve={onTriggerRetrieval}
                 disabled={isLoading}
               />
             );
@@ -1094,6 +1110,42 @@ function EditableSummaryCard({
           Edit Summary
         </button>
       </div>
+    </div>
+  );
+}
+
+function RetrievePromptCard({
+  taskId,
+  query,
+  onRetrieve,
+  disabled,
+}: {
+  taskId: string;
+  query: string;
+  onRetrieve: (taskId: string) => Promise<void>;
+  disabled: boolean;
+}) {
+  const [clicked, setClicked] = useState(false);
+
+  async function handleClick() {
+    if (clicked || disabled) return;
+    setClicked(true);
+    await onRetrieve(taskId);
+  }
+
+  if (clicked) return null;
+
+  return (
+    <div className="scg-action-prompt">
+      <div className="scg-action-prompt-text">{query}</div>
+      <button
+        type="button"
+        className="pi-primary-btn scg-action-prompt-btn"
+        onClick={() => void handleClick()}
+        disabled={disabled}
+      >
+        Retrieve Document ▶
+      </button>
     </div>
   );
 }

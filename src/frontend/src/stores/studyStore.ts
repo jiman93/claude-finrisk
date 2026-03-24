@@ -80,6 +80,7 @@ interface StudyState {
   setAssignment: (assignment: ParticipantAssignment | null) => void;
   startAndRunCurrentPhase: () => Promise<void>;
   askQuery: (query: string) => Promise<void>;
+  triggerRetrieval: (taskId: string) => Promise<void>;
   triggerGeneration: (taskId: string) => Promise<void>;
   advancePhase: () => Promise<void>;
   submitNodeSelection: (
@@ -345,6 +346,92 @@ export const useStudyStore = create<StudyState>()(
       query: normalizedQuery,
       mode: session.current_mode,
     });
+  },
+
+  // ── Trigger retrieval (user-initiated) ──
+
+  triggerRetrieval: async (taskId) => {
+    const session = get().session;
+    if (!session) return;
+
+    const retrievePromptMsg = get().messages.find(
+      (m) => m.type === "retrieve_prompt" && (m as { taskId: string }).taskId === taskId
+    ) as { query: string } | undefined;
+    const query = retrievePromptMsg?.query ?? session.current_query;
+    const currentPhase = session.current_phase;
+    const mode = session.current_mode;
+    const retrievalLoadingId = makeId("loading-retrieval");
+
+    useStudyStore.setState((state) => ({
+      isLoading: true,
+      error: null,
+      messages: [
+        ...state.messages.filter((m) => !(m.type === "retrieve_prompt" && (m as { taskId: string }).taskId === taskId)),
+        { id: makeId("msg"), type: "text", role: "user", content: query },
+        { id: retrievalLoadingId, type: "loading", content: "Searching document..." },
+      ],
+    }));
+
+    useStudyStore.getState().appendLedgerQuery(currentPhase, query);
+
+    try {
+      const retrieval = await queryTask(taskId, query);
+
+      const selectionEnabled = mode === "hitl_r" || mode === "hitl_full";
+      useStudyStore.getState().appendLedgerRetrieval(currentPhase, {
+        totalRetrieved: retrieval.retrieved_nodes.length,
+        totalSelected: retrieval.retrieved_nodes.length,
+        chunks: buildLedgerChunks(retrieval.retrieved_nodes),
+        selectionEnabled,
+      });
+
+      const newMessages: ChatMessage[] = [];
+      if (retrieval.traversal_path && retrieval.traversal_path.length > 0) {
+        newMessages.push({
+          id: makeId("traversal"),
+          type: "traversal_path",
+          steps: retrieval.traversal_path as TraversalStep[],
+        });
+      }
+      newMessages.push({
+        id: makeId("nodes"),
+        type: "retrieved_nodes",
+        nodes: retrieval.retrieved_nodes,
+      });
+
+      useStudyStore.setState((state) => ({
+        messages: [
+          ...state.messages.filter((m) => m.id !== retrievalLoadingId),
+          ...newMessages,
+        ],
+      }));
+
+      if (selectionEnabled) {
+        useStudyStore.setState((state) => ({
+          messages: [
+            ...state.messages,
+            { id: makeId("selector"), type: "selector", taskId, nodes: retrieval.retrieved_nodes },
+          ],
+          isLoading: false,
+        }));
+        return;
+      }
+
+      useStudyStore.setState((state) => ({
+        messages: [
+          ...state.messages,
+          { id: makeId("gen-prompt"), type: "generate_prompt", taskId },
+        ],
+        isLoading: false,
+      }));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unexpected error";
+      useStudyStore.setState((state) => ({
+        error: message,
+        isLoading: false,
+        messages: state.messages.filter((m) => m.id !== retrievalLoadingId),
+      }));
+    }
   },
 
   // ── Trigger generation ──
@@ -818,87 +905,13 @@ interface RunTaskFlowParams {
   mode: Mode;
 }
 
-async function runTaskFlow({ taskId, query, mode }: RunTaskFlowParams) {
-  const retrievalLoadingId = makeId("loading-retrieval");
-  const session = useStudyStore.getState().session;
-  const currentPhase = session?.current_phase ?? 1;
-
+async function runTaskFlow({ taskId, query }: RunTaskFlowParams) {
   useStudyStore.setState((state) => ({
-    isLoading: true,
+    isLoading: false,
     error: null,
     messages: [
       ...state.messages,
-      { id: makeId("msg"), type: "text", role: "user", content: query },
-      { id: retrievalLoadingId, type: "loading", content: "Searching document..." },
+      { id: makeId("retrieve-prompt"), type: "retrieve_prompt", taskId, query },
     ],
   }));
-
-  // Ledger: record query
-  useStudyStore.getState().appendLedgerQuery(currentPhase, query);
-
-  try {
-    const retrieval = await queryTask(taskId, query);
-
-    // Ledger: record retrieval
-    const selectionEnabled = mode === "hitl_r" || mode === "hitl_full";
-    useStudyStore.getState().appendLedgerRetrieval(currentPhase, {
-      totalRetrieved: retrieval.retrieved_nodes.length,
-      totalSelected: retrieval.retrieved_nodes.length,
-      chunks: buildLedgerChunks(retrieval.retrieved_nodes),
-      selectionEnabled,
-    });
-
-    // Build messages: optionally include traversal path for tree mode.
-    const newMessages: ChatMessage[] = [];
-    if (retrieval.traversal_path && retrieval.traversal_path.length > 0) {
-      newMessages.push({
-        id: makeId("traversal"),
-        type: "traversal_path",
-        steps: retrieval.traversal_path as TraversalStep[],
-      });
-    }
-    newMessages.push({
-      id: makeId("nodes"),
-      type: "retrieved_nodes",
-      nodes: retrieval.retrieved_nodes,
-    });
-
-    useStudyStore.setState((state) => ({
-      messages: [
-        ...state.messages.filter((m) => m.id !== retrievalLoadingId),
-        ...newMessages,
-      ],
-    }));
-
-    if (selectionEnabled) {
-      useStudyStore.setState((state) => ({
-        messages: [
-          ...state.messages,
-          {
-            id: makeId("selector"),
-            type: "selector",
-            taskId,
-            nodes: retrieval.retrieved_nodes,
-          },
-        ],
-        isLoading: false,
-      }));
-      return;
-    }
-
-    useStudyStore.setState((state) => ({
-      messages: [
-        ...state.messages,
-        { id: makeId("gen-prompt"), type: "generate_prompt", taskId },
-      ],
-      isLoading: false,
-    }));
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Unexpected error";
-    useStudyStore.setState((state) => ({
-      error: message,
-      isLoading: false,
-      messages: state.messages.filter((m) => m.id !== retrievalLoadingId),
-    }));
-  }
 }

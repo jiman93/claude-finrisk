@@ -319,6 +319,12 @@ export type ChatMessage =
     }
   | {
       id: string;
+      type: "retrieve_prompt";
+      taskId: string;
+      query: string;
+    }
+  | {
+      id: string;
       type: "generate_prompt";
       taskId: string;
     }
