@@ -1172,7 +1172,7 @@ function GeneratePromptCard({
   return (
     <div className="scg-action-prompt">
       <div className="scg-action-prompt-text">
-        Chunks retrieved. Review above, then generate a summary when ready.
+        Ready to generate a summary from the selected chunks.
       </div>
       <button
         type="button"
