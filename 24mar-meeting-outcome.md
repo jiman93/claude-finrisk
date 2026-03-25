@@ -1,4 +1,5 @@
 # LGN Opportunity — Meeting Notes & Reflection
+
 *March 2026*
 
 ---
@@ -26,6 +27,7 @@ Their flagship methodology is *UPGRADEjourney™*, a digital upskilling programm
 
 **2. AI Solutions**
 Their product suite includes:
+
 - *Proactive Learning Assistant* — the RAG-based teaching assistant that's the core of this opportunity
 - *Legal Documents Analyzer* — document intelligence for legal use cases
 - *AI in a Box* — packaged AI deployment for enterprises
@@ -47,8 +49,9 @@ The moat is relationships and credibility, not technical innovation. Gulf enterp
 **The pitch:** Join as a technical contributor (framed as potential cofounder) on the Proactive Learning Assistant — a RAG system for enterprise learning and knowledge management. 5% equity. ~2 hours/day commitment alongside current Access Group role.
 
 **Three demo clients:**
+
 - Saudi Aramco
-- Academy of Learning (unspecified)
+- Academy of Learning (Saudi)
 - Khalifa University, Abu Dhabi
 
 These are not small logos. Aramco is one of the most valuable companies in the world. Khalifa University is a well-funded Abu Dhabi research institution. Landing even one of these as a paying client creates credibility that opens the entire Gulf market.
@@ -93,6 +96,7 @@ My background makes this specific role unusual to find: 8 years shipping product
 **What 5% could be worth:** Genuinely impossible to calculate now. 5% of a small consultancy that stays local is one number. 5% of a company that lands Aramco and scales across the Gulf is a very different number. The range spans tens of thousands to millions depending on trajectory.
 
 **What the role actually justifies:**
+
 - Pure technical contributor in a team of 5: 2–3%
 - Technical domain owner: 3–5%
 - Technical cofounder bridging product, client, and engineering: 7–15%
@@ -118,6 +122,7 @@ The bridge role described is closer to the upper range. 10% is defensible if I c
 **Before signing — one conversation.** Not aggressive. Something like: *"I see myself in the bridge role between the technical team and the product, not just as an additional engineer. Does the 5% reflect that, or is there room to discuss?"* His answer tells me everything about how this partnership will work.
 
 **What to protect:**
+
 - My existing FinRisk/thesis work must not transfer to this venture in the IP assignment
 - Check Access Group employment contract for IP clauses — understand where the lines are
 - Anything built for LGN is theirs; what I've already built is mine
