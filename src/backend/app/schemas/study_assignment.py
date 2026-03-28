@@ -14,7 +14,7 @@ class PhaseCheckpointRef(BaseModel):
 
 
 class PhaseAssignment(BaseModel):
-    phase: int = Field(ge=1, le=3)
+    phase: int = Field(ge=1)
     mode: ModeType
     ticker: str
     query: str

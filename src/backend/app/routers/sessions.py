@@ -7,11 +7,19 @@ from sqlalchemy.orm import Session
 from app.db.database import get_db
 from app.models.participant import Participant
 from app.models.session import Session as StudySession
+from app.models.study_assignment import StudyAssignment
 from app.models.task import Task
 from app.schemas.session import NextPhaseResponse, SessionStartRequest, SessionStateResponse
-from app.services.study_setup import QUERIES, get_group, get_phase_modes, get_ticker_sequence
+from app.services.study_setup import get_group, get_ticker_sequence
 
 router = APIRouter(prefix="/api/sessions", tags=["sessions"])
+
+
+def _get_assignment(db: Session, participant_id: str) -> StudyAssignment:
+    assignment = db.get(StudyAssignment, participant_id)
+    if not assignment:
+        raise HTTPException(status_code=404, detail="Assignment not found. Generate defaults first.")
+    return assignment
 
 
 def _build_session_state(db: Session, study_session: StudySession) -> SessionStateResponse:
@@ -50,9 +58,7 @@ def _ensure_participant(db: Session, participant_id: str) -> Participant:
     participant = Participant(
         id=participant_id,
         group=group,
-        phase1_ticker=ticker_seq[0],
-        phase2_ticker=ticker_seq[1],
-        phase3_ticker=ticker_seq[2],
+        phase_tickers=ticker_seq,
     )
     db.add(participant)
     db.flush()
@@ -60,23 +66,14 @@ def _ensure_participant(db: Session, participant_id: str) -> Participant:
 
 
 def _create_task_for_phase(db: Session, study_session: StudySession, phase: int) -> Task:
-    participant = db.get(Participant, study_session.participant_id)
-    if not participant:
-        raise HTTPException(status_code=404, detail="Participant not found")
-
-    ticker_by_phase = {
-        1: participant.phase1_ticker,
-        2: participant.phase2_ticker,
-        3: participant.phase3_ticker,
-    }
-    ticker = ticker_by_phase[phase]
-    query = QUERIES[ticker]
+    assignment = _get_assignment(db, study_session.participant_id)
+    phase_config = assignment.phases[phase - 1]
     task = Task(
         session_id=study_session.id,
         phase=phase,
-        mode=study_session.current_mode,
-        ticker=ticker,
-        query_text=query,
+        mode=phase_config["mode"],
+        ticker=phase_config["ticker"],
+        query_text=phase_config["query"],
     )
     db.add(task)
     db.flush()
@@ -86,12 +83,13 @@ def _create_task_for_phase(db: Session, study_session: StudySession, phase: int)
 @router.post("/start", response_model=SessionStateResponse)
 def start_session(payload: SessionStartRequest, db: Session = Depends(get_db)):
     participant = _ensure_participant(db, payload.participant_id)
-    modes = get_phase_modes(participant.group)
+    assignment = _get_assignment(db, payload.participant_id)
+    first_phase = assignment.phases[0]
 
     study_session = StudySession(
         participant_id=participant.id,
         current_phase=1,
-        current_mode=modes[0],
+        current_mode=first_phase["mode"],
     )
     db.add(study_session)
     db.flush()
@@ -115,16 +113,15 @@ def next_phase(session_id: str, db: Session = Depends(get_db)):
     if not study_session:
         raise HTTPException(status_code=404, detail="Session not found")
 
-    participant = db.get(Participant, study_session.participant_id)
-    if not participant:
-        raise HTTPException(status_code=404, detail="Participant not found")
+    assignment = _get_assignment(db, study_session.participant_id)
+    total_phases = len(assignment.phases)
 
-    modes = get_phase_modes(participant.group)
-    if study_session.current_phase >= 3:
+    if study_session.current_phase >= total_phases:
         raise HTTPException(status_code=400, detail="Session already at final phase")
 
     study_session.current_phase += 1
-    study_session.current_mode = modes[study_session.current_phase - 1]
+    next_config = assignment.phases[study_session.current_phase - 1]
+    study_session.current_mode = next_config["mode"]
     task = _create_task_for_phase(db, study_session, study_session.current_phase)
     db.commit()
     return NextPhaseResponse(

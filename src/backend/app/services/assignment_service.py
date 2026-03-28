@@ -8,6 +8,8 @@ from app.services.study_setup import (
     get_ticker_sequence,
 )
 
+NUM_PARTICIPANTS = 8
+
 # ---------------------------------------------------------------------------
 # Canonical checkpoint definitions — mirrors SEED_DEFINITIONS on the frontend.
 # In a future iteration these would come from a checkpoint_definitions table.
@@ -36,7 +38,7 @@ DEFAULT_CHECKPOINTS = [
         "label": "Post-Generation Questionnaire",
         "pipeline_position": "post_generation",
         "sort_order": 0,
-        "applicable_modes": ["hitl_r", "hitl_g", "hitl_full"],
+        "applicable_modes": ["baseline", "hitl_r", "hitl_g", "hitl_full"],
     },
 ]
 
@@ -59,11 +61,11 @@ def get_checkpoints_for_mode(mode: ModeType) -> list[dict]:
 def generate_default_assignment(participant_id: str) -> dict:
     """Build a fully-resolved default assignment for one participant."""
     group = get_group(participant_id)
-    modes = get_phase_modes(group)
+    modes = get_phase_modes(participant_id)
     tickers = get_ticker_sequence(participant_id)
 
     phases = []
-    for i in range(3):
+    for i in range(len(modes)):
         mode = modes[i]
         ticker = tickers[i]
         query = QUERIES[ticker]
@@ -88,7 +90,7 @@ def generate_default_assignment(participant_id: str) -> dict:
     }
 
 
-def generate_all_defaults(count: int = 16) -> list[dict]:
+def generate_all_defaults(count: int = NUM_PARTICIPANTS) -> list[dict]:
     """Generate default assignments for P01 through P{count}."""
     return [
         generate_default_assignment(f"P{str(i).zfill(2)}")

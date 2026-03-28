@@ -1,11 +1,11 @@
 from app.models.enums import GroupType, ModeType
 
-# Quality tiers based on retrieval evaluation results:
-# Tier 1 (90%+): WMT (100%), AMZN (93.3%), BA (100%)
-# Tier 2 (80-89%): AAPL (88.2%), MSFT (80%)
-# Tier 3 (75-79%): XOM (77.78%), PFE (75%), TSLA (75%)
-TICKERS = ["AAPL", "AMZN", "BA", "MSFT", "PFE", "TSLA", "WMT", "XOM"]
+# v2 study design: Tier 1-2 tickers only (AAPL, AMZN, MSFT)
+# WMT reserved for tutorial
+TICKERS = ["AAPL", "AMZN", "MSFT"]
+TUTORIAL_TICKER = "WMT"
 
+# Full query map (includes all tickers for backward compat)
 QUERIES = {
     "AAPL": "Identify and summarize the supply chain and geopolitical risks facing Apple's hardware operations.",
     "AMZN": "What are Amazon's key operational and competitive risks in e-commerce and cloud services?",
@@ -27,14 +27,16 @@ def get_group(participant_id: str) -> GroupType:
     return GroupType.A if participant_num % 2 == 1 else GroupType.B
 
 
-def get_phase_modes(group: GroupType) -> list[ModeType]:
-    if group == GroupType.A:
-        return [ModeType.baseline, ModeType.hitl_r, ModeType.hitl_full]
-    return [ModeType.baseline, ModeType.hitl_g, ModeType.hitl_full]
+def get_phase_modes(participant_id: str) -> list[ModeType]:
+    """v2: 2 modes, alternated order. Odd = baseline first, even = hitl_full first."""
+    idx = parse_participant_index(participant_id)
+    if idx % 2 == 1:
+        return [ModeType.baseline, ModeType.hitl_full]
+    return [ModeType.hitl_full, ModeType.baseline]
 
 
 def get_ticker_sequence(participant_id: str) -> list[str]:
-    participant_num = parse_participant_index(participant_id)
-    offset = ((participant_num - 1) // 2) % len(TICKERS)
-    seq = [TICKERS[(offset + i) % len(TICKERS)] for i in range(3)]
-    return seq
+    """v2: 2 tickers from Tier 1-2 pool, no repetition within session."""
+    idx = parse_participant_index(participant_id)
+    offset = (idx - 1) % len(TICKERS)
+    return [TICKERS[(offset + i) % len(TICKERS)] for i in range(len(get_phase_modes(participant_id)))]

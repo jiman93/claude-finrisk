@@ -833,17 +833,18 @@ function flushPdfDuration(taskId: string) {
 /**
  * After a summary is finalized, set the appropriate tail action.
  * - If post-gen checkpoints exist → questionnaire_prompt
- * - Else if phase < 3 → phase_advance
+ * - Else if phase < total phases → phase_advance
  * - Else → session_complete
  */
 function setTailActionForPostSummary() {
   const { session, assignment } = useStudyStore.getState();
   const currentPhase = getCurrentPhaseAssignment(assignment, session);
   const postGenCps = getPostGenCheckpoints(currentPhase);
+  const totalPhases = assignment?.phases.length ?? 0;
 
   if (postGenCps.length > 0) {
     useStudyStore.setState({ tailAction: { type: "questionnaire_prompt" } });
-  } else if (session && session.current_phase < 3) {
+  } else if (session && session.current_phase < totalPhases) {
     useStudyStore.setState({
       tailAction: { type: "phase_advance", nextPhase: session.current_phase + 1 },
     });
@@ -880,7 +881,8 @@ function checkAllCheckpointsDone() {
 
   if (!allDone) return;
 
-  if (session && session.current_phase < 3) {
+  const totalPhases = assignment?.phases.length ?? 0;
+  if (session && session.current_phase < totalPhases) {
     useStudyStore.setState({
       tailAction: { type: "phase_advance", nextPhase: session.current_phase + 1 },
     });

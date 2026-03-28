@@ -186,7 +186,7 @@ export interface PhaseAssignment {
 export interface ParticipantAssignment {
   participant_id: string;
   group: "A" | "B";
-  phases: [PhaseAssignment, PhaseAssignment, PhaseAssignment];
+  phases: PhaseAssignment[];
   status: AssignmentStatus;
   override: boolean;
   updated_at: string;
@@ -387,6 +387,7 @@ export interface AdminParticipantRow {
   session_started_at: string | null;
   session_ended_at: string | null;
   phases_completed: number;
+  total_phases: number;
   total_time_seconds: number | null;
 }
 

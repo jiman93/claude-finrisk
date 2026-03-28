@@ -117,7 +117,7 @@ function ParticipantTable({
                   {p.assignment_status.replace("_", " ")}
                 </span>
               </td>
-              <td>{p.current_phase != null ? `${p.current_phase}/3` : "--"}</td>
+              <td>{p.current_phase != null ? `${p.current_phase}/${p.total_phases}` : "--"}</td>
               <td>
                 {p.current_mode ? (
                   <span
@@ -134,12 +134,12 @@ function ParticipantTable({
                   <div
                     className="adm-progress-fill"
                     style={{
-                      width: `${(p.phases_completed / 3) * 100}%`,
+                      width: `${(p.phases_completed / (p.total_phases || 1)) * 100}%`,
                     }}
                   />
                 </div>
                 <span className="adm-progress-text">
-                  {p.phases_completed}/3
+                  {p.phases_completed}/{p.total_phases}
                 </span>
               </td>
               <td>{formatTime(p.total_time_seconds)}</td>

@@ -35,6 +35,7 @@ class ParticipantRow(BaseModel):
     session_started_at: datetime | None
     session_ended_at: datetime | None
     phases_completed: int
+    total_phases: int
     total_time_seconds: int | None
 
 

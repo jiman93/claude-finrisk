@@ -1,9 +1,7 @@
 CREATE TABLE participants (
   id VARCHAR(4) PRIMARY KEY,
   "group" VARCHAR(10) NOT NULL,
-  phase1_ticker VARCHAR(10) NOT NULL,
-  phase2_ticker VARCHAR(10) NOT NULL,
-  phase3_ticker VARCHAR(10) NOT NULL
+  phase_tickers JSON NOT NULL
 );
 
 CREATE TABLE sessions (

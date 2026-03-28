@@ -99,6 +99,7 @@ def get_overview(db: DbSession = Depends(get_db)):
                 session_started_at=session.started_at if session else None,
                 session_ended_at=session.ended_at if session else None,
                 phases_completed=phases_completed,
+                total_phases=len(a.phases),
                 total_time_seconds=total_time,
             )
         )

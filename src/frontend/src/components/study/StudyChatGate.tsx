@@ -219,7 +219,7 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
   useEffect(() => {
     if (!started || !sessionStartedRef.current || !assignment || !chatIdRef.current || !session) return;
     if (messages.length === 0) return;
-    const title = `${assignment.participant_id} - Phase ${session.current_phase}/3`;
+    const title = `${assignment.participant_id} - Phase ${session.current_phase}/${assignment.phases.length}`;
     onSaveChat(chatIdRef.current, title, assignment);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages, session]);
@@ -406,7 +406,7 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
 
                 <WelcomeBlock />
 
-                <div className="scg-section-label">Your 3 phases</div>
+                <div className="scg-section-label">Your {assignment.phases.length} phases</div>
 
                 <div className="scg-phases-col">
                   {assignment.phases.map((phase) => (
@@ -690,7 +690,7 @@ function TailActionZone({
       )}
       {tailAction?.type === "session_complete" && (
         <div className="pi-run-meta pi-status-row" style={{ marginTop: 8 }}>
-          <span>Study session complete. All 3 phases finished.</span>
+          <span>Study session complete. All phases finished.</span>
         </div>
       )}
     </div>
@@ -710,7 +710,7 @@ function SessionBar({ assignment, session }: { assignment: ParticipantAssignment
       </span>
       {session && (
         <>
-          <span className="scg-session-phase">Phase {session.current_phase}/3</span>
+          <span className="scg-session-phase">Phase {session.current_phase}/{assignment.phases.length}</span>
           <span className={`scp-mode-badge ${MODE_COLORS[session.current_mode] ?? ""}`}>
             {MODE_LABELS[session.current_mode] ?? session.current_mode}
           </span>

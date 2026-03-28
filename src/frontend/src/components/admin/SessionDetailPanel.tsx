@@ -70,8 +70,9 @@ export default function SessionDetailPanel() {
 
   const modeClass = session.current_mode.replace("_", "");
 
-  // Build phase cards — one per phase (1-3)
-  const phases = [1, 2, 3].map((p) => {
+  // Build phase cards — one per phase (dynamic)
+  const maxPhase = Math.max(session.current_phase, ...session.tasks.map((t) => t.phase));
+  const phases = Array.from({ length: maxPhase }, (_, i) => i + 1).map((p) => {
     const task = session.tasks.find((t) => t.phase === p);
     return { phase: p, task };
   });
