@@ -91,8 +91,8 @@ def generate_default_assignment(participant_id: str) -> dict:
 
 
 def generate_all_defaults(count: int = NUM_PARTICIPANTS) -> list[dict]:
-    """Generate default assignments for P01 through P{count}."""
+    """Generate default assignments for P00 (tutorial) and P01 through P{count}."""
     return [
         generate_default_assignment(f"P{str(i).zfill(2)}")
-        for i in range(1, count + 1)
+        for i in range(0, count + 1)
     ]

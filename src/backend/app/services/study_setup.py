@@ -28,15 +28,21 @@ def get_group(participant_id: str) -> GroupType:
 
 
 def get_phase_modes(participant_id: str) -> list[ModeType]:
-    """v2: 2 modes, alternated order. Odd = baseline first, even = hitl_full first."""
+    """v2: 2 modes, alternated order. Odd = baseline first, even = hitl_full first.
+    P00 is the tutorial participant — single HITL-Full phase."""
     idx = parse_participant_index(participant_id)
+    if idx == 0:
+        return [ModeType.hitl_full]
     if idx % 2 == 1:
         return [ModeType.baseline, ModeType.hitl_full]
     return [ModeType.hitl_full, ModeType.baseline]
 
 
 def get_ticker_sequence(participant_id: str) -> list[str]:
-    """v2: 2 tickers from Tier 1-2 pool, no repetition within session."""
+    """v2: 2 tickers from Tier 1-2 pool, no repetition within session.
+    P00 uses the tutorial ticker (WMT)."""
     idx = parse_participant_index(participant_id)
+    if idx == 0:
+        return [TUTORIAL_TICKER]
     offset = (idx - 1) % len(TICKERS)
     return [TICKERS[(offset + i) % len(TICKERS)] for i in range(len(get_phase_modes(participant_id)))]
