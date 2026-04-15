@@ -135,7 +135,7 @@ The bridge role described is closer to the upper range. 10% is defensible if I c
 
 The immediate opportunity is clear. But the more important frame is what this enables downstream.
 
-Financial security from this — if it works — is what buys independence to work on Malaysian and ASEAN AI governance problems that don't have obvious commercial returns. The people who end up shaping policy rarely do it from a position of financial stress.
+Financial security from this — if it works — is what buys independence to work on Malaysian and ASEAN AI governance problems that don't have obvious commercial returns. The people who end up shaping policy rarely do it from a position of fƒinancial stress.
 
 The governance learning plan already written maps directly to this: build technical credibility (thesis done), gain institutional understanding and Gulf exposure (LGN), then work on the systemic problems from a position of independence.
 
