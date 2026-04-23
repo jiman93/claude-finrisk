@@ -70,8 +70,9 @@ export default function SessionDetailPanel() {
 
   const modeClass = session.current_mode.replace("_", "");
 
-  // Build phase cards — one per phase (1-3)
-  const phases = [1, 2, 3].map((p) => {
+  // Build phase cards dynamically from total_phases
+  const phases = Array.from({ length: session.total_phases }, (_, i) => {
+    const p = i + 1;
     const task = session.tasks.find((t) => t.phase === p);
     return { phase: p, task };
   });
@@ -84,11 +85,6 @@ export default function SessionDetailPanel() {
           &#8592; Back
         </button>
         <h2 className="adm-page-title">{session.participant_id}</h2>
-        <span
-          className={`scp-card-group group-${session.group.toLowerCase()}`}
-        >
-          Group {session.group}
-        </span>
         <span className={`scp-card-mode-badge scp-mode-${modeClass}`}>
           Phase {session.current_phase} — {MODE_LABELS[session.current_mode]}
         </span>

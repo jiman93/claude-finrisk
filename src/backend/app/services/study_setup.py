@@ -1,10 +1,14 @@
-from app.models.enums import GroupType, ModeType
+from app.models.enums import ModeType
 
 # Quality tiers based on retrieval evaluation results:
 # Tier 1 (90%+): WMT (100%), AMZN (93.3%), BA (100%)
 # Tier 2 (80-89%): AAPL (88.2%), MSFT (80%)
 # Tier 3 (75-79%): XOM (77.78%), PFE (75%), TSLA (75%)
 TICKERS = ["AAPL", "AMZN", "BA", "MSFT", "PFE", "TSLA", "WMT", "XOM"]
+
+# v2 study design: Tier 1-2 main task tickers; WMT reserved for tutorial
+V2_MAIN_TICKERS = ["AMZN", "AAPL", "MSFT"]
+TUTORIAL_TICKER = "WMT"
 
 QUERIES = {
     "AAPL": "Identify and summarize the supply chain and geopolitical risks facing Apple's hardware operations.",
@@ -22,19 +26,31 @@ def parse_participant_index(participant_id: str) -> int:
     return int(participant_id[1:])
 
 
-def get_group(participant_id: str) -> GroupType:
-    participant_num = parse_participant_index(participant_id)
-    return GroupType.A if participant_num % 2 == 1 else GroupType.B
+def get_phase_modes(participant_id: str) -> list[ModeType]:
+    """Return the ordered mode list for a participant.
 
-
-def get_phase_modes(group: GroupType) -> list[ModeType]:
-    if group == GroupType.A:
-        return [ModeType.baseline, ModeType.hitl_r, ModeType.hitl_full]
-    return [ModeType.baseline, ModeType.hitl_g, ModeType.hitl_full]
+    P00 is the tutorial-only participant: single HITL-Full phase.
+    Odd participants (P01, P03, …) start with Baseline.
+    Even participants (P02, P04, …) start with HITL-Full.
+    """
+    n = parse_participant_index(participant_id)
+    if n == 0:
+        return [ModeType.hitl_full]
+    if n % 2 == 1:
+        return [ModeType.baseline, ModeType.hitl_full]
+    return [ModeType.hitl_full, ModeType.baseline]
 
 
 def get_ticker_sequence(participant_id: str) -> list[str]:
-    participant_num = parse_participant_index(participant_id)
-    offset = ((participant_num - 1) // 2) % len(TICKERS)
-    seq = [TICKERS[(offset + i) % len(TICKERS)] for i in range(3)]
-    return seq
+    """Return the ordered ticker list for a participant.
+
+    P00 gets only the tutorial ticker (WMT).
+    Others get 2 tickers cycling through V2_MAIN_TICKERS.
+    """
+    n = parse_participant_index(participant_id)
+    if n == 0:
+        return [TUTORIAL_TICKER]
+    offset = (n - 1) % len(V2_MAIN_TICKERS)
+    t1 = V2_MAIN_TICKERS[offset]
+    t2 = V2_MAIN_TICKERS[(offset + 1) % len(V2_MAIN_TICKERS)]
+    return [t1, t2]

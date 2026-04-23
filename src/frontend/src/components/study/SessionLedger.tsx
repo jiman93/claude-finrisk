@@ -66,7 +66,7 @@ export default function SessionLedger({
           <div className="ledger-title-row">
             <span className="ledger-title">Session Map</span>
             <span className="ledger-pid-group">
-              {assignment.participant_id} · {assignment.group}
+              {assignment.participant_id}
             </span>
           </div>
         </div>
@@ -84,7 +84,7 @@ export default function SessionLedger({
         <div className="ledger-title-row">
           <span className="ledger-title">Session Map</span>
           <span className="ledger-pid-group">
-            {assignment.participant_id} · {assignment.group}
+            {assignment.participant_id}
           </span>
         </div>
         <div className="ledger-progress">

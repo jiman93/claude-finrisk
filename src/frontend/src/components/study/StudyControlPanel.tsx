@@ -30,9 +30,9 @@ export default function StudyControlPanel({ onBack }: StudyControlPanelProps) {
     (a) => a.participant_id === selectedParticipantId
   );
 
-  function handleSave(phases: PhaseAssignment[], group: "A" | "B") {
+  function handleSave(phases: PhaseAssignment[]) {
     if (!selectedParticipantId) return;
-    updateAssignment(selectedParticipantId, phases, group);
+    updateAssignment(selectedParticipantId, phases);
   }
 
   function handleReset() {

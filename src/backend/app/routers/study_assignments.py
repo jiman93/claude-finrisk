@@ -20,7 +20,6 @@ router = APIRouter(prefix="/api/study/assignments", tags=["study-assignments"])
 def _to_response(assignment: StudyAssignment) -> ParticipantAssignmentResponse:
     return ParticipantAssignmentResponse(
         participant_id=assignment.participant_id,
-        group=assignment.group,
         phases=assignment.phases,
         status=assignment.status,
         override=assignment.override,
@@ -34,7 +33,7 @@ def _upsert_defaults(db: Session) -> list[StudyAssignment]:
     for d in defaults:
         sa = StudyAssignment(
             participant_id=d["participant_id"],
-            group=GroupType(d["group"]),
+            group=GroupType.A,
             phases=d["phases"],
             status=d["status"],
             override=d["override"],
@@ -104,8 +103,6 @@ def update_assignment(
     if not assignment:
         raise HTTPException(status_code=404, detail="Assignment not found")
 
-    if payload.group is not None:
-        assignment.group = payload.group
     assignment.phases = [phase.model_dump() for phase in payload.phases]
     assignment.override = True
     assignment.updated_at = datetime.utcnow()
@@ -122,7 +119,6 @@ def reset_assignment(participant_id: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Assignment not found")
 
     defaults = generate_default_assignment(participant_id)
-    assignment.group = GroupType(defaults["group"])
     assignment.phases = defaults["phases"]
     assignment.override = False
     assignment.updated_at = datetime.utcnow()

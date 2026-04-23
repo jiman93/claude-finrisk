@@ -3,7 +3,6 @@ from datetime import datetime
 from app.models.enums import ModeType
 from app.services.study_setup import (
     QUERIES,
-    get_group,
     get_phase_modes,
     get_ticker_sequence,
 )
@@ -36,13 +35,14 @@ DEFAULT_CHECKPOINTS = [
         "label": "Post-Generation Questionnaire",
         "pipeline_position": "post_generation",
         "sort_order": 0,
-        "applicable_modes": ["hitl_r", "hitl_g", "hitl_full"],
+        # v2: questionnaire applies to all modes including Baseline
+        "applicable_modes": ["baseline", "hitl_r", "hitl_g", "hitl_full"],
     },
 ]
 
 
 def get_checkpoints_for_mode(mode: ModeType) -> list[dict]:
-    """Return checkpoint refs applicable to the given HITL mode."""
+    """Return checkpoint refs applicable to the given mode."""
     return [
         {
             "definition_id": cp["definition_id"],
@@ -58,14 +58,11 @@ def get_checkpoints_for_mode(mode: ModeType) -> list[dict]:
 
 def generate_default_assignment(participant_id: str) -> dict:
     """Build a fully-resolved default assignment for one participant."""
-    group = get_group(participant_id)
-    modes = get_phase_modes(group)
+    modes = get_phase_modes(participant_id)
     tickers = get_ticker_sequence(participant_id)
 
     phases = []
-    for i in range(3):
-        mode = modes[i]
-        ticker = tickers[i]
+    for i, (mode, ticker) in enumerate(zip(modes, tickers)):
         query = QUERIES[ticker]
         checkpoints = get_checkpoints_for_mode(mode)
         phases.append(
@@ -80,7 +77,6 @@ def generate_default_assignment(participant_id: str) -> dict:
 
     return {
         "participant_id": participant_id,
-        "group": group.value,
         "phases": phases,
         "status": "not_started",
         "override": False,
@@ -88,9 +84,11 @@ def generate_default_assignment(participant_id: str) -> dict:
     }
 
 
-def generate_all_defaults(count: int = 16) -> list[dict]:
-    """Generate default assignments for P01 through P{count}."""
-    return [
+def generate_all_defaults(count: int = 8) -> list[dict]:
+    """Generate default assignments for P00 (tutorial) through P{count}."""
+    result = [generate_default_assignment("P00")]
+    result += [
         generate_default_assignment(f"P{str(i).zfill(2)}")
         for i in range(1, count + 1)
     ]
+    return result

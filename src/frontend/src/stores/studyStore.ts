@@ -841,9 +841,10 @@ function setTailActionForPostSummary() {
   const currentPhase = getCurrentPhaseAssignment(assignment, session);
   const postGenCps = getPostGenCheckpoints(currentPhase);
 
+  const totalPhases = assignment?.phases.length ?? 2;
   if (postGenCps.length > 0) {
     useStudyStore.setState({ tailAction: { type: "questionnaire_prompt" } });
-  } else if (session && session.current_phase < 3) {
+  } else if (session && session.current_phase < totalPhases) {
     useStudyStore.setState({
       tailAction: { type: "phase_advance", nextPhase: session.current_phase + 1 },
     });
@@ -880,7 +881,8 @@ function checkAllCheckpointsDone() {
 
   if (!allDone) return;
 
-  if (session && session.current_phase < 3) {
+  const totalPhases = assignment?.phases.length ?? 2;
+  if (session && session.current_phase < totalPhases) {
     useStudyStore.setState({
       tailAction: { type: "phase_advance", nextPhase: session.current_phase + 1 },
     });

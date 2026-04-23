@@ -91,7 +91,6 @@ def get_overview(db: DbSession = Depends(get_db)):
         rows.append(
             ParticipantRow(
                 participant_id=a.participant_id,
-                group=a.group,
                 assignment_status=a.status,
                 session_id=session.id if session else None,
                 current_phase=session.current_phase if session else None,
@@ -99,6 +98,7 @@ def get_overview(db: DbSession = Depends(get_db)):
                 session_started_at=session.started_at if session else None,
                 session_ended_at=session.ended_at if session else None,
                 phases_completed=phases_completed,
+                total_phases=len(a.phases) if a.phases else 2,
                 total_time_seconds=total_time,
             )
         )
@@ -155,12 +155,15 @@ def get_session_detail(session_id: str, db: DbSession = Depends(get_db)):
         .all()
     )
 
+    assignment = db.get(StudyAssignment, session.participant_id)
+    total_phases = len(assignment.phases) if assignment and assignment.phases else 2
+
     return SessionDetailResponse(
         session_id=session.id,
         participant_id=session.participant_id,
-        group=participant.group if participant else "A",
         current_phase=session.current_phase,
         current_mode=session.current_mode,
+        total_phases=total_phases,
         started_at=session.started_at,
         ended_at=session.ended_at,
         tasks=[_task_to_detail(t) for t in tasks],

@@ -2,7 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
-from app.models.enums import GroupType, ModeType
+from app.models.enums import ModeType
 
 
 class PhaseCheckpointRef(BaseModel):
@@ -14,7 +14,7 @@ class PhaseCheckpointRef(BaseModel):
 
 
 class PhaseAssignment(BaseModel):
-    phase: int = Field(ge=1, le=3)
+    phase: int = Field(ge=1)
     mode: ModeType
     ticker: str
     query: str
@@ -23,7 +23,6 @@ class PhaseAssignment(BaseModel):
 
 class ParticipantAssignmentResponse(BaseModel):
     participant_id: str
-    group: GroupType
     phases: list[PhaseAssignment]
     status: str
     override: bool
@@ -33,7 +32,6 @@ class ParticipantAssignmentResponse(BaseModel):
 class ParticipantAssignmentUpdate(BaseModel):
     """Payload for PUT /api/study/assignments/{participant_id}."""
 
-    group: GroupType | None = None
     phases: list[PhaseAssignment]
 
 

@@ -3,7 +3,6 @@ export type Mode = "baseline" | "hitl_r" | "hitl_g" | "hitl_full";
 export interface SessionState {
   session_id: string;
   participant_id: string;
-  group: "A" | "B";
   current_phase: number;
   current_mode: Mode;
   current_task_id: string;
@@ -185,8 +184,7 @@ export interface PhaseAssignment {
 
 export interface ParticipantAssignment {
   participant_id: string;
-  group: "A" | "B";
-  phases: [PhaseAssignment, PhaseAssignment, PhaseAssignment];
+  phases: PhaseAssignment[];
   status: AssignmentStatus;
   override: boolean;
   updated_at: string;
@@ -379,7 +377,6 @@ export interface StudyOverview {
 
 export interface AdminParticipantRow {
   participant_id: string;
-  group: "A" | "B";
   assignment_status: string;
   session_id: string | null;
   current_phase: number | null;
@@ -387,6 +384,7 @@ export interface AdminParticipantRow {
   session_started_at: string | null;
   session_ended_at: string | null;
   phases_completed: number;
+  total_phases: number;
   total_time_seconds: number | null;
 }
 
@@ -429,9 +427,9 @@ export interface AdminTaskDetail {
 export interface AdminSessionDetail {
   session_id: string;
   participant_id: string;
-  group: "A" | "B";
   current_phase: number;
   current_mode: Mode;
+  total_phases: number;
   started_at: string;
   ended_at: string | null;
   tasks: AdminTaskDetail[];

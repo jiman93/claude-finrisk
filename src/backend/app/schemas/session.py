@@ -2,7 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
-from app.models.enums import GroupType, ModeType
+from app.models.enums import ModeType
 
 
 class SessionStartRequest(BaseModel):
@@ -12,7 +12,6 @@ class SessionStartRequest(BaseModel):
 class SessionStateResponse(BaseModel):
     session_id: str
     participant_id: str
-    group: GroupType
     current_phase: int
     current_mode: ModeType
     current_task_id: str

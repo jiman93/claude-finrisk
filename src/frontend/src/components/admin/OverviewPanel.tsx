@@ -31,7 +31,7 @@ const MODE_LABELS: Record<string, string> = {
   hitl_full: "HITL-Full",
 };
 
-type SortKey = "participant_id" | "group" | "assignment_status" | "current_phase" | "phases_completed" | "total_time_seconds";
+type SortKey = "participant_id" | "assignment_status" | "current_phase" | "phases_completed" | "total_time_seconds";
 
 // ── Participant Table ──
 
@@ -73,9 +73,6 @@ function ParticipantTable({
           <th onClick={() => handleSort("participant_id")}>
             ID{arrow("participant_id")}
           </th>
-          <th onClick={() => handleSort("group")}>
-            Group{arrow("group")}
-          </th>
           <th onClick={() => handleSort("assignment_status")}>
             Status{arrow("assignment_status")}
           </th>
@@ -106,18 +103,11 @@ function ParticipantTable({
                 <strong>{p.participant_id}</strong>
               </td>
               <td>
-                <span
-                  className={`scp-card-group group-${p.group.toLowerCase()}`}
-                >
-                  {p.group}
-                </span>
-              </td>
-              <td>
                 <span className={`scp-status-badge ${statusClass}`}>
                   {p.assignment_status.replace("_", " ")}
                 </span>
               </td>
-              <td>{p.current_phase != null ? `${p.current_phase}/3` : "--"}</td>
+              <td>{p.current_phase != null ? `${p.current_phase}/${p.total_phases}` : "--"}</td>
               <td>
                 {p.current_mode ? (
                   <span
@@ -134,12 +124,12 @@ function ParticipantTable({
                   <div
                     className="adm-progress-fill"
                     style={{
-                      width: `${(p.phases_completed / 3) * 100}%`,
+                      width: `${(p.phases_completed / p.total_phases) * 100}%`,
                     }}
                   />
                 </div>
                 <span className="adm-progress-text">
-                  {p.phases_completed}/3
+                  {p.phases_completed}/{p.total_phases}
                 </span>
               </td>
               <td>{formatTime(p.total_time_seconds)}</td>

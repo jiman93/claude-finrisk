@@ -6,7 +6,7 @@ import PipelinePreview from "./PipelinePreview";
 
 interface ParticipantEditorProps {
   assignment: ParticipantAssignment;
-  onSave: (phases: PhaseAssignment[], group: "A" | "B") => void;
+  onSave: (phases: PhaseAssignment[]) => void;
   onReset: () => void;
   onBack: () => void;
   isSaving: boolean;
@@ -22,7 +22,6 @@ export default function ParticipantEditor({
   const [editingPhases, setEditingPhases] = useState<PhaseAssignment[]>([
     ...assignment.phases,
   ]);
-  const [editingGroup, setEditingGroup] = useState<"A" | "B">(assignment.group);
   const [showPreview, setShowPreview] = useState(false);
   const [dirty, setDirty] = useState(false);
 
@@ -33,19 +32,13 @@ export default function ParticipantEditor({
     setDirty(true);
   }
 
-  function handleGroupChange(group: "A" | "B") {
-    setEditingGroup(group);
-    setDirty(true);
-  }
-
   function handleSave() {
-    onSave(editingPhases, editingGroup);
+    onSave(editingPhases);
     setDirty(false);
   }
 
   function handleCancel() {
     setEditingPhases([...assignment.phases]);
-    setEditingGroup(assignment.group);
     setDirty(false);
   }
 
@@ -66,7 +59,6 @@ export default function ParticipantEditor({
         </div>
         <PipelinePreview
           participantId={assignment.participant_id}
-          group={editingGroup}
           phases={editingPhases}
         />
       </div>
@@ -94,26 +86,9 @@ export default function ParticipantEditor({
         </div>
       </div>
 
-      {/* Group selector */}
+      {/* Status */}
       <div className="scp-editor-section">
         <div className="scp-field-group scp-inline-row">
-          <label className="scp-field-label">Group</label>
-          <div className="scp-mode-chips">
-            <button
-              type="button"
-              className={`cp-chip ${editingGroup === "A" ? "active" : ""}`}
-              onClick={() => handleGroupChange("A")}
-            >
-              Group A
-            </button>
-            <button
-              type="button"
-              className={`cp-chip ${editingGroup === "B" ? "active" : ""}`}
-              onClick={() => handleGroupChange("B")}
-            >
-              Group B
-            </button>
-          </div>
           <span className={`scp-status-badge ${assignment.status.replace("_", "-")}`}>
             {assignment.status === "not_started"
               ? "Not Started"

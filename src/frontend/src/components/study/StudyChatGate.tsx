@@ -219,7 +219,7 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
   useEffect(() => {
     if (!started || !sessionStartedRef.current || !assignment || !chatIdRef.current || !session) return;
     if (messages.length === 0) return;
-    const title = `${assignment.participant_id} - Phase ${session.current_phase}/3`;
+    const title = `${assignment.participant_id} - Phase ${session.current_phase}/${assignment.phases.length}`;
     onSaveChat(chatIdRef.current, title, assignment);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages, session]);
@@ -384,9 +384,6 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
                 <div className="scg-overview-header">
                   <div className="scg-participant-badge">
                     <span className="scg-pid">{assignment.participant_id}</span>
-                    <span className={`scp-card-group group-${assignment.group.toLowerCase()}`}>
-                      Group {assignment.group}
-                    </span>
                     {assignment.override && (
                       <span className="scp-override-badge">Custom</span>
                     )}
@@ -406,7 +403,7 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
 
                 <WelcomeBlock />
 
-                <div className="scg-section-label">Your 3 phases</div>
+                <div className="scg-section-label">Your {assignment.phases.length} phase{assignment.phases.length === 1 ? "" : "s"}</div>
 
                 <div className="scg-phases-col">
                   {assignment.phases.map((phase) => (
@@ -424,7 +421,8 @@ export default function StudyChatGate({ onSaveChat }: StudyChatGateProps) {
                   </button>
                   <p className="scg-start-hint">
                     Begins Phase 1 ({MODE_LABELS[assignment.phases[0].mode]}) with{" "}
-                    {assignment.phases[0].ticker}. Estimated ~15 minutes total.
+                    {assignment.phases[0].ticker}.{" "}
+                    {assignment.phases.length === 1 ? "Tutorial session." : "Estimated ~30 minutes total."}
                   </p>
                 </div>
               </div>
@@ -705,12 +703,9 @@ function SessionBar({ assignment, session }: { assignment: ParticipantAssignment
   return (
     <div className="scg-session-bar">
       <span className="scg-session-pid">{assignment.participant_id}</span>
-      <span className={`scp-card-group group-${assignment.group.toLowerCase()}`}>
-        {assignment.group}
-      </span>
       {session && (
         <>
-          <span className="scg-session-phase">Phase {session.current_phase}/3</span>
+          <span className="scg-session-phase">Phase {session.current_phase}/{assignment.phases.length}</span>
           <span className={`scp-mode-badge ${MODE_COLORS[session.current_mode] ?? ""}`}>
             {MODE_LABELS[session.current_mode] ?? session.current_mode}
           </span>

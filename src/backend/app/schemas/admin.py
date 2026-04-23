@@ -4,7 +4,7 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
-from app.models.enums import GroupType, ModeType
+from app.models.enums import ModeType
 
 
 # ── Overview stats ──
@@ -27,7 +27,6 @@ class StudyOverview(BaseModel):
 
 class ParticipantRow(BaseModel):
     participant_id: str
-    group: GroupType
     assignment_status: str
     session_id: str | None
     current_phase: int | None
@@ -35,6 +34,7 @@ class ParticipantRow(BaseModel):
     session_started_at: datetime | None
     session_ended_at: datetime | None
     phases_completed: int
+    total_phases: int
     total_time_seconds: int | None
 
 
@@ -80,9 +80,9 @@ class TaskDetail(BaseModel):
 class SessionDetailResponse(BaseModel):
     session_id: str
     participant_id: str
-    group: GroupType
     current_phase: int
     current_mode: ModeType
+    total_phases: int
     started_at: datetime
     ended_at: datetime | None
     tasks: list[TaskDetail]

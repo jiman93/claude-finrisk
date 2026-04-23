@@ -26,9 +26,6 @@ export default function ParticipantGrid({
               {a.participant_id}
               {a.override && <span className="scp-override-dot" title="Overridden" />}
             </span>
-            <span className={`scp-card-group group-${a.group.toLowerCase()}`}>
-              Group {a.group}
-            </span>
           </div>
 
           <div className="scp-card-tickers">

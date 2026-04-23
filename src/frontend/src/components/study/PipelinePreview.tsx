@@ -11,7 +11,6 @@ import DynamicControlRenderer from "../controls/DynamicControlRenderer";
 
 interface PipelinePreviewProps {
   participantId: string;
-  group: "A" | "B";
   phases: PhaseAssignment[];
   /** Show only a single phase (1-indexed). If omitted, shows all phases. */
   singlePhase?: number;
@@ -54,10 +53,9 @@ const MODE_LABELS: Record<string, string> = {
   hitl_full: "HITL-Full",
 };
 
-function PhaseFlow({ phase, participantId, group }: {
+function PhaseFlow({ phase, participantId }: {
   phase: PhaseAssignment;
   participantId: string;
-  group: "A" | "B";
 }) {
   const [instances, setInstances] = useState(() => ({
     after_retrieval: buildInstances(phase, "after_retrieval"),
@@ -125,7 +123,7 @@ function PhaseFlow({ phase, participantId, group }: {
 
       <div className="cpd-pipeline-chat">
         <div className="pi-assistant-text" style={{ fontSize: 13, opacity: 0.7 }}>
-          Session started for {participantId} (Group {group}). Phase {phase.phase} | {phase.mode} | {phase.ticker}
+          Session started for {participantId}. Phase {phase.phase} | {phase.mode} | {phase.ticker}
         </div>
 
         <div className="pi-user-bubble">{phase.query}</div>
@@ -200,7 +198,6 @@ function PhaseFlow({ phase, participantId, group }: {
 
 export default function PipelinePreview({
   participantId,
-  group,
   phases,
   singlePhase,
 }: PipelinePreviewProps) {
@@ -216,7 +213,6 @@ export default function PipelinePreview({
           <PhaseFlow
             phase={phase}
             participantId={participantId}
-            group={group}
           />
         </div>
       ))}

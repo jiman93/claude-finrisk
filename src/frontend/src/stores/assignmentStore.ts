@@ -32,8 +32,7 @@ interface AssignmentState {
   selectParticipant: (id: string | null) => void;
   updateAssignment: (
     participantId: string,
-    phases: PhaseAssignment[],
-    group?: "A" | "B"
+    phases: PhaseAssignment[]
   ) => Promise<void>;
   resetAssignment: (participantId: string) => Promise<void>;
   regenerateDefaults: () => Promise<void>;
@@ -61,15 +60,12 @@ export const useAssignmentStore = create<AssignmentState>((set) => ({
 
   selectParticipant: (id) => set({ selectedParticipantId: id }),
 
-  updateAssignment: async (participantId, phases, group) => {
+  updateAssignment: async (participantId, phases) => {
     set({ isLoading: true, error: null });
     try {
-      const payload: { group?: string; phases: PhaseAssignment[] } = { phases };
-      if (group) payload.group = group;
-
       const updated = await request<ParticipantAssignment>(
         `/api/study/assignments/${participantId}`,
-        { method: "PUT", body: JSON.stringify(payload) }
+        { method: "PUT", body: JSON.stringify({ phases }) }
       );
       set((state) => ({
         assignments: state.assignments.map((a) =>
