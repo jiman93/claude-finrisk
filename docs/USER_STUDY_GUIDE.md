@@ -688,7 +688,7 @@ Note any final comments.
 | Item                       | Detail                                                                                                   |
 | -------------------------- | -------------------------------------------------------------------------------------------------------- |
 | **Ethics committee** | UH Health, Science, Engineering and Technology ECDA                                                      |
-| **Protocol number**  | *[To be assigned]*                                                                                     |
+| **Protocol number**  | 1919 STa HSET 2026                                                                                     |
 | **Researcher**       | Muhamad Zulhafiz Bin Zaini (bm24aaq@herts.ac.uk)                                                         |
 | **Supervisor**       | Dr. Epaminondas Kapetanios (e.kapetanios@herts.ac.uk)                                                    |
 | **Withdrawal**       | Any time, no reason required, data deleted on request                                                    |

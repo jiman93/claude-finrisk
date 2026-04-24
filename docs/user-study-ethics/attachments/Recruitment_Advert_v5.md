@@ -8,7 +8,7 @@
 
 **Title of study:** Enhancing Trust in AI-Generated Financial Risk Summaries through Human-in-the-Loop Feedback
 
-**Protocol Number:** TBC
+**Protocol Number:** 1919 STa HSET 2026
 **Approving Committee:** The University of Hertfordshire Health, Science, Engineering and Technology Ethics Committee with Delegated Authority
 
 ---
