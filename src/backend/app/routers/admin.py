@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import desc, func, select
 from sqlalchemy.orm import Session as DbSession
 
@@ -9,6 +10,7 @@ from app.models.participant import Participant
 from app.models.session import Session as StudySession
 from app.models.study_assignment import StudyAssignment
 from app.models.task import Task
+from app.routers.auth import verify_token
 from app.schemas.admin import (
     ActivityEvent,
     ActivityFeedResponse,
@@ -20,7 +22,18 @@ from app.schemas.admin import (
     TaskFullDetail,
 )
 
-router = APIRouter(prefix="/api/admin", tags=["admin"])
+_bearer = HTTPBearer()
+
+
+def _require_admin(credentials: HTTPAuthorizationCredentials = Depends(_bearer)) -> None:
+    verify_token(credentials.credentials)
+
+
+router = APIRouter(
+    prefix="/api/admin",
+    tags=["admin"],
+    dependencies=[Depends(_require_admin)],
+)
 
 
 # ── helpers ──

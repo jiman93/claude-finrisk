@@ -34,7 +34,7 @@ log = logging.getLogger(__name__)
 DEFAULT_TREE_DIR = PROJECT_ROOT / "data" / "tree_index"
 
 # Navigation model — fast reasoning for branch selection.
-NAV_MODEL: str = settings.tree_nav_model
+NAV_MODEL: str = settings.navigation_model
 NAV_REASONING_EFFORT: str = settings.tree_nav_reasoning_effort
 
 # Max branches the LLM can select at each traversal level.

@@ -24,8 +24,10 @@ class Settings(BaseSettings):
     chroma_db_path: str = "./data/chroma_db"
     embedding_model: str = "all-MiniLM-L6-v2"
     # Tree traversal tuning (when RETRIEVAL_MODE=tree)
-    tree_nav_model: str = "o3-mini"
+    navigation_model: str = "o3-mini"
     tree_nav_reasoning_effort: str = "low"
+    # Admin auth
+    admin_password: str = ""
     tree_max_branches: int = 3
     tree_max_depth: int = 4
     tree_max_leaves: int = 8

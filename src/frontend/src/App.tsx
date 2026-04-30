@@ -1,10 +1,12 @@
 import { useState } from "react";
 
+import AdminLogin from "./components/admin/AdminLogin";
 import CheckpointDashboard from "./components/admin/CheckpointDashboard";
 import StudyMonitor from "./components/admin/StudyMonitor";
 import DocumentsPanel from "./components/DocumentsPanel";
 import StudyChatGate from "./components/study/StudyChatGate";
 import StudyControlPanel from "./components/study/StudyControlPanel";
+import { useAdminStore } from "./stores/adminStore";
 import { useStudyStore } from "./stores/studyStore";
 
 type AppPage = "chat" | "dashboard" | "study" | "documents" | "admin";
@@ -12,6 +14,9 @@ type AppPage = "chat" | "dashboard" | "study" | "documents" | "admin";
 export default function App() {
   const [page, setPage] = useState<AppPage>("chat");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const adminToken = useAdminStore((s) => s.token);
+  const adminLogout = useAdminStore((s) => s.logout);
 
   const activeChatId = useStudyStore((s) => s.activeChatId);
   const chatOrder = useStudyStore((s) => s.chatOrder);
@@ -138,12 +143,16 @@ export default function App() {
               </button>
             )}
             {page === "admin" && (
-              <button
-                className="pi-pill-btn"
-                onClick={() => setPage("chat")}
-              >
-                Back to Chat
-              </button>
+              <>
+                {adminToken && (
+                  <button className="pi-pill-btn" onClick={adminLogout} style={{ marginRight: "0.5rem" }}>
+                    Sign out
+                  </button>
+                )}
+                <button className="pi-pill-btn" onClick={() => setPage("chat")}>
+                  Back to Chat
+                </button>
+              </>
             )}
           </div>
         </header>
@@ -161,7 +170,7 @@ export default function App() {
             <StudyControlPanel onBack={() => setPage("chat")} />
           )}
           {page === "documents" && <DocumentsPanel />}
-          {page === "admin" && <StudyMonitor />}
+          {page === "admin" && (adminToken ? <StudyMonitor /> : <AdminLogin />)}
         </div>
       </section>
     </main>

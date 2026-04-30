@@ -8,6 +8,7 @@ import app.models  # noqa: F401
 from app.config import settings
 from app.db.database import Base, engine
 from app.routers.admin import router as admin_router
+from app.routers.auth import router as auth_router
 from app.routers.documents import router as documents_router
 from app.routers.sessions import router as sessions_router
 from app.routers.study_assignments import router as study_assignments_router
@@ -45,6 +46,7 @@ def health():
     return {"status": "ok"}
 
 
+app.include_router(auth_router)
 app.include_router(admin_router)
 app.include_router(sessions_router)
 app.include_router(tasks_router)
@@ -101,7 +103,7 @@ def _validate_retrieval_mode() -> None:
         log.info(
             "Tree config: nav_model=%s, reasoning_effort=%s, "
             "max_branches=%d, max_depth=%d, max_leaves=%d",
-            settings.tree_nav_model,
+            settings.navigation_model,
             settings.tree_nav_reasoning_effort,
             settings.tree_max_branches,
             settings.tree_max_depth,
