@@ -1,0 +1,30 @@
+# Python
+src/backend/.venv
+**/__pycache__
+**/*.pyc
+**/*.pyo
+
+# Node
+src/frontend/node_modules
+src/frontend/dist
+
+# Local data (large, not needed in image)
+data/chroma_db
+data/10k_pdfs
+data/10k_html
+
+# Secrets
+.env
+*.env
+
+# Git
+.git
+.gitignore
+
+# Docs and scripts (not needed at runtime)
+docs/
+scripts/
+
+# Dev artifacts
+*.db
+*.sqlite

@@ -1,0 +1,17 @@
+FROM python:3.12-slim
+
+# /finrisk mirrors the repo root so PROJECT_ROOT resolves correctly:
+# config.py is at /finrisk/src/backend/app/config.py → parents[3] = /finrisk
+WORKDIR /finrisk
+
+COPY requirements-prod.txt .
+RUN pip install --no-cache-dir -r requirements-prod.txt
+
+COPY src/backend/ ./src/backend/
+COPY data/tree_index/ ./data/tree_index/
+
+# uvicorn must run from src/backend so `app.main` is importable
+WORKDIR /finrisk/src/backend
+
+EXPOSE 8000
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
