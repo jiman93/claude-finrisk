@@ -10,6 +10,8 @@ RUN pip install --no-cache-dir -r requirements-prod.txt
 COPY src/backend/ ./src/backend/
 COPY data/tree_index/ ./data/tree_index/
 COPY data/10k_pdfs/ ./data/10k_pdfs/
+COPY data/10k_thumbs/ ./data/10k_thumbs/
+COPY data/metadata/ ./data/metadata/
 
 # uvicorn must run from src/backend so `app.main` is importable
 WORKDIR /finrisk/src/backend
