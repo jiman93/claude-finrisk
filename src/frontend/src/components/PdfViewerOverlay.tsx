@@ -1,13 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
+import PdfjsWorker from "pdfjs-dist/build/pdf.worker.min.mjs?worker";
 
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
 
 import { useStudyStore } from "../stores/studyStore";
 
-// Use CDN worker to avoid nginx .mjs MIME type issues in production
-pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+// Bundle the PDF.js worker via Vite's ?worker import. The worker is
+// instantiated directly as a Worker (no URL fetch), so it bypasses any
+// nginx MIME-type concerns with .mjs files and avoids external CDNs.
+pdfjs.GlobalWorkerOptions.workerPort = new PdfjsWorker();
 
 const ZOOM_STEP = 0.15;
 const ZOOM_MIN = 0.5;
