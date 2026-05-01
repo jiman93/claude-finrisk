@@ -11,4 +11,6 @@ RUN VITE_API_URL="" npm run build
 FROM nginx:alpine
 COPY --from=builder /app/dist /usr/share/nginx/html
 COPY deploy/nginx.conf /etc/nginx/conf.d/default.conf
+# Add .mjs MIME type for PDF.js worker (not in nginx:alpine defaults)
+RUN echo "    text/javascript  mjs;" >> /etc/nginx/mime.types
 EXPOSE 80
